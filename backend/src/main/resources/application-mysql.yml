@@ -1,3 +1,5 @@
+# Production profile. Every value comes from the environment — see .env.example.
+# A host that supplies a full JDBC URL can set SPRING_DATASOURCE_URL instead of the DB_* values.
 spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tideline}?createDatabaseIfNotExist=true&serverTimezone=Asia/Colombo
@@ -8,11 +10,20 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate.format_sql: false
 
   h2:
     console:
       enabled: false
 
 tideline:
-  seed-demo-data: false
+  security:
+    # No fallback on purpose: the app refuses to start without a real secret (32+ characters).
+    jwt-secret: ${TIDELINE_JWT_SECRET}
+  # Seeding only runs against an empty database, so it is safe to leave on for a demo deployment.
+  seed-demo-data: ${SEED_DEMO_DATA:false}
+
+logging:
+  level:
+    lk.tideline.cleanup: INFO

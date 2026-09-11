@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? '';
+// A trailing slash would produce "//api/..." paths.
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 const TOKEN_KEY = 'tideline.token';
 
 export class ApiError extends Error {

@@ -21,6 +21,30 @@ content the frontend shows. H2 console: `http://localhost:8080/h2-console`
 Reads `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` (see
 `application-mysql.yml`); the schema is created by Hibernate and demo seeding is off.
 
+## Deploying
+
+`Dockerfile` builds the production image: Maven on JDK 21, then a slim JRE 21 image running as
+a non-root user with the `mysql` profile on. Any container host works — Render, Railway, Fly.io.
+
+1. Create a MySQL 8 database. Railway and Aiven offer managed MySQL; Render's managed database
+   is PostgreSQL, so pair Render with an external MySQL.
+2. Deploy `backend/` as a Docker service and set the variables listed in `.env.example`:
+   - `TIDELINE_JWT_SECRET` — required; the app refuses to start without it.
+   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` — or one `SPRING_DATASOURCE_URL`.
+   - `CORS_ALLOWED_ORIGINS` — your Vercel domain(s); wildcards work for preview URLs.
+   - `SEED_DEMO_DATA=true` if you want the demo accounts on a fresh database.
+3. Point the host's health check at `/actuator/health`.
+4. In Vercel, set `VITE_API_URL` to the backend's public URL (no trailing slash) and redeploy —
+   Vite bakes it into the build, so changing it needs a new deployment.
+
+To try the production image locally against MySQL:
+
+```
+docker compose up --build
+```
+
+The API comes up on `http://localhost:8081` with the demo data seeded.
+
 ## Demo accounts
 
 All seeded accounts use the password `password123`.
