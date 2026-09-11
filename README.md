@@ -1,34 +1,49 @@
-# Tideline — Community-Based Ocean & Coastal Cleanup Management System
+# Community-Based Ocean & Coastal Cleanup Management System
 
-Frontend-only prototype (React + Vite) built against the **Tideline design system**
-and the Group 8 project proposal. No backend yet — all data in `src/data/mock.js`.
+Group 8 · Institute of Technology, University of Moratuwa.
 
-## Run it
+A platform connecting citizens, volunteer divers, government authorities and organisations
+around one loop for Sri Lanka's coastline: **report a polluted site → let the community
+verify it → escalate it to an authority → clean it up and record the result.**
 
 ```
-npm install
-npm run dev
+├── frontend/   React + Vite, built on the Tideline design system
+└── backend/    Spring Boot 3.3 + JPA + JWT, H2 for dev and MySQL for the target deployment
 ```
 
-Opens at `http://localhost:5173`. Landing page (`/`) lets you jump into either console.
+## Run both
 
-## Structure
+```bash
+npm --prefix frontend install && npm --prefix frontend run dev
+```
 
-- `src/design-system/` — copied from the Tideline design system: tokens (`tokens/*.css`),
-  21 components (`components/core|forms|feedback`), barrel export at `index.js`.
-- `public/assets/icons/` — the 47 Lucide icons the design system uses.
-- `src/layouts/` — `VolunteerShell` (mobile PWA, bottom tabs) and `AuthorityShell`
-  (desktop console, sidebar) — the two consoles named in the design system readme.
-- `src/pages/volunteer/` — Feed, ReportDetail (community voting), SubmitReport,
-  Alerts, Opportunities, Profile. Covers modules 1, 2, 3, 6, 8.
-- `src/pages/authority/` — Queue (admin moderation), ReportReview (moderation +
-  government escalation), Projects, ProjectDetail (before/during/after), Analytics.
-  Covers modules 4, 5, 7, 9.
-- `src/pages/auth/` — Login, Register (role picker: citizen / diver / organization).
+```bash
+cd backend && ./mvnw spring-boot:run
+```
 
-## Not built yet (out of scope for this pass)
+Frontend on `http://localhost:5173`, API on `http://localhost:8080`. The backend seeds the
+same demo content the frontend currently shows; every seeded account uses `password123`.
 
-- Spring Boot backend / MySQL — the proposal's next phase.
-- Real authentication, file upload, geocoding/maps APIs.
-- Government-authority-specific dashboard (proposal marks it "future scope").
-- Native mobile app (proposal scopes this out entirely — mobile web only).
+See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md) for
+details, demo accounts and the full endpoint list.
+
+## Module coverage
+
+| # | Module | Frontend | Backend |
+| --- | --- | --- | --- |
+| 1 | User registration & profile | yes | yes |
+| 2 | Pollution reporting | yes | yes (evidence by URL, no binary upload yet) |
+| 3 | Community verification & trust | yes | yes (75% threshold, configurable) |
+| 4 | Admin review & moderation | yes | yes |
+| 5 | Government approval workflow | yes | yes |
+| 6 | Location-based alerts | yes | yes (Haversine radius + escalation steps) |
+| 7 | Project progress monitoring | yes | yes |
+| 8 | Diver employment & opportunities | yes | yes |
+| 9 | Reporting & analytics | yes | yes |
+
+## Still to do
+
+- Wire the frontend to the API — it currently renders from `frontend/src/data/mock.js`.
+- File upload for photo and video evidence.
+- Geocoding and map APIs for location validation and the pollution map.
+- Test coverage, containerisation and cloud deployment.

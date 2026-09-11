@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: cleanup-backend
+
+  # Default profile runs on in-memory H2 so the API starts with no database setup.
+  # Use the `mysql` profile (application-mysql.yml) for the real target database.
+  datasource:
+    url: jdbc:h2:mem:tideline;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate.format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+
+tideline:
+  # The SRS pins community verification at a 75% trust threshold.
+  verification:
+    threshold-percent: 75
+    minimum-votes: 5
+  # Location-based alerting starts local and widens when nobody responds.
+  alerts:
+    initial-radius-km: 5
+    escalation-radii-km: 25,100,500
+  security:
+    jwt-secret: ${TIDELINE_JWT_SECRET:dev-only-secret-change-me-in-production-0123456789abcdef}
+    jwt-expiry-minutes: 720
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:4173
+  seed-demo-data: true
+
+logging:
+  level:
+    lk.tideline.cleanup: DEBUG
