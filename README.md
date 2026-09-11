@@ -21,8 +21,10 @@ npm --prefix frontend install && npm --prefix frontend run dev
 cd backend && ./mvnw spring-boot:run
 ```
 
-Frontend on `http://localhost:5173`, API on `http://localhost:8080`. The backend seeds the
-same demo content the frontend currently shows; every seeded account uses `password123`.
+Frontend on `http://localhost:5173`, API on `http://localhost:8080`. The frontend reads and
+writes live API data — Vite proxies `/api` to the backend, so there is no CORS setup in
+development. Start the backend first; every seeded account uses `password123`, and the login
+screen lists them.
 
 See [frontend/README.md](frontend/README.md) and [backend/README.md](backend/README.md) for
 details, demo accounts and the full endpoint list.
@@ -43,7 +45,6 @@ details, demo accounts and the full endpoint list.
 
 ## Still to do
 
-- Wire the frontend to the API — it currently renders from `frontend/src/data/mock.js`.
-- File upload for photo and video evidence.
+- File upload for photo and video evidence — the API stores evidence as URLs today.
 - Geocoding and map APIs for location validation and the pollution map.
 - Test coverage, containerisation and cloud deployment.

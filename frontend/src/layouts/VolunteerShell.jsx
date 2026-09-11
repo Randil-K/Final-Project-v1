@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Icon, Avatar } from '../design-system';
-import { currentUser } from '../data/mock.js';
+import { Icon, Avatar, Button } from '../design-system';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 const TABS = [
   { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
@@ -12,6 +12,8 @@ const TABS = [
 
 export default function VolunteerShell() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface-page)' }}>
       <header
@@ -23,6 +25,7 @@ export default function VolunteerShell() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 12,
           padding: '0 var(--space-5)',
           background: 'var(--surface-brand)',
           color: 'var(--text-inverse)',
@@ -32,10 +35,27 @@ export default function VolunteerShell() {
           <Icon name="waves-horizontal" size="md" color="var(--tide-300)" />
           <span style={{ font: '700 18px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--white)' }}>Tideline</span>
         </button>
-        <button onClick={() => navigate('/app/profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-inverse-muted)' }}>{currentUser.location}</span>
-          <Avatar name={currentUser.name} role={currentUser.role === 'diver' ? 'diver' : undefined} size="sm" />
-        </button>
+
+        {user ? (
+          <button onClick={() => navigate('/app/profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minWidth: 0 }}>
+            <span
+              style={{
+                font: 'var(--text-body-sm)',
+                color: 'var(--text-inverse-muted)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {[user.city, user.province].filter(Boolean).join(' · ')}
+            </span>
+            <Avatar name={user.fullName} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
+          </button>
+        ) : (
+          <Button variant="inverse" size="sm" onClick={() => navigate('/login')}>
+            Sign in
+          </Button>
+        )}
       </header>
 
       <main style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>

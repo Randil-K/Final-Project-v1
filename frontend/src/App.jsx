@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+import { AuthProvider } from './auth/AuthContext.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
+
 import Landing from './pages/Landing.jsx';
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
@@ -20,33 +23,72 @@ import Projects from './pages/authority/Projects.jsx';
 import ProjectDetail from './pages/authority/ProjectDetail.jsx';
 import Analytics from './pages/authority/Analytics.jsx';
 
+const CONSOLE_ROLES = ['ADMIN', 'AUTHORITY'];
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        <Route path="/app" element={<VolunteerShell />}>
-          <Route index element={<Feed />} />
-          <Route path="report/:id" element={<ReportDetail />} />
-          <Route path="submit" element={<SubmitReport />} />
-          <Route path="alerts" element={<Alerts />} />
-          <Route path="opportunities" element={<Opportunities />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
+          <Route path="/app" element={<VolunteerShell />}>
+            <Route index element={<Feed />} />
+            <Route path="report/:id" element={<ReportDetail />} />
+            <Route
+              path="submit"
+              element={
+                <RequireAuth>
+                  <SubmitReport />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="alerts"
+              element={
+                <RequireAuth>
+                  <Alerts />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="opportunities"
+              element={
+                <RequireAuth>
+                  <Opportunities />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="profile"
+              element={
+                <RequireAuth>
+                  <Profile />
+                </RequireAuth>
+              }
+            />
+          </Route>
 
-        <Route path="/console" element={<AuthorityShell />}>
-          <Route index element={<Queue />} />
-          <Route path="reports/:id" element={<ReportReview />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="projects/:id" element={<ProjectDetail />} />
-          <Route path="analytics" element={<Analytics />} />
-        </Route>
+          <Route
+            path="/console"
+            element={
+              <RequireAuth roles={CONSOLE_ROLES}>
+                <AuthorityShell />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Queue />} />
+            <Route path="reports/:id" element={<ReportReview />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="projects/:id" element={<ProjectDetail />} />
+            <Route path="analytics" element={<Analytics />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Badge } from '../design-system';
-import { stats } from '../data/mock.js';
+import { api } from '../api/index.js';
+import { useApi } from '../hooks/useApi.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 const PATHS = [
   {
@@ -22,11 +24,32 @@ const PATHS = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const state = useApi(() => api.analytics.summary(), []);
+
+  const stats = state.data
+    ? [
+        { label: 'Reported sites', value: state.data.reportedSites },
+        { label: 'Verified incidents', value: state.data.verifiedIncidents },
+        { label: 'Active projects', value: state.data.activeProjects },
+        { label: 'Volunteers', value: state.data.registeredVolunteers },
+      ]
+    : [];
+
   return (
     <div style={{ minHeight: '100%', background: 'var(--surface-page)' }}>
-      <header style={{ padding: 'var(--space-6) var(--space-6) 0', maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Icon name="waves-horizontal" size="lg" color="var(--tide-600)" />
-        <span style={{ font: '700 20px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--text-strong)' }}>Tideline</span>
+      <header style={{ padding: 'var(--space-6) var(--space-6) 0', maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Icon name="waves-horizontal" size="lg" color="var(--tide-600)" />
+          <span style={{ font: '700 20px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--text-strong)' }}>Tideline</span>
+        </div>
+        {user ? (
+          <Button variant="secondary" iconRight="arrow-right" onClick={() => navigate(user.role === 'ADMIN' || user.role === 'AUTHORITY' ? '/console' : '/app')}>
+            Continue as {user.fullName.split(' ')[0]}
+          </Button>
+        ) : (
+          <Button variant="secondary" onClick={() => navigate('/login')}>Sign in</Button>
+        )}
       </header>
 
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: 'var(--space-16) var(--space-6) var(--space-8)' }}>
@@ -38,19 +61,22 @@ export default function Landing() {
           Tideline connects citizens, volunteer divers, government authorities and organisations around one loop for Sri Lanka's coastline.
         </p>
 
-        <div style={{ display: 'flex', gap: 'var(--space-6)', marginTop: 'var(--space-8)', flexWrap: 'wrap' }}>
-          {[
-            { label: 'Reported sites', value: stats.reportedSites },
-            { label: 'Verified incidents', value: stats.verifiedIncidents },
-            { label: 'Active projects', value: stats.activeProjects },
-            { label: 'Volunteers', value: stats.volunteers },
-          ].map((s) => (
-            <div key={s.label}>
-              <div style={{ font: '600 28px/1 var(--font-mono)', color: 'var(--text-strong)' }}>{s.value}</div>
-              <div style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+        {stats.length ? (
+          <div style={{ display: 'flex', gap: 'var(--space-6)', marginTop: 'var(--space-8)', flexWrap: 'wrap' }}>
+            {stats.map((s) => (
+              <div key={s.label}>
+                <div style={{ font: '600 28px/1 var(--font-mono)', color: 'var(--text-strong)' }}>{s.value}</div>
+                <div style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {state.error ? (
+          <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 'var(--space-6)' }}>
+            Live figures are unavailable — the API is not reachable right now.
+          </p>
+        ) : null}
       </section>
 
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--space-6) var(--space-16)' }}>
@@ -58,17 +84,7 @@ export default function Landing() {
           {PATHS.map((p) => (
             <Card key={p.title} tone="default" padding="lg" interactive onClick={() => navigate(p.to)} style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <span
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--accent-soft)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
+                <span style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', background: 'var(--accent-soft)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name={p.icon} size="lg" color="var(--accent-on-soft)" />
                 </span>
                 <div>

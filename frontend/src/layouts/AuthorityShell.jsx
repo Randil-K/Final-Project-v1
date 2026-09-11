@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Badge } from '../design-system';
-import { currentUser } from '../data/mock.js';
+import { useAuth } from '../auth/AuthContext.jsx';
+import { ROLE_LABEL } from '../lib/format.js';
 
 const NAV = [
   { to: '/console', label: 'Review queue', icon: 'list-filter', end: true },
@@ -11,6 +12,13 @@ const NAV = [
 
 export default function AuthorityShell() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  function signOut() {
+    logout();
+    navigate('/');
+  }
+
   return (
     <div style={{ minHeight: '100%', display: 'flex' }}>
       <aside
@@ -56,18 +64,20 @@ export default function AuthorityShell() {
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 var(--space-2)' }}>
-            <Avatar name={currentUser.name} role="authority" size="sm" />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ font: 'var(--text-label)', color: 'var(--white)' }}>{currentUser.name}</span>
-              <Badge tone="inverse" size="sm">Authority officer</Badge>
+            <Avatar name={user?.fullName || ''} role="authority" size="sm" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+              <span style={{ font: 'var(--text-label)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.fullName}
+              </span>
+              <Badge tone="inverse" size="sm">{ROLE_LABEL[user?.role] || user?.role}</Badge>
             </div>
           </div>
           <button
-            onClick={() => navigate('/')}
+            onClick={signOut}
             style={{ display: 'flex', alignItems: 'center', gap: 10, height: 40, padding: '0 var(--space-2)', color: 'var(--text-inverse-muted)', font: 'var(--text-label)', cursor: 'pointer' }}
           >
             <Icon name="log-out" size="sm" />
-            Switch role
+            Sign out
           </button>
         </div>
       </aside>

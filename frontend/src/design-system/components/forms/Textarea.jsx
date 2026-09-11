@@ -21,7 +21,8 @@ function controlStyle({ focus, invalid, disabled, size }) {
 
 export function Textarea({ label, hint, error, required, rows = 4, maxLength, value, disabled, id, style, ...rest }) {
   const [focus, setFocus] = React.useState(false);
-  const areaId = id || React.useId();
+  const generatedId = React.useId();
+  const areaId = id || generatedId;
   return (
     <Field label={label} hint={hint} error={error} required={required} htmlFor={areaId} style={style}>
       <textarea

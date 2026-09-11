@@ -22,7 +22,8 @@ function controlStyle({ focus, invalid, disabled, size }) {
 
 export function Select({ label, hint, error, required, options = [], placeholder, size = 'md', disabled, id, style, ...rest }) {
   const [focus, setFocus] = React.useState(false);
-  const selId = id || React.useId();
+  const generatedId = React.useId();
+  const selId = id || generatedId;
   return (
     <Field label={label} hint={hint} error={error} required={required} htmlFor={selId} style={style}>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>

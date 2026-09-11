@@ -22,7 +22,8 @@ function controlStyle({ focus, invalid, disabled, size }) {
 
 export function Input({ label, hint, error, required, size = 'md', iconLeft, suffix, disabled, id, style, ...rest }) {
   const [focus, setFocus] = React.useState(false);
-  const inputId = id || React.useId();
+  const generatedId = React.useId();
+  const inputId = id || generatedId;
   return (
     <Field label={label} hint={hint} error={error} required={required} htmlFor={inputId} style={style}>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
