@@ -14,7 +14,7 @@ verify it → escalate it to an authority → clean it up and record the result.
 ## Run both
 
 ```bash
-npm --prefix frontend install && npm --prefix frontend run dev
+cd frontend && npm install && npm run dev
 ```
 
 ```bash
