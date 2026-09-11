@@ -27,7 +27,13 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 - `src/layouts/` — `VolunteerShell` (mobile PWA, bottom tabs) and `AuthorityShell` (desktop console).
 - `src/pages/volunteer/` — feed, report detail with community voting and "start a cleanup",
   submission, cleanups (list, join, organiser progress), alerts, opportunities, profile.
-- `src/pages/authority/` — review queue, report review, projects, project detail, analytics.
+- `src/pages/volunteer/OrganisationOpportunities.jsx` — what an organisation sees on the
+  Opportunities tab: post assignments, review applicants' diving record, accept or decline.
+- `src/pages/authority/` — review queue, report review, projects, project detail, alerts,
+  analytics, and users (administrators only).
+- `src/components/` — shared pieces: `AlertList`, `ProjectCard`, `ProjectProgress`,
+  `ProjectTimeline`, `ProgressUpdateForm`, `ParticipantList` (organiser ratings), `MapLink`,
+  and `Modal`.
 
 ## What the UI does against the API
 
@@ -37,15 +43,17 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Login / Register | `POST /api/auth/login` · `/register` |
 | Feed | `GET /api/reports?status=` |
 | Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` · `POST /api/projects` |
-| Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (organiser) |
+| Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (organiser) · `POST /{id}/participants/{pid}/mark` (organiser, once complete) |
 | Submit report | `POST /api/reports` with browser geolocation |
-| Alerts | `GET /api/alerts` · `POST /api/alerts/{id}/read` |
-| Opportunities | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` |
-| Profile | `GET`/`PUT /api/users/me` · `PUT /api/users/me/diver-profile` |
+| Alerts (both apps) | `GET /api/alerts` · `POST /{id}/read` · `POST /read-all` · `GET /unread-count` (nav badge) |
+| Opportunities — diver | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` (shows accepted / not selected) |
+| Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
+| Profile | `GET`/`PUT /api/users/me` (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
 | Review queue | `GET /api/reports` |
-| Report review | moderation, escalation, authority decision, alert-radius widening |
+| Report review | verify, reject, request clarification, escalate, authority decision, widen alert radius |
 | Projects | `GET /api/projects` · `GET /{id}` · `POST /{id}/updates` |
 | Analytics | `GET /api/analytics/summary` |
+| Users (admin) | `GET /api/admin/users?query=` · `POST /api/admin/users/{id}/suspension` |
 
 The review screen shows different actions per role: an administrator gets verify / reject /
 escalate / widen-alert, while an authority officer gets approve / reject on an escalated
@@ -67,4 +75,4 @@ upstream.
 
 - Binary upload for photo and video evidence — the API stores evidence as URLs, and the
   submission form currently sends placeholder URLs.
-- A map view; locations are captured and displayed as coordinates.
+- An embedded map. Reports and cleanups link out to OpenStreetMap instead.

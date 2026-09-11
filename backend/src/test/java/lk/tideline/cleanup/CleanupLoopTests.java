@@ -8,6 +8,7 @@ import lk.tideline.cleanup.repository.AlertRepository;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import lk.tideline.cleanup.service.ProjectService;
+import lk.tideline.cleanup.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +36,9 @@ class CleanupLoopTests {
 
     @Autowired
     private ProjectService projects;
+
+    @Autowired
+    private UserService userService;
 
     @Test
     void reporterHearsWhenACleanupIsPlannedAndWhenTheSiteIsCleaned() {
@@ -85,6 +89,34 @@ class CleanupLoopTests {
 
         assertThatThrownBy(() -> projects.join(project.id(), organiser, null))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void theOrganiserRatesContributionsOnceTheCleanupIsComplete() {
+        User organiser = user(Role.DIVER);
+        User volunteer = user(Role.DIVER);
+        ProjectResponse project = projects.create(
+                request(report(user(Role.CITIZEN), ReportStatus.VERIFIED, null)), organiser);
+        projects.join(project.id(), volunteer, null);
+
+        assertThat(projects.view(project.id(), volunteer).participants())
+                .as("participants stay private to the organiser")
+                .isNull();
+        Long participantId = projects.view(project.id(), organiser).participants().get(0).id();
+
+        assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, organiser))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("complete");
+
+        projects.addUpdate(project.id(),
+                new ProjectUpdateRequest(UpdateStage.AFTER, "Done.", null, 100, null), organiser);
+
+        assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, volunteer))
+                .isInstanceOf(IllegalStateException.class);
+
+        projects.mark(project.id(), participantId, 4, organiser);
+        assertThat(userService.view(volunteer.getId()).averageMark()).isEqualTo(4.0);
+        assertThat(titlesFor(volunteer)).contains("Your contribution was rated");
     }
 
     private List<String> titlesFor(User user) {

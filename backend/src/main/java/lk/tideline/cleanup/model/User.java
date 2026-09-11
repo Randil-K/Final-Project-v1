@@ -41,6 +41,13 @@ public class User {
     @Column(nullable = false)
     private boolean availableForAlerts = true;
 
+    /** Set by an administrator for abusive accounts; a suspended user cannot sign in. */
+    @Column(nullable = false)
+    private boolean suspended = false;
+
+    @Column(length = 500)
+    private String suspensionReason;
+
     private String organizationName;
 
     @Enumerated(EnumType.STRING)

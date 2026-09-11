@@ -49,6 +49,20 @@ public class AlertService {
         return AlertResponse.from(alertRepository.save(alert));
     }
 
+    @Transactional(readOnly = true)
+    public long unreadCount(User recipient) {
+        return alertRepository.countByRecipientAndReadFlagFalse(recipient);
+    }
+
+    @Transactional
+    public int markAllRead(User recipient) {
+        List<Alert> unread = alertRepository.findByRecipientOrderByCreatedAtDesc(recipient).stream()
+                .filter(alert -> !alert.isReadFlag())
+                .toList();
+        unread.forEach(alert -> alert.setReadFlag(true));
+        return unread.size();
+    }
+
     @Transactional
     public Alert send(User recipient, AlertType type, String title, String body,
                       Long reportId, Long projectId, Double radiusKm) {

@@ -1,11 +1,14 @@
 package lk.tideline.cleanup.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.CertificationLevel;
 import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.OrganizationType;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 
+import java.time.Instant;
 import java.util.List;
 
 public final class UserDtos {
@@ -26,9 +29,16 @@ public final class UserDtos {
             boolean availableForAlerts,
             String organizationName,
             OrganizationType organizationType,
-            DiverProfileResponse diverProfile
+            DiverProfileResponse diverProfile,
+            /** Average organiser rating (1-5) across completed cleanups; null until someone rates them. */
+            Double averageMark,
+            Integer markedCleanups
     ) {
         public static UserResponse from(User user) {
+            return from(user, null, null);
+        }
+
+        public static UserResponse from(User user, Double averageMark, Integer markedCleanups) {
             return new UserResponse(
                     user.getId(),
                     user.getFullName(),
@@ -42,7 +52,9 @@ public final class UserDtos {
                     user.isAvailableForAlerts(),
                     user.getOrganizationName(),
                     user.getOrganizationType(),
-                    DiverProfileResponse.from(user.getDiverProfile()));
+                    DiverProfileResponse.from(user.getDiverProfile()),
+                    averageMark,
+                    markedCleanups);
         }
     }
 
@@ -94,6 +106,38 @@ public final class UserDtos {
             Integer experienceYears,
             String equipment,
             List<String> preferredRegions
+    ) {
+    }
+
+    /** Admin view of an account (module 4). */
+    public record AdminUserResponse(
+            Long id,
+            String fullName,
+            String email,
+            Role role,
+            String province,
+            String city,
+            boolean suspended,
+            String suspensionReason,
+            Instant createdAt
+    ) {
+        public static AdminUserResponse from(User user) {
+            return new AdminUserResponse(
+                    user.getId(),
+                    user.getFullName(),
+                    user.getEmail(),
+                    user.getRole(),
+                    user.getProvince(),
+                    user.getCity(),
+                    user.isSuspended(),
+                    user.getSuspensionReason(),
+                    user.getCreatedAt());
+        }
+    }
+
+    public record SuspensionRequest(
+            @NotNull Boolean suspended,
+            @Size(max = 500) String reason
     ) {
     }
 }

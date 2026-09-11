@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon, IconButton, Badge, Button, Alert } from '../../design-system';
 import { Async } from '../../components/AsyncState.jsx';
+import MapLink from '../../components/MapLink.jsx';
+import ParticipantList from '../../components/ParticipantList.jsx';
 import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
@@ -31,9 +33,7 @@ export default function CleanupDetail() {
     }
   }
 
-  function participation(project) {
-    const isOwner = user?.id === project.owner?.id;
-
+  function participation(project, isOwner) {
     if (project.status === 'COMPLETED') {
       return (
         <Alert tone="success" title="This cleanup is finished">
@@ -72,49 +72,65 @@ export default function CleanupDetail() {
 
   return (
     <Async state={state}>
-      {(project) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <IconButton icon="chevron-left" label="Back" onClick={() => navigate(-1)} />
-            <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{project.reference}</span>
-            <Badge tone={PROJECT_STATUS_TONE[project.status]} style={{ marginLeft: 'auto' }}>
-              {PROJECT_STATUS_LABEL[project.status]}
-            </Badge>
-          </div>
-
-          <div>
-            <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{project.title}</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 4 }}>
-              <Icon name="map-pin" size="sm" />
-              {locationLine(project)}
-              {project.owner ? ` · led by ${project.owner.fullName}` : ''}
+      {(project) => {
+        const isOwner = user?.id === project.owner?.id;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <IconButton icon="chevron-left" label="Back" onClick={() => navigate(-1)} />
+              <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{project.reference}</span>
+              <Badge tone={PROJECT_STATUS_TONE[project.status]} style={{ marginLeft: 'auto' }}>
+                {PROJECT_STATUS_LABEL[project.status]}
+              </Badge>
             </div>
-            {project.description ? (
-              <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 8 }}>{project.description}</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{project.title}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
+                <Icon name="map-pin" size="sm" />
+                {locationLine(project)}
+                {project.owner ? ` · led by ${project.owner.fullName}` : ''}
+              </div>
+              {project.description ? (
+                <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 4 }}>{project.description}</p>
+              ) : null}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                <MapLink latitude={project.latitude} longitude={project.longitude} label="Meeting point on the map" />
+                {project.reportId ? (
+                  <Button variant="secondary" size="sm" iconLeft="flag" onClick={() => navigate(`/app/report/${project.reportId}`)}>
+                    Original report
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            <ProjectProgress project={project} />
+
+            {participation(project, isOwner)}
+            {error ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
+
+            {project.participants ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Who's taking part</span>
+                <ParticipantList
+                  project={project}
+                  canRate={isOwner && project.status === 'COMPLETED'}
+                  onRated={state.setData}
+                />
+              </div>
+            ) : null}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Progress</span>
+              <ProjectTimeline updates={project.updates} />
+            </div>
+
+            {isOwner && project.status !== 'COMPLETED' ? (
+              <ProgressUpdateForm projectId={project.id} onUpdated={state.setData} />
             ) : null}
           </div>
-
-          <ProjectProgress project={project} />
-
-          {participation(project)}
-          {error ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
-
-          {project.reportId ? (
-            <Button variant="secondary" iconLeft="flag" onClick={() => navigate(`/app/report/${project.reportId}`)} style={{ alignSelf: 'flex-start' }}>
-              View the original report
-            </Button>
-          ) : null}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Progress</span>
-            <ProjectTimeline updates={project.updates} />
-          </div>
-
-          {user?.id === project.owner?.id && project.status !== 'COMPLETED' ? (
-            <ProgressUpdateForm projectId={project.id} onUpdated={state.setData} />
-          ) : null}
-        </div>
-      )}
+        );
+      }}
     </Async>
   );
 }

@@ -5,6 +5,7 @@ import lk.tideline.cleanup.dto.ReportDtos.*;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.ReportCommentRepository;
+import lk.tideline.cleanup.repository.UserRepository;
 import lk.tideline.cleanup.repository.VerificationVoteRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,17 +26,20 @@ public class ReportService {
     private final PollutionReportRepository reportRepository;
     private final VerificationVoteRepository voteRepository;
     private final ReportCommentRepository commentRepository;
+    private final UserRepository userRepository;
     private final AlertService alertService;
     private final TidelineProperties properties;
 
     public ReportService(PollutionReportRepository reportRepository,
                          VerificationVoteRepository voteRepository,
                          ReportCommentRepository commentRepository,
+                         UserRepository userRepository,
                          AlertService alertService,
                          TidelineProperties properties) {
         this.reportRepository = reportRepository;
         this.voteRepository = voteRepository;
         this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
         this.alertService = alertService;
         this.properties = properties;
     }
@@ -174,28 +178,58 @@ public class ReportService {
         return CommentResponse.from(commentRepository.save(comment));
     }
 
-    /** Module 4 — an administrator resolves a report the community could not settle. */
+    /**
+     * Module 4 — an administrator verifies, rejects, or asks the reporter for clarification
+     * (which returns the report to Verifying).
+     */
     @Transactional
     public ReportResponse moderate(Long reportId, ModerationRequest request, User admin) {
         PollutionReport report = get(reportId);
 
+        if (report.getStatus() == ReportStatus.ESCALATED) {
+            throw new IllegalStateException("This report is with the authority. Wait for their decision before moderating it.");
+        }
+        if (report.getStatus() == ReportStatus.CLEANED) {
+            throw new IllegalStateException("This site has already been cleaned.");
+        }
+
         ReportStatus target = request.status();
         if (target != ReportStatus.VERIFIED && target != ReportStatus.REJECTED && target != ReportStatus.VERIFYING) {
-            throw new IllegalArgumentException("An administrator can only verify, reject, or return a report for review.");
+            throw new IllegalArgumentException("An administrator can only verify, reject, or ask for clarification.");
+        }
+
+        boolean clarification = target == ReportStatus.VERIFYING;
+        String comment = request.comment() == null || request.comment().isBlank() ? null : request.comment().trim();
+        if (clarification && comment == null) {
+            throw new IllegalArgumentException("Say what needs clarifying. The reporter sees your question.");
         }
 
         report.setStatus(target);
-        report.setModerationComment(request.comment());
+        report.setModerationComment(comment);
         report.setUpdatedAt(Instant.now());
         if (target == ReportStatus.VERIFIED) {
             report.setVerifiedAt(Instant.now());
         }
 
-        alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                "Your report was reviewed",
-                report.getReference() + " is now " + target.name().toLowerCase()
-                        + (request.comment() == null ? "." : ". " + request.comment()),
-                report.getId(), null, null);
+        if (clarification) {
+            // Posted to the discussion so the reporter can answer where the community can see it.
+            ReportComment question = new ReportComment();
+            question.setReport(report);
+            question.setAuthor(admin);
+            question.setBody(comment);
+            question.setOfficial(true);
+            commentRepository.save(question);
+        }
+
+        String title = switch (target) {
+            case VERIFIED -> "Your report was verified";
+            case REJECTED -> "Your report was rejected";
+            default -> "More detail needed on your report";
+        };
+        String body = clarification
+                ? report.getReference() + ": " + comment
+                : report.getReference() + " is now " + target.name().toLowerCase() + (comment == null ? "." : ". " + comment);
+        alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION, title, body, report.getId(), null, null);
 
         return toResponse(report);
     }
@@ -217,6 +251,17 @@ public class ReportService {
                 "Your report was escalated",
                 report.getReference() + " has been sent to the relevant government authority for review.",
                 report.getId(), null, null);
+
+        for (User officer : userRepository.findByRole(Role.AUTHORITY)) {
+            if (officer.isSuspended()) {
+                continue;
+            }
+            alertService.send(officer, AlertType.AUTHORITY_DECISION,
+                    "Report escalated for your review",
+                    report.getReference() + " at " + report.getLocationName() + " — " + report.getTrustPercentage()
+                            + "% community trust. Approve or reject the cleanup request.",
+                    report.getId(), null, null);
+        }
 
         return toResponse(report);
     }
@@ -244,6 +289,15 @@ public class ReportService {
                 request.approved() ? "Cleanup approved by the authority" : "Cleanup request rejected",
                 report.getReference() + ": " + request.comment(),
                 report.getId(), null, null);
+
+        // Module 5 — "notify admin about approval status".
+        String decision = request.approved() ? "approved" : "rejected";
+        for (User admin : userRepository.findByRole(Role.ADMIN)) {
+            alertService.send(admin, AlertType.AUTHORITY_DECISION,
+                    "Authority " + decision + " " + report.getReference(),
+                    officer.getFullName() + " " + decision + " the cleanup request: " + request.comment(),
+                    report.getId(), null, null);
+        }
 
         return toResponse(report);
     }

@@ -2,17 +2,21 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Badge } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import { ROLE_LABEL } from '../lib/format.js';
 
 const NAV = [
   { to: '/console', label: 'Review queue', icon: 'list-filter', end: true },
   { to: '/console/projects', label: 'Projects', icon: 'map-pin' },
+  { to: '/console/alerts', label: 'Alerts', icon: 'bell', showUnread: true },
   { to: '/console/analytics', label: 'Analytics', icon: 'chart-column' },
+  { to: '/console/users', label: 'Users', icon: 'users', adminOnly: true },
 ];
 
 export default function AuthorityShell() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const unread = useUnreadAlerts();
 
   function signOut() {
     logout();
@@ -39,7 +43,7 @@ export default function AuthorityShell() {
         </button>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {NAV.map((n) => (
+          {NAV.filter((n) => !n.adminOnly || user?.role === 'ADMIN').map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
@@ -58,6 +62,9 @@ export default function AuthorityShell() {
             >
               <Icon name={n.icon} size="sm" />
               {n.label}
+              {n.showUnread && unread ? (
+                <Badge tone="accent" size="sm" style={{ marginLeft: 'auto' }} aria-label={`${unread} unread`}>{unread}</Badge>
+              ) : null}
             </NavLink>
           ))}
         </nav>

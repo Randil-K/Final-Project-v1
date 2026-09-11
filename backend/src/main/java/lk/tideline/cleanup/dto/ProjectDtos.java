@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.ParticipantRole;
+import lk.tideline.cleanup.model.ProjectParticipant;
 import lk.tideline.cleanup.model.ProjectStatus;
 import lk.tideline.cleanup.model.ProjectUpdate;
 import lk.tideline.cleanup.model.UpdateStage;
@@ -51,9 +52,12 @@ public final class ProjectDtos {
             Instant completedAt,
             Instant createdAt,
             /** Whether the signed-in viewer has joined; null for anonymous viewers. */
-            Boolean joined
+            Boolean joined,
+            /** Only for the organiser, administrators and authority officers; null for everyone else. */
+            List<ParticipantResponse> participants
     ) {
-        public static ProjectResponse from(CleanupProject project, long volunteers, long divers, Boolean joined) {
+        public static ProjectResponse from(CleanupProject project, long volunteers, long divers, Boolean joined,
+                                           List<ParticipantResponse> participants) {
             return new ProjectResponse(
                     project.getId(),
                     project.getReference(),
@@ -77,7 +81,8 @@ public final class ProjectDtos {
                     project.getStartedAt(),
                     project.getCompletedAt(),
                     project.getCreatedAt(),
-                    joined);
+                    joined,
+                    participants);
         }
     }
 
@@ -112,5 +117,24 @@ public final class ProjectDtos {
     }
 
     public record JoinProjectRequest(ParticipantRole participantRole) {
+    }
+
+    public record ParticipantResponse(
+            Long id,
+            UserDtos.UserSummary user,
+            ParticipantRole role,
+            /** The organiser's 1-5 rating, given once the cleanup is complete. */
+            Integer mark
+    ) {
+        public static ParticipantResponse from(ProjectParticipant participant) {
+            return new ParticipantResponse(
+                    participant.getId(),
+                    UserDtos.UserSummary.from(participant.getUser()),
+                    participant.getParticipantRole(),
+                    participant.getContributionMark());
+        }
+    }
+
+    public record MarkRequest(@NotNull @Min(1) @Max(5) Integer mark) {
     }
 }

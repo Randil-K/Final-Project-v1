@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Icon, IconButton, StatusBadge, Badge, Button, ProgressBar, Avatar, Textarea, Alert, Card, Input } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
+import MapLink from '../../components/MapLink.jsx';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
@@ -160,6 +161,9 @@ export default function ReportDetail() {
                 {locationLine(report)}
               </div>
               <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 6 }}>{report.description}</p>
+              <div style={{ alignSelf: 'flex-start', marginTop: 4 }}>
+                <MapLink latitude={report.latitude} longitude={report.longitude} />
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
                 <Avatar name={report.reporter?.fullName || ''} size="sm" />
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>

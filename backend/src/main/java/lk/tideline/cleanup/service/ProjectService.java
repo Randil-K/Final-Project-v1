@@ -2,6 +2,7 @@ package lk.tideline.cleanup.service;
 
 import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.dto.ProjectDtos.CreateProjectRequest;
+import lk.tideline.cleanup.dto.ProjectDtos.ParticipantResponse;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectResponse;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectUpdateRequest;
 import lk.tideline.cleanup.model.*;
@@ -65,10 +66,23 @@ public class ProjectService {
         Boolean joined = viewer == null
                 ? null
                 : participantRepository.findByProjectAndUser(project, viewer).isPresent();
+
+        // Participants' names are shown only to the people running the cleanup.
+        boolean manages = viewer != null
+                && (Objects.equals(project.getOwner().getId(), viewer.getId())
+                    || viewer.getRole() == Role.ADMIN
+                    || viewer.getRole() == Role.AUTHORITY);
+        List<ParticipantResponse> participants = manages
+                ? participantRepository.findByProjectOrderByJoinedAtAsc(project).stream()
+                        .map(ParticipantResponse::from)
+                        .toList()
+                : null;
+
         return ProjectResponse.from(project,
                 participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.VOLUNTEER),
                 participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.DIVER),
-                joined);
+                joined,
+                participants);
     }
 
     @Transactional
@@ -163,6 +177,37 @@ public class ProjectService {
         }
 
         return toResponse(project, user);
+    }
+
+    /** Module 8 — the organiser rates each participant (1-5) once the cleanup is complete. */
+    @Transactional
+    public ProjectResponse mark(Long projectId, Long participantId, int mark, User organiser) {
+        CleanupProject project = get(projectId);
+
+        if (!Objects.equals(project.getOwner().getId(), organiser.getId())) {
+            throw new IllegalStateException("Only the organiser can rate contributions.");
+        }
+        if (project.getStatus() != ProjectStatus.COMPLETED) {
+            throw new IllegalStateException("Contributions can be rated once the cleanup is complete.");
+        }
+
+        ProjectParticipant participant = participantRepository.findById(participantId)
+                .filter(p -> Objects.equals(p.getProject().getId(), project.getId()))
+                .orElseThrow(() -> new NotFoundException("That person is not part of this cleanup."));
+
+        boolean firstRating = participant.getContributionMark() == null;
+        participant.setContributionMark(mark);
+        participantRepository.saveAndFlush(participant);
+
+        if (firstRating) {
+            alertService.send(participant.getUser(), AlertType.PROJECT_UPDATE,
+                    "Your contribution was rated",
+                    organiser.getFullName() + " rated your part in " + project.getTitle() + " " + mark
+                            + " out of 5. It now shows on your profile.",
+                    null, project.getId(), null);
+        }
+
+        return toResponse(project, organiser);
     }
 
     /** Module 7 — progress evidence, completion percentage and recorded outcome. */

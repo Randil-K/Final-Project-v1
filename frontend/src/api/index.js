@@ -55,18 +55,32 @@ export const api = {
       request(`/api/projects/${id}/participants`, { method: 'POST', body: { participantRole } }),
     addUpdate: (id, payload) =>
       request(`/api/projects/${id}/updates`, { method: 'POST', body: payload }),
+    mark: (id, participantId, mark) =>
+      request(`/api/projects/${id}/participants/${participantId}/mark`, { method: 'POST', body: { mark } }),
   },
 
   alerts: {
     list: () => request('/api/alerts'),
+    unreadCount: () => request('/api/alerts/unread-count'),
     markRead: (id) => request(`/api/alerts/${id}/read`, { method: 'POST' }),
+    markAllRead: () => request('/api/alerts/read-all', { method: 'POST' }),
   },
 
   opportunities: {
     list: () => request('/api/opportunities'),
+    create: (payload) => request('/api/opportunities', { method: 'POST', body: payload }),
     myApplications: () => request('/api/opportunities/applications/mine'),
     apply: (id, message) =>
       request(`/api/opportunities/${id}/applications`, { method: 'POST', body: { message } }),
+    applications: (id) => request(`/api/opportunities/${id}/applications`),
+    decide: (applicationId, status) =>
+      request(`/api/opportunities/applications/${applicationId}/decision`, { method: 'POST', body: { status } }),
+  },
+
+  admin: {
+    users: (search) => request(`/api/admin/users${query({ query: search })}`),
+    setSuspension: (id, suspended, reason) =>
+      request(`/api/admin/users/${id}/suspension`, { method: 'POST', body: { suspended, reason } }),
   },
 
   analytics: {

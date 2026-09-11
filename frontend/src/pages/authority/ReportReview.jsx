@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Icon, IconButton, StatusBadge, Badge, Button, ProgressBar, Avatar, Textarea, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
+import MapLink from '../../components/MapLink.jsx';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
@@ -49,6 +50,9 @@ export default function ReportReview() {
         const passed = report.trustPercentage >= report.thresholdPercent;
         const canEscalate = report.status === 'VERIFIED' || report.status === 'VERIFYING';
         const canDecide = isAuthority && report.status === 'ESCALATED';
+        const canModerate = isAdmin && report.status !== 'ESCALATED' && report.status !== 'CLEANED';
+        const canWiden = isAdmin && report.status !== 'CLEANED' && report.status !== 'REJECTED';
+        const hasComment = Boolean(comment.trim());
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', maxWidth: 760 }}>
@@ -58,23 +62,24 @@ export default function ReportReview() {
               <StatusBadge status={statusKey(report.status)} style={{ marginLeft: 'auto' }} />
             </div>
 
-            {notice ? <Alert tone="success" title="Done">{notice}</Alert> : null}
+            {notice ? <Alert tone="success" title="Done" onDismiss={() => setNotice(null)}>{notice}</Alert> : null}
             {error ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
 
             <PhotoPlaceholder ratio="4/3" count={report.photoUrls?.length} style={{ borderRadius: 'var(--radius-lg)' }} />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{report.title}</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                 <Icon name="map-pin" size="sm" />
                 {locationLine(report)} · {report.latitude?.toFixed(4)}° N, {report.longitude?.toFixed(4)}° E
               </div>
               <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)' }}>{report.description}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <Avatar name={report.reporter?.fullName || ''} size="sm" />
-                <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginRight: 'auto' }}>
                   Reported by {report.reporter?.fullName} · {formatDate(report.createdAt)}
                 </span>
+                <MapLink latitude={report.latitude} longitude={report.longitude} />
               </div>
             </div>
 
@@ -101,24 +106,32 @@ export default function ReportReview() {
             {report.authorityComment ? (
               <Alert tone="info" title="Authority decision recorded">{report.authorityComment}</Alert>
             ) : null}
+            {isAdmin && report.status === 'ESCALATED' ? (
+              <Alert tone="info" title="With the authority">
+                Moderation resumes once an authority officer approves or rejects the cleanup request.
+              </Alert>
+            ) : null}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Official comment</span>
-              <Textarea
-                placeholder="Record instructions or context for the reporter and any escalated authority."
-                rows={3}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </div>
+            {canDecide || canModerate ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Official comment</span>
+                <Textarea
+                  placeholder={canDecide ? 'Conditions or reasons for your decision.' : 'What should the reporter clarify, or why is this decision being made?'}
+                  hint={canDecide ? 'Required to approve or reject — the reporter sees it.' : 'Required to ask for clarification or reject — the reporter sees it.'}
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+              </div>
+            ) : null}
 
             <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
               {canDecide ? (
                 <>
                   <Button
                     iconLeft="shield-check"
-                    disabled={busy || !comment.trim()}
-                    onClick={() => run(() => api.reports.authorityDecision(id, true, comment), 'Cleanup approved. The reporter has been notified.')}
+                    disabled={busy || !hasComment}
+                    onClick={() => run(() => api.reports.authorityDecision(id, true, comment), 'Cleanup approved. The reporter and administrators have been notified.')}
                   >
                     Approve cleanup
                   </Button>
@@ -128,35 +141,49 @@ export default function ReportReview() {
                 </>
               ) : null}
 
-              {isAdmin ? (
-                <>
-                  <Button
-                    iconLeft="flag"
-                    disabled={busy || !canEscalate}
-                    onClick={() => run(() => api.reports.escalate(id), 'Escalated to the government authority.')}
-                  >
-                    Escalate to authority
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    iconLeft="badge-check"
-                    disabled={busy}
-                    onClick={() => run(() => api.reports.moderate(id, 'VERIFIED', comment || null), 'Report marked verified.')}
-                  >
-                    Mark verified
-                  </Button>
-                  <Button variant="danger" iconLeft="x" disabled={busy} onClick={() => setRejectOpen(true)}>
-                    Reject report
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    iconLeft="bell"
-                    disabled={busy}
-                    onClick={() => run(() => api.reports.widenAlert(id), 'Alert radius widened.')}
-                  >
-                    Widen alert radius
-                  </Button>
-                </>
+              {isAdmin && canEscalate ? (
+                <Button
+                  iconLeft="flag"
+                  disabled={busy}
+                  onClick={() => run(() => api.reports.escalate(id), 'Escalated. Authority officers have been alerted.')}
+                >
+                  Escalate to authority
+                </Button>
+              ) : null}
+              {canModerate && report.status !== 'VERIFIED' ? (
+                <Button
+                  variant="secondary"
+                  iconLeft="badge-check"
+                  disabled={busy}
+                  onClick={() => run(() => api.reports.moderate(id, 'VERIFIED', comment || null), 'Report marked verified.')}
+                >
+                  Mark verified
+                </Button>
+              ) : null}
+              {canModerate ? (
+                <Button
+                  variant="secondary"
+                  iconLeft="message-square"
+                  disabled={busy || !hasComment}
+                  onClick={() => run(() => api.reports.moderate(id, 'VERIFYING', comment), 'Clarification requested. Your question is in the discussion and the reporter has been alerted.')}
+                >
+                  Request clarification
+                </Button>
+              ) : null}
+              {canModerate && report.status !== 'REJECTED' ? (
+                <Button variant="danger" iconLeft="x" disabled={busy} onClick={() => setRejectOpen(true)}>
+                  Reject report
+                </Button>
+              ) : null}
+              {canWiden ? (
+                <Button
+                  variant="ghost"
+                  iconLeft="bell"
+                  disabled={busy}
+                  onClick={() => run(() => api.reports.widenAlert(id), 'Alert radius widened.')}
+                >
+                  Widen alert radius
+                </Button>
               ) : null}
             </div>
 
@@ -170,7 +197,7 @@ export default function ReportReview() {
                   <Button variant="secondary" onClick={() => setRejectOpen(false)}>Cancel</Button>
                   <Button
                     variant="danger"
-                    disabled={busy || !comment.trim()}
+                    disabled={busy || !hasComment}
                     onClick={() =>
                       run(
                         () =>

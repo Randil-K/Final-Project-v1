@@ -19,8 +19,10 @@ export default function Login() {
     setError(null);
     try {
       const user = await login(email, password);
-      const target = location.state?.from
-        || (user.role === 'ADMIN' || user.role === 'AUTHORITY' ? '/console' : '/app');
+      const home = user.role === 'ADMIN' || user.role === 'AUTHORITY'
+        ? '/console'
+        : user.role === 'ORGANIZATION' ? '/app/opportunities' : '/app';
+      const target = location.state?.from || home;
       navigate(target, { replace: true });
     } catch (err) {
       setError(err.message);

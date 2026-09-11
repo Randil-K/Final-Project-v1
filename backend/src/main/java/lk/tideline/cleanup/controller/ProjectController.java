@@ -46,6 +46,13 @@ public class ProjectController {
         return projectService.join(id, currentUser.require(), request == null ? null : request.participantRole());
     }
 
+    /** Module 8 — the organiser rates each participant once the cleanup is complete. */
+    @PostMapping("/{id}/participants/{participantId}/mark")
+    public ProjectResponse mark(@PathVariable Long id, @PathVariable Long participantId,
+                                @Valid @RequestBody MarkRequest request) {
+        return projectService.mark(id, participantId, request.mark(), currentUser.require());
+    }
+
     /** Module 7 — before / during / after progress evidence. */
     @PostMapping("/{id}/updates")
     public ProjectResponse addUpdate(@PathVariable Long id, @Valid @RequestBody ProjectUpdateRequest request) {

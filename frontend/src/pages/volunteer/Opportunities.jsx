@@ -4,9 +4,15 @@ import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { Async } from '../../components/AsyncState.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { CERTIFICATION_LABEL, ORGANIZATION_LABEL } from '../../lib/format.js';
+import { APPLICATION_STATUS, CERTIFICATION_LABEL, ORGANIZATION_LABEL } from '../../lib/format.js';
+import OrganisationOpportunities from './OrganisationOpportunities.jsx';
 
 export default function Opportunities() {
+  const { user } = useAuth();
+  return user?.role === 'ORGANIZATION' ? <OrganisationOpportunities /> : <DiverOpportunities />;
+}
+
+function DiverOpportunities() {
   const { user } = useAuth();
   const isDiver = user?.role === 'DIVER';
 
@@ -19,7 +25,7 @@ export default function Opportunities() {
   const [error, setError] = React.useState(null);
   const [busyId, setBusyId] = React.useState(null);
 
-  const appliedIds = new Set((applicationsState.data || []).map((a) => a.opportunityId));
+  const applications = new Map((applicationsState.data || []).map((a) => [a.opportunityId, a]));
 
   async function apply(id) {
     setError(null);
@@ -46,7 +52,7 @@ export default function Opportunities() {
       {error ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
       {!isDiver ? (
         <Alert tone="info" title="Open to volunteer divers">
-          Add a diving certification to your profile to apply for these assignments.
+          Register as a volunteer diver with your certification to apply for these assignments.
         </Alert>
       ) : null}
 
@@ -59,7 +65,8 @@ export default function Opportunities() {
         {(opportunities) => (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {opportunities.map((o) => {
-              const applied = appliedIds.has(o.id);
+              const application = applications.get(o.id);
+              const status = application ? APPLICATION_STATUS[application.status] : null;
               return (
                 <Card key={o.id} padding="md">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -87,14 +94,20 @@ export default function Opportunities() {
                     </div>
 
                     {isDiver ? (
-                      <Button
-                        variant={applied ? 'soft' : 'primary'}
-                        disabled={applied || busyId === o.id}
-                        onClick={() => apply(o.id)}
-                        style={{ alignSelf: 'flex-start' }}
-                      >
-                        {applied ? 'Application sent' : busyId === o.id ? 'Sending…' : 'Express interest'}
-                      </Button>
+                      status ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <Badge tone={status.tone} icon={application.status === 'ACCEPTED' ? 'check' : undefined}>{status.label}</Badge>
+                          {application.status === 'ACCEPTED' ? (
+                            <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                              {o.organizationName} will contact you with the details.
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <Button disabled={busyId === o.id} onClick={() => apply(o.id)} style={{ alignSelf: 'flex-start' }}>
+                          {busyId === o.id ? 'Sending…' : 'Express interest'}
+                        </Button>
+                      )
                     ) : null}
                   </div>
                 </Card>

@@ -78,12 +78,16 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/reports/{id}/authority-decision` | 5 | authority |
 | POST | `/api/reports/{id}/alert-escalation` | 6 | admin, authority |
 | GET | `/api/alerts` · POST `/api/alerts/{id}/read` | 6 | authenticated |
-| GET/POST | `/api/projects` | 7 | read public, create authenticated |
+| GET | `/api/alerts/unread-count` · POST `/api/alerts/read-all` | 6 | authenticated |
+| GET/POST | `/api/projects` (`?reportId=` to find a report's cleanup) | 7 | read public, create authenticated |
 | POST | `/api/projects/{id}/participants` | 7 | authenticated |
 | POST | `/api/projects/{id}/updates` | 7 | project owner, admin, authority |
+| POST | `/api/projects/{id}/participants/{participantId}/mark` | 8 | project owner, once complete |
 | GET/POST | `/api/opportunities` | 8 | read authenticated, post organisation |
-| POST | `/api/opportunities/{id}/applications` | 8 | diver |
+| POST | `/api/opportunities/{id}/applications` · GET `/applications/mine` | 8 | diver |
+| GET | `/api/opportunities/{id}/applications` · POST `/applications/{id}/decision` | 8 | posting organisation, admin |
 | GET | `/api/analytics/summary` | 9 | public |
+| GET | `/api/admin/users?query=` · POST `/api/admin/users/{id}/suspension` | 4 | admin |
 
 ## How the domain rules work
 
@@ -104,6 +108,17 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 - **Enum columns.** Hibernate 6 can map enum fields to native `enum(...)` columns on MySQL, and
   `ddl-auto: update` won't alter them. Check the column type before adding a constant (say, a new
   `AlertType`) against an existing database — you may need a manual `ALTER TABLE`.
+
+- **Moderation.** An administrator can verify, reject, or ask the reporter for clarification —
+  the question is posted to the report's discussion as an official comment and the report goes
+  back to Verifying. Moderation is blocked while an authority is deciding and after a cleanup.
+- **Officials hear about their work.** Authority officers are alerted when a report is escalated
+  to them, and administrators when an officer approves or rejects.
+- **Suspension.** A suspended account cannot sign in, and tokens issued before the suspension
+  stop working on the next request. Administrator accounts cannot be suspended.
+- **Ratings.** Once a cleanup is complete its organiser rates each participant 1–5; the average
+  appears on the participant's profile and on their opportunity applications. Participant names
+  are only returned to the organiser and officials.
 
 ## Layout
 

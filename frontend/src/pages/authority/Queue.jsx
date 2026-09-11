@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, StatusBadge, Badge, Tag, Avatar } from '../../design-system';
+import { Icon, StatusBadge, Badge, Avatar } from '../../design-system';
+import ChipButton from '../../components/ChipButton.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { Async } from '../../components/AsyncState.jsx';
@@ -33,9 +34,9 @@ export default function Queue() {
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {FILTERS.map((f) => (
-          <Tag key={f.value} selected={filter === f.value} onClick={() => setFilter(f.value)}>
+          <ChipButton key={f.value} selected={filter === f.value} onClick={() => setFilter(f.value)}>
             {f.label}
-          </Tag>
+          </ChipButton>
         ))}
       </div>
 

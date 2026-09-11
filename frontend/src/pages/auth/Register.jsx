@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Input, Select, Field, Tag, Alert } from '../../design-system';
+import { Icon, Card, Button, Input, Select, Field, Alert } from '../../design-system';
+import ChipButton from '../../components/ChipButton.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
 const ROLES = [
@@ -67,7 +68,7 @@ export default function Register() {
         organizationName: role === 'ORGANIZATION' ? form.organizationName || null : null,
         organizationType: role === 'ORGANIZATION' ? form.organizationType || null : null,
       });
-      navigate('/app', { replace: true });
+      navigate(role === 'ORGANIZATION' ? '/app/opportunities' : '/app', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,9 +98,9 @@ export default function Register() {
             <Field label="I am registering as">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {ROLES.map((r) => (
-                  <Tag key={r.value} icon={r.icon} selected={role === r.value} onClick={() => setRole(r.value)}>
+                  <ChipButton key={r.value} icon={r.icon} selected={role === r.value} onClick={() => setRole(r.value)}>
                     {r.label}
-                  </Tag>
+                  </ChipButton>
                 ))}
               </div>
             </Field>

@@ -67,3 +67,21 @@ export function timeAgo(iso) {
 export function locationLine(item) {
   return [item?.locationName, item?.province].filter(Boolean).join(' · ');
 }
+
+/** Sri Lanka's coastal provinces — the regions this system covers. */
+export const PROVINCES = [
+  'Western Province',
+  'Southern Province',
+  'Eastern Province',
+  'Northern Province',
+  'North Western Province',
+];
+
+export const CERTIFICATION_OPTIONS = Object.entries(CERTIFICATION_LABEL).map(([value, label]) => ({ value, label }));
+
+/** Worded for the diver who applied. */
+export const APPLICATION_STATUS = {
+  PENDING: { label: 'Application sent', tone: 'accent' },
+  ACCEPTED: { label: 'Accepted', tone: 'success' },
+  DECLINED: { label: 'Not selected', tone: 'neutral' },
+};

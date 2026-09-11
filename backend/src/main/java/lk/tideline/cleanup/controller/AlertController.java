@@ -6,6 +6,7 @@ import lk.tideline.cleanup.service.CurrentUserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/alerts")
@@ -22,6 +23,16 @@ public class AlertController {
     @GetMapping
     public List<AlertResponse> inbox() {
         return alertService.inbox(currentUser.require());
+    }
+
+    @GetMapping("/unread-count")
+    public Map<String, Long> unreadCount() {
+        return Map.of("count", alertService.unreadCount(currentUser.require()));
+    }
+
+    @PostMapping("/read-all")
+    public Map<String, Integer> markAllRead() {
+        return Map.of("marked", alertService.markAllRead(currentUser.require()));
     }
 
     @PostMapping("/{id}/read")

@@ -35,10 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 String email = jwtService.extractEmail(header.substring(7));
                 UserDetails details = userDetailsService.loadUserByUsername(email);
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        details, null, details.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                // A token issued before a suspension must stop working immediately.
+                if (details.isEnabled()) {
+                    var authentication = new UsernamePasswordAuthenticationToken(
+                            details, null, details.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (Exception ex) {
                 // An invalid or expired token simply leaves the request unauthenticated.
                 SecurityContextHolder.clearContext();

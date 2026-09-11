@@ -7,6 +7,7 @@ import lk.tideline.cleanup.dto.OpportunityDtos.OpportunityResponse;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.OpportunityApplicationRepository;
 import lk.tideline.cleanup.repository.OpportunityRepository;
+import lk.tideline.cleanup.repository.ProjectParticipantRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +20,18 @@ public class OpportunityService {
 
     private final OpportunityRepository opportunityRepository;
     private final OpportunityApplicationRepository applicationRepository;
+    private final ProjectParticipantRepository participantRepository;
     private final UserRepository userRepository;
     private final AlertService alertService;
 
     public OpportunityService(OpportunityRepository opportunityRepository,
                               OpportunityApplicationRepository applicationRepository,
+                              ProjectParticipantRepository participantRepository,
                               UserRepository userRepository,
                               AlertService alertService) {
         this.opportunityRepository = opportunityRepository;
         this.applicationRepository = applicationRepository;
+        this.participantRepository = participantRepository;
         this.userRepository = userRepository;
         this.alertService = alertService;
     }
@@ -47,6 +51,11 @@ public class OpportunityService {
     private Opportunity get(Long id) {
         return opportunityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Opportunity " + id + " was not found."));
+    }
+
+    private ApplicationResponse withRecord(OpportunityApplication application) {
+        Double average = participantRepository.averageMark(application.getDiver().getId());
+        return ApplicationResponse.from(application, average == null ? null : Math.round(average * 10) / 10.0);
     }
 
     @Transactional
@@ -115,7 +124,7 @@ public class OpportunityService {
             throw new IllegalStateException("Only the posting organisation can see these applications.");
         }
         return applicationRepository.findByOpportunity(opportunity).stream()
-                .map(ApplicationResponse::from)
+                .map(this::withRecord)
                 .toList();
     }
 
@@ -143,6 +152,6 @@ public class OpportunityService {
                         + status.name().toLowerCase() + ".",
                 null, null, null);
 
-        return ApplicationResponse.from(application);
+        return withRecord(application);
     }
 }

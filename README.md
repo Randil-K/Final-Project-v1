@@ -46,5 +46,8 @@ details, demo accounts and the full endpoint list.
 ## Still to do
 
 - File upload for photo and video evidence — the API stores evidence as URLs today.
-- Geocoding and map APIs for location validation and the pollution map.
-- Test coverage, containerisation and cloud deployment.
+- Geocoding for location validation, and an embedded pollution map (screens link to
+  OpenStreetMap for now).
+- Scheduled reminders to volunteers (module 6) and a complaints channel (module 4).
+- A hosted deployment — the backend's Dockerfile is ready (see `backend/README.md`), and the
+  image still needs a run against real MySQL.

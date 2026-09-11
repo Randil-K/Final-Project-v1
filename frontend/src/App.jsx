@@ -24,6 +24,8 @@ import ReportReview from './pages/authority/ReportReview.jsx';
 import Projects from './pages/authority/Projects.jsx';
 import ProjectDetail from './pages/authority/ProjectDetail.jsx';
 import Analytics from './pages/authority/Analytics.jsx';
+import ConsoleAlerts from './pages/authority/ConsoleAlerts.jsx';
+import Users from './pages/authority/Users.jsx';
 
 const CONSOLE_ROLES = ['ADMIN', 'AUTHORITY'];
 
@@ -88,6 +90,15 @@ export default function App() {
             <Route path="projects" element={<Projects />} />
             <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="alerts" element={<ConsoleAlerts />} />
+            <Route
+              path="users"
+              element={
+                <RequireAuth roles={['ADMIN']}>
+                  <Users />
+                </RequireAuth>
+              }
+            />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

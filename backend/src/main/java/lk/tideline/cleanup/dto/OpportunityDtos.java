@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.ApplicationStatus;
 import lk.tideline.cleanup.model.CertificationLevel;
+import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.Opportunity;
 import lk.tideline.cleanup.model.OpportunityApplication;
 import lk.tideline.cleanup.model.OrganizationType;
@@ -58,21 +59,35 @@ public final class OpportunityDtos {
     public record ApplyRequest(@Size(max = 1000) String message) {
     }
 
+    /** Includes the applicant's diving record so an organisation can decide (module 8). */
     public record ApplicationResponse(
             Long id,
             Long opportunityId,
             String opportunityTitle,
             UserDtos.UserSummary diver,
+            CertificationLevel certificationLevel,
+            Integer experienceYears,
+            int completedProjects,
+            Double averageMark,
             ApplicationStatus status,
             String message,
             Instant createdAt
     ) {
         public static ApplicationResponse from(OpportunityApplication application) {
+            return from(application, null);
+        }
+
+        public static ApplicationResponse from(OpportunityApplication application, Double averageMark) {
+            DiverProfile profile = application.getDiver().getDiverProfile();
             return new ApplicationResponse(
                     application.getId(),
                     application.getOpportunity().getId(),
                     application.getOpportunity().getTitle(),
                     UserDtos.UserSummary.from(application.getDiver()),
+                    profile == null ? null : profile.getCertificationLevel(),
+                    profile == null ? null : profile.getExperienceYears(),
+                    profile == null ? 0 : profile.getCompletedProjects(),
+                    averageMark,
                     application.getStatus(),
                     application.getMessage(),
                     application.getCreatedAt());

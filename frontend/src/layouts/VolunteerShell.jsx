@@ -2,11 +2,12 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 
 const TABS = [
   { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
   { to: '/app/cleanups', label: 'Cleanups', icon: 'users' },
-  { to: '/app/alerts', label: 'Alerts', icon: 'bell' },
+  { to: '/app/alerts', label: 'Alerts', icon: 'bell', showUnread: true },
   { to: '/app/opportunities', label: 'Opportunities', icon: 'hand-heart' },
   { to: '/app/profile', label: 'Profile', icon: 'user' },
 ];
@@ -14,6 +15,7 @@ const TABS = [
 export default function VolunteerShell() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const unread = useUnreadAlerts();
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface-page)' }}>
@@ -79,6 +81,7 @@ export default function VolunteerShell() {
             key={t.to}
             to={t.to}
             end={t.end}
+            aria-label={t.showUnread && unread ? `${t.label}, ${unread} unread` : undefined}
             style={({ isActive }) => ({
               flex: 1,
               display: 'flex',
@@ -89,7 +92,30 @@ export default function VolunteerShell() {
               color: isActive ? 'var(--accent)' : 'var(--text-muted)',
             })}
           >
-            <Icon name={t.icon} size="md" />
+            <span style={{ position: 'relative', display: 'inline-flex' }}>
+              <Icon name={t.icon} size="md" />
+              {t.showUnread && unread ? (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    minWidth: 17,
+                    height: 17,
+                    padding: '0 4px',
+                    boxSizing: 'border-box',
+                    borderRadius: 'var(--radius-pill)',
+                    background: 'var(--accent)',
+                    color: 'var(--white)',
+                    font: '700 10px/17px var(--font-body)',
+                    textAlign: 'center',
+                    boxShadow: '0 0 0 2px var(--surface-card)',
+                  }}
+                >
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              ) : null}
+            </span>
             <span style={{ font: '600 11px/1 var(--font-body)', letterSpacing: 'var(--tracking-micro)' }}>{t.label}</span>
           </NavLink>
         ))}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag } from '../../design-system';
+import ChipButton from '../../components/ChipButton.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { Async } from '../../components/AsyncState.jsx';
@@ -27,9 +27,9 @@ export default function Projects() {
 
       <div style={{ display: 'flex', gap: 8 }}>
         {FILTERS.map((f) => (
-          <Tag key={f.value} selected={status === f.value} onClick={() => setStatus(f.value)}>
+          <ChipButton key={f.value} selected={status === f.value} onClick={() => setStatus(f.value)}>
             {f.label}
-          </Tag>
+          </ChipButton>
         ))}
       </div>
 
