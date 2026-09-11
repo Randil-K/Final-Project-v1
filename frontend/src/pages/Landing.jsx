@@ -4,6 +4,7 @@ import { Icon, Card, Button, Badge } from '../design-system';
 import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import ReportCard from '../components/ReportCard.jsx';
 
 const PATHS = [
   {
@@ -26,6 +27,8 @@ export default function Landing() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const state = useApi(() => api.analytics.summary(), []);
+  const recent = useApi(() => api.reports.list({ size: 3 }), []);
+  const recentReports = recent.data?.content || [];
 
   const stats = state.data
     ? [
@@ -61,6 +64,19 @@ export default function Landing() {
           Tideline connects citizens, volunteer divers, government authorities and organisations around one loop for Sri Lanka's coastline.
         </p>
 
+        <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
+          <Button
+            size="lg"
+            iconLeft="camera"
+            onClick={() => (user ? navigate('/app/submit') : navigate('/login', { state: { from: '/app/submit' } }))}
+          >
+            Report a polluted site
+          </Button>
+          <Button size="lg" variant="ghost" iconRight="arrow-right" onClick={() => navigate('/app')}>
+            Browse reports
+          </Button>
+        </div>
+
         {stats.length ? (
           <div style={{ display: 'flex', gap: 'var(--space-6)', marginTop: 'var(--space-8)', flexWrap: 'wrap' }}>
             {stats.map((s) => (
@@ -78,6 +94,27 @@ export default function Landing() {
           </p>
         ) : null}
       </section>
+
+      {recentReports.length ? (
+        <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--space-6) var(--space-12)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 'var(--space-4)' }}>
+            <div>
+              <h2 style={{ font: 'var(--text-h2)', letterSpacing: 'var(--tracking-heading)', color: 'var(--text-strong)' }}>Latest reports</h2>
+              <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
+                Open one to see how the community is verifying it.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" iconRight="arrow-right" onClick={() => navigate('/app')} style={{ whiteSpace: 'nowrap', flex: '0 0 auto' }}>
+              See all
+            </Button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+            {recentReports.map((report) => (
+              <ReportCard key={report.id} report={report} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--space-6) var(--space-16)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)' }}>
