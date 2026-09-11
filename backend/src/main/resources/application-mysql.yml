@@ -19,8 +19,8 @@ spring:
 
 tideline:
   security:
-    # No fallback on purpose: the app refuses to start without a real secret (32+ characters).
-    jwt-secret: ${TIDELINE_JWT_SECRET}
+    # Empty fallback on purpose: JwtService refuses to start unless a real secret (32+ characters) is set.
+    jwt-secret: ${TIDELINE_JWT_SECRET:}
   # Seeding only runs against an empty database, so it is safe to leave on for a demo deployment.
   seed-demo-data: ${SEED_DEMO_DATA:false}
 

@@ -33,7 +33,9 @@ a non-root user with the `mysql` profile on. Any container host works — Render
    - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` — or one `SPRING_DATASOURCE_URL`.
    - `CORS_ALLOWED_ORIGINS` — your Vercel domain(s); wildcards work for preview URLs.
    - `SEED_DEMO_DATA=true` if you want the demo accounts on a fresh database.
-3. Point the host's health check at `/actuator/health`.
+3. Point the host's health check at `/actuator/health/readiness`. It turns UP only once startup
+   has finished, including seeding demo data — plain `/actuator/health` reports UP a moment
+   earlier, while the seeder may still be running.
 4. In Vercel, set `VITE_API_URL` to the backend's public URL (no trailing slash) and redeploy —
    Vite bakes it into the build, so changing it needs a new deployment.
 

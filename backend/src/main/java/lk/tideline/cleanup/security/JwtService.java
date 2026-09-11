@@ -20,7 +20,12 @@ public class JwtService {
     private final long expiryMinutes;
 
     public JwtService(TidelineProperties properties) {
-        this.key = Keys.hmacShaKeyFor(properties.getSecurity().getJwtSecret().getBytes(StandardCharsets.UTF_8));
+        String secret = properties.getSecurity().getJwtSecret();
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("TIDELINE_JWT_SECRET must be set to at least 32 characters. "
+                    + "Generate one with: openssl rand -base64 48");
+        }
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiryMinutes = properties.getSecurity().getJwtExpiryMinutes();
     }
 

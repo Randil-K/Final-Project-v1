@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projects", "/api/projects/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/analytics/summary").permitAll()
-                        .requestMatchers("/h2-console/**", "/actuator/health").permitAll()
+                        .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

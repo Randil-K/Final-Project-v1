@@ -34,6 +34,11 @@ management:
     web:
       exposure:
         include: health
+  endpoint:
+    health:
+      # /actuator/health/readiness only turns UP once startup work, including demo seeding, is done.
+      probes:
+        enabled: true
 
 tideline:
   # The SRS pins community verification at a 75% trust threshold.
