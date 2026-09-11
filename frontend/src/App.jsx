@@ -15,6 +15,8 @@ import SubmitReport from './pages/volunteer/SubmitReport.jsx';
 import Alerts from './pages/volunteer/Alerts.jsx';
 import Opportunities from './pages/volunteer/Opportunities.jsx';
 import Profile from './pages/volunteer/Profile.jsx';
+import Cleanups from './pages/volunteer/Cleanups.jsx';
+import CleanupDetail from './pages/volunteer/CleanupDetail.jsx';
 
 import AuthorityShell from './layouts/AuthorityShell.jsx';
 import Queue from './pages/authority/Queue.jsx';
@@ -37,6 +39,8 @@ export default function App() {
           <Route path="/app" element={<VolunteerShell />}>
             <Route index element={<Feed />} />
             <Route path="report/:id" element={<ReportDetail />} />
+            <Route path="cleanups" element={<Cleanups />} />
+            <Route path="cleanups/:id" element={<CleanupDetail />} />
             <Route
               path="submit"
               element={

@@ -47,8 +47,9 @@ export const api = {
   },
 
   projects: {
-    list: (params) => request(`/api/projects${query(params)}`, { auth: false }),
-    get: (id) => request(`/api/projects/${id}`, { auth: false }),
+    // Public, but sending the token lets the API report whether the viewer has joined.
+    list: (params) => request(`/api/projects${query(params)}`),
+    get: (id) => request(`/api/projects/${id}`),
     create: (payload) => request('/api/projects', { method: 'POST', body: payload }),
     join: (id, participantRole) =>
       request(`/api/projects/${id}/participants`, { method: 'POST', body: { participantRole } }),

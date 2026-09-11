@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class AlertService {
@@ -80,16 +81,22 @@ public class AlertService {
         return sent;
     }
 
+    /** Skips {@code excludedUserIds} — e.g. the organiser, and a reporter who gets a personal alert instead. */
     @Transactional
-    public int notifyProjectNearby(CleanupProject project, double radiusKm, String title, String body) {
+    public int notifyProjectNearby(CleanupProject project, double radiusKm, String title, String body,
+                                   Set<Long> excludedUserIds) {
         if (project.getLatitude() == null || project.getLongitude() == null) {
             return 0;
         }
-        List<User> nearby = usersWithin(project.getLatitude(), project.getLongitude(), radiusKm);
-        for (User user : nearby) {
+        int sent = 0;
+        for (User user : usersWithin(project.getLatitude(), project.getLongitude(), radiusKm)) {
+            if (excludedUserIds.contains(user.getId())) {
+                continue;
+            }
             send(user, AlertType.PROJECT_PLANNED, title, body, null, project.getId(), radiusKm);
+            sent++;
         }
-        return nearby.size();
+        return sent;
     }
 
     /**

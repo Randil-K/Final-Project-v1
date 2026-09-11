@@ -98,6 +98,13 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 - **Project completion.** A progress update at 100% closes the project, marks the linked
   report `CLEANED`, and increments each diver's completed-project count.
 
+- **Closing the loop for reporters.** The reporter is alerted when a cleanup is planned for their
+  report and again when the site is cleaned. A report gets at most one cleanup, and an escalated
+  report can't get one until the authority approves it.
+- **Enum columns.** Hibernate 6 can map enum fields to native `enum(...)` columns on MySQL, and
+  `ddl-auto: update` won't alter them. Check the column type before adding a constant (say, a new
+  `AlertType`) against an existing database — you may need a manual `ALTER TABLE`.
+
 ## Layout
 
 ```

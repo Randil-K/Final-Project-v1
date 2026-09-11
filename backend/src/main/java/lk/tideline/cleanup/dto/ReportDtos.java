@@ -47,6 +47,7 @@ public final class ReportDtos {
             int thresholdPercent,
             String moderationComment,
             String authorityComment,
+            Boolean authorityApproved,
             Instant createdAt,
             Instant verifiedAt,
             Instant escalatedAt
@@ -71,6 +72,7 @@ public final class ReportDtos {
                     thresholdPercent,
                     report.getModerationComment(),
                     report.getAuthorityComment(),
+                    report.getAuthorityApproved(),
                     report.getCreatedAt(),
                     report.getVerifiedAt(),
                     report.getEscalatedAt());

@@ -10,6 +10,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        // Drop the browser's Origin so the API sees proxied calls as same-origin. Otherwise POSTs
+        // fail CORS whenever Vite falls back to a port the backend doesn't list (e.g. 5174).
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => proxyReq.removeHeader('origin'));
+        },
       },
     },
   },

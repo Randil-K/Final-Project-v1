@@ -49,9 +49,11 @@ public final class ProjectDtos {
             List<ProjectUpdateResponse> updates,
             Instant startedAt,
             Instant completedAt,
-            Instant createdAt
+            Instant createdAt,
+            /** Whether the signed-in viewer has joined; null for anonymous viewers. */
+            Boolean joined
     ) {
-        public static ProjectResponse from(CleanupProject project, long volunteers, long divers) {
+        public static ProjectResponse from(CleanupProject project, long volunteers, long divers, Boolean joined) {
             return new ProjectResponse(
                     project.getId(),
                     project.getReference(),
@@ -74,7 +76,8 @@ public final class ProjectDtos {
                             .toList(),
                     project.getStartedAt(),
                     project.getCompletedAt(),
-                    project.getCreatedAt());
+                    project.getCreatedAt(),
+                    joined);
         }
     }
 

@@ -25,8 +25,8 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 - `src/components/RequireAuth.jsx` — route guard; the console additionally requires ADMIN or AUTHORITY.
 - `src/design-system/` — the Tideline tokens and 21 components.
 - `src/layouts/` — `VolunteerShell` (mobile PWA, bottom tabs) and `AuthorityShell` (desktop console).
-- `src/pages/volunteer/` — feed, report detail with community voting, submission, alerts,
-  opportunities, profile.
+- `src/pages/volunteer/` — feed, report detail with community voting and "start a cleanup",
+  submission, cleanups (list, join, organiser progress), alerts, opportunities, profile.
 - `src/pages/authority/` — review queue, report review, projects, project detail, analytics.
 
 ## What the UI does against the API
@@ -36,7 +36,8 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Landing | `GET /api/analytics/summary` (public) |
 | Login / Register | `POST /api/auth/login` · `/register` |
 | Feed | `GET /api/reports?status=` |
-| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` |
+| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` · `POST /api/projects` |
+| Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (organiser) |
 | Submit report | `POST /api/reports` with browser geolocation |
 | Alerts | `GET /api/alerts` · `POST /api/alerts/{id}/read` |
 | Opportunities | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` |
@@ -57,10 +58,13 @@ calls a hook conditionally and is flagged as an error by this project's own lint
 call `useId()` unconditionally and fall back to it. Behaviour and the component API are
 unchanged. Worth folding back upstream.
 
+`Dialog` itself is unchanged, but it positions itself absolutely against its container — on a
+scrolled page that is the top of the document, off-screen. App code opens dialogs through
+`src/components/Modal.jsx`, which supplies a fixed, viewport-sized container. Also worth raising
+upstream.
+
 ## Not built yet
 
 - Binary upload for photo and video evidence — the API stores evidence as URLs, and the
   submission form currently sends placeholder URLs.
 - A map view; locations are captured and displayed as coordinates.
-- Creating a cleanup project from the UI (the API supports it; the console only reads projects
-  and posts progress updates).

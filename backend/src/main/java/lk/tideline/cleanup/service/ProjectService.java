@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -37,16 +39,21 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProjectResponse> list(ProjectStatus status) {
-        List<CleanupProject> projects = status == null
-                ? projectRepository.findAllByOrderByCreatedAtDesc()
-                : projectRepository.findByStatusOrderByCreatedAtDesc(status);
-        return projects.stream().map(this::toResponse).toList();
+    public List<ProjectResponse> list(ProjectStatus status, Long reportId, User viewer) {
+        List<CleanupProject> projects = reportId != null
+                ? projectRepository.findByReportIdOrderByCreatedAtDesc(reportId)
+                : status != null
+                    ? projectRepository.findByStatusOrderByCreatedAtDesc(status)
+                    : projectRepository.findAllByOrderByCreatedAtDesc();
+        return projects.stream()
+                .filter(project -> status == null || project.getStatus() == status)
+                .map(project -> toResponse(project, viewer))
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public ProjectResponse view(Long id) {
-        return toResponse(get(id));
+    public ProjectResponse view(Long id, User viewer) {
+        return toResponse(get(id), viewer);
     }
 
     private CleanupProject get(Long id) {
@@ -54,10 +61,14 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException("Project " + id + " was not found."));
     }
 
-    private ProjectResponse toResponse(CleanupProject project) {
+    private ProjectResponse toResponse(CleanupProject project, User viewer) {
+        Boolean joined = viewer == null
+                ? null
+                : participantRepository.findByProjectAndUser(project, viewer).isPresent();
         return ProjectResponse.from(project,
                 participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.VOLUNTEER),
-                participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.DIVER));
+                participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.DIVER),
+                joined);
     }
 
     @Transactional
@@ -73,11 +84,10 @@ public class ProjectService {
         project.setLongitude(request.longitude());
         project.setStatus(ProjectStatus.PLANNED);
 
+        PollutionReport report = null;
         if (request.reportId() != null) {
-            PollutionReport report = reportService.get(request.reportId());
-            if (report.getStatus() != ReportStatus.VERIFIED && report.getStatus() != ReportStatus.ESCALATED) {
-                throw new IllegalStateException("A cleanup project needs a verified report.");
-            }
+            report = reportService.get(request.reportId());
+            requireReadyForCleanup(report);
             project.setReport(report);
             if (project.getLatitude() == null) {
                 project.setLatitude(report.getLatitude());
@@ -88,11 +98,40 @@ public class ProjectService {
         CleanupProject saved = projectRepository.saveAndFlush(project);
         saved.setReference("CP-" + (100 + saved.getId()));
 
+        Set<Long> excluded = new HashSet<>();
+        excluded.add(owner.getId());
+
+        // The proposal's core complaint: people who report pollution never hear back.
+        if (report != null && !Objects.equals(report.getReporter().getId(), owner.getId())) {
+            User reporter = report.getReporter();
+            excluded.add(reporter.getId());
+            alertService.send(reporter, AlertType.PROJECT_PLANNED,
+                    "A cleanup is planned for your report",
+                    owner.getFullName() + " is organising " + saved.getTitle() + " for "
+                            + report.getReference() + " at " + report.getLocationName() + ".",
+                    report.getId(), saved.getId(), null);
+        }
+
         alertService.notifyProjectNearby(saved, properties.getAlerts().getInitialRadiusKm(),
                 "New cleanup planned near " + saved.getLocationName(),
-                saved.getTitle() + " — join this cleanup if you can help.");
+                saved.getTitle() + " — join this cleanup if you can help.",
+                excluded);
 
-        return toResponse(saved);
+        return toResponse(saved, owner);
+    }
+
+    /** A cleanup needs a community-verified report, and government approval once it has been escalated. */
+    private void requireReadyForCleanup(PollutionReport report) {
+        if (report.getStatus() == ReportStatus.ESCALATED && !Boolean.TRUE.equals(report.getAuthorityApproved())) {
+            throw new IllegalStateException(
+                    "This report is waiting for the authority's decision. A cleanup can start once it is approved.");
+        }
+        if (report.getStatus() != ReportStatus.VERIFIED && report.getStatus() != ReportStatus.ESCALATED) {
+            throw new IllegalStateException("A cleanup needs a community-verified report.");
+        }
+        if (projectRepository.existsByReportId(report.getId())) {
+            throw new IllegalStateException("A cleanup is already planned for this report.");
+        }
     }
 
     @Transactional
@@ -102,7 +141,9 @@ public class ProjectService {
         if (project.getStatus() == ProjectStatus.COMPLETED) {
             throw new IllegalStateException("This cleanup is already complete.");
         }
-
+        if (Objects.equals(project.getOwner().getId(), user.getId())) {
+            throw new IllegalStateException("You are leading this cleanup, so you are already part of it.");
+        }
         participantRepository.findByProjectAndUser(project, user).ifPresent(existing -> {
             throw new IllegalStateException("You have already joined this cleanup.");
         });
@@ -121,7 +162,7 @@ public class ProjectService {
             project.setStartedAt(Instant.now());
         }
 
-        return toResponse(project);
+        return toResponse(project, user);
     }
 
     /** Module 7 — progress evidence, completion percentage and recorded outcome. */
@@ -159,7 +200,7 @@ public class ProjectService {
             complete(project);
         }
 
-        return toResponse(project);
+        return toResponse(project, author);
     }
 
     private void complete(CleanupProject project) {
@@ -167,8 +208,19 @@ public class ProjectService {
         project.setCompletionPercentage(100);
         project.setCompletedAt(Instant.now());
 
-        if (project.getReport() != null) {
-            reportService.markCleaned(project.getReport());
+        Long notifiedReporterId = null;
+        PollutionReport report = project.getReport();
+        if (report != null) {
+            reportService.markCleaned(report);
+            User reporter = report.getReporter();
+            if (!Objects.equals(reporter.getId(), project.getOwner().getId())) {
+                notifiedReporterId = reporter.getId();
+                alertService.send(reporter, AlertType.PROJECT_UPDATE,
+                        "The site you reported has been cleaned",
+                        report.getReference() + " at " + report.getLocationName() + " is clean — "
+                                + project.getTitle() + " is finished." + debrisSentence(project),
+                        report.getId(), project.getId(), null);
+            }
         }
 
         for (ProjectParticipant participant : project.getParticipants()) {
@@ -176,10 +228,22 @@ public class ProjectService {
             if (profile != null) {
                 profile.setCompletedProjects(profile.getCompletedProjects() + 1);
             }
+            if (Objects.equals(participant.getUser().getId(), notifiedReporterId)) {
+                continue;
+            }
             alertService.send(participant.getUser(), AlertType.PROJECT_UPDATE,
                     "Cleanup complete",
                     project.getTitle() + " is finished. Thank you for taking part.",
                     null, project.getId(), null);
         }
+    }
+
+    private static String debrisSentence(CleanupProject project) {
+        Double kg = project.getDebrisRemovedKg();
+        if (kg == null) {
+            return "";
+        }
+        String amount = kg % 1 == 0 ? String.valueOf(kg.longValue()) : String.valueOf(kg);
+        return " " + amount + " kg of debris was removed.";
     }
 }

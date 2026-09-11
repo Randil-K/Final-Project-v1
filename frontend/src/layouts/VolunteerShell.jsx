@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 
 const TABS = [
   { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
+  { to: '/app/cleanups', label: 'Cleanups', icon: 'users' },
   { to: '/app/alerts', label: 'Alerts', icon: 'bell' },
   { to: '/app/opportunities', label: 'Opportunities', icon: 'hand-heart' },
   { to: '/app/profile', label: 'Profile', icon: 'user' },

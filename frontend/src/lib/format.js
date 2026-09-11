@@ -37,6 +37,11 @@ export const ROLE_LABEL = {
   ADMIN: 'Administrator',
 };
 
+export const PROJECT_STATUS_LABEL = { PLANNED: 'Planned', ACTIVE: 'Active', COMPLETED: 'Completed' };
+export const PROJECT_STATUS_TONE = { PLANNED: 'neutral', ACTIVE: 'accent', COMPLETED: 'success' };
+
+export const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
 export function formatDate(iso, withYear = true) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', {

@@ -29,7 +29,8 @@ export default function Alerts() {
         /* marking read is best-effort */
       }
     }
-    if (alert.reportId) navigate(`/app/report/${alert.reportId}`);
+    if (alert.projectId) navigate(`/app/cleanups/${alert.projectId}`);
+    else if (alert.reportId) navigate(`/app/report/${alert.reportId}`);
   }
 
   return (
@@ -56,9 +57,9 @@ export default function Alerts() {
                   key={alert.id}
                   padding="md"
                   tone={alert.read ? 'default' : 'accent'}
-                  interactive={Boolean(alert.reportId)}
+                  interactive={Boolean(alert.projectId || alert.reportId)}
                   onClick={() => open(alert)}
-                  style={{ cursor: alert.reportId || !alert.read ? 'pointer' : 'default' }}
+                  style={{ cursor: alert.projectId || alert.reportId || !alert.read ? 'pointer' : 'default' }}
                 >
                   <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
                     <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>

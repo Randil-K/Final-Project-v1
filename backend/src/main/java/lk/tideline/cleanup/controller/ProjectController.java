@@ -23,14 +23,16 @@ public class ProjectController {
         this.currentUser = currentUser;
     }
 
+    /** Public, but a signed-in viewer also learns which cleanups they have joined. */
     @GetMapping
-    public List<ProjectResponse> list(@RequestParam(required = false) ProjectStatus status) {
-        return projectService.list(status);
+    public List<ProjectResponse> list(@RequestParam(required = false) ProjectStatus status,
+                                      @RequestParam(required = false) Long reportId) {
+        return projectService.list(status, reportId, currentUser.find().orElse(null));
     }
 
     @GetMapping("/{id}")
     public ProjectResponse get(@PathVariable Long id) {
-        return projectService.view(id);
+        return projectService.view(id, currentUser.find().orElse(null));
     }
 
     @PostMapping

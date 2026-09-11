@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Icon, IconButton, StatusBadge, Badge, Button, ProgressBar, Avatar, Textarea, Dialog, Alert } from '../../design-system';
+import { Icon, IconButton, StatusBadge, Badge, Button, ProgressBar, Avatar, Textarea, Alert } from '../../design-system';
+import Modal from '../../components/Modal.jsx';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
@@ -159,7 +160,7 @@ export default function ReportReview() {
               ) : null}
             </div>
 
-            <Dialog
+            <Modal
               open={rejectOpen}
               title="Reject this report?"
               description="The reporter is notified with your comment. This cannot be undone from the console."
@@ -194,7 +195,7 @@ export default function ReportReview() {
                 onChange={(e) => setComment(e.target.value)}
                 hint="An official comment is required before rejection."
               />
-            </Dialog>
+            </Modal>
           </div>
         );
       }}
