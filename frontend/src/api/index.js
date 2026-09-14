@@ -45,6 +45,13 @@ export const api = {
     comments: (id) => request(`/api/reports/${id}/comments`),
     comment: (id, bodyText, parentId = null) =>
       request(`/api/reports/${id}/comments`, { method: 'POST', body: { body: bodyText, parentId } }),
+    infoRequests: (id) => request(`/api/reports/${id}/info-requests`),
+    respondInfo: (id, requestId, description, photos = []) => {
+      const form = new FormData();
+      form.append('data', new Blob([JSON.stringify({ description })], { type: 'application/json' }));
+      photos.forEach((file) => form.append('photos', file));
+      return request(`/api/reports/${id}/info-requests/${requestId}/response`, { method: 'POST', body: form });
+    },
     react: (id, commentId, type) =>
       request(`/api/reports/${id}/comments/${commentId}/reactions`, { method: 'POST', body: { type } }),
     /** decision: APPROVED (sends it to the authority), REJECTED or MORE_INFO_REQUESTED. */

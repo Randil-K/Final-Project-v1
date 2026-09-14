@@ -34,6 +34,8 @@ public class DocumentStorageService {
     public static final long MAX_VIDEO_BYTES = 25L * 1024 * 1024;
     public static final int MAX_EVIDENCE_FILES = 6;
     private static final String EVIDENCE_FOLDER = "evidence";
+    private static final String INFO_FOLDER = "info";
+    private static final Pattern INFO_NAME = Pattern.compile("[0-9a-f-]{36}\\.(jpg|png|webp)");
     private static final Pattern EVIDENCE_NAME = Pattern.compile("[0-9a-f-]{36}\\.(jpg|png|webp|mp4|mov|webm)");
 
     private final Path root;
@@ -42,6 +44,7 @@ public class DocumentStorageService {
         this.root = Paths.get(properties.getUploads().getDirectory()).toAbsolutePath().normalize();
         try {
             Files.createDirectories(root.resolve(EVIDENCE_FOLDER));
+            Files.createDirectories(root.resolve(INFO_FOLDER));
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot create the upload directory " + root, e);
         }
@@ -104,6 +107,34 @@ public class DocumentStorageService {
             throw new NotFoundException("That file was not found.");
         }
         Path path = resolve(EVIDENCE_FOLDER + "/" + storedName);
+        if (!Files.isRegularFile(path)) {
+            throw new NotFoundException("That file was not found.");
+        }
+        return path;
+    }
+
+    /** Photos a reporter attaches when answering an information request. Not publicly served. */
+    public List<CheckedFile> checkInfoPhotos(List<MultipartFile> files) {
+        List<CheckedFile> checked = checkEvidence(files);
+        for (CheckedFile file : checked) {
+            if (!file.contentType().startsWith("image/")) {
+                throw new IllegalArgumentException(file.originalName() + " is not a photo. Attach JPG, PNG or WebP images.");
+            }
+        }
+        return checked;
+    }
+
+    public String saveInfoPhoto(CheckedFile file) {
+        String storedName = UUID.randomUUID() + file.extension();
+        write(INFO_FOLDER + "/" + storedName, file.bytes());
+        return storedName;
+    }
+
+    public Path infoPhotoPath(String storedName) {
+        if (storedName == null || !INFO_NAME.matcher(storedName).matches()) {
+            throw new NotFoundException("That file was not found.");
+        }
+        Path path = resolve(INFO_FOLDER + "/" + storedName);
         if (!Files.isRegularFile(path)) {
             throw new NotFoundException("That file was not found.");
         }

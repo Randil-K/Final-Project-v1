@@ -42,6 +42,11 @@ public class Alert {
     @Column(nullable = false)
     private boolean readFlag = false;
 
+    /** Needs the recipient to act, e.g. a reviewer asking the reporter for more information. */
+    // Default so ddl-auto can add the column to a database that already has alerts.
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean critical = false;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 }

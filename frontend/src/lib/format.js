@@ -102,13 +102,18 @@ export function reviewStage(report) {
     return { label: report.authorityDecision === 'REJECTED' ? 'Rejected by authority' : 'Rejected by admin', tone: 'danger' };
   }
   if (report.status === 'ESCALATED') {
-    return report.authorityDecision === 'MORE_INFO_REQUESTED'
-      ? { label: 'Authority asked for info', tone: 'info' }
-      : { label: 'Waiting for authority', tone: 'warning' };
+    if (report.infoRequestStatus === 'OPEN') return { label: 'Waiting for reporter', tone: 'info' };
+    if (report.infoRequestStatus === 'ANSWERED' && report.authorityDecision === 'MORE_INFO_REQUESTED') {
+      return { label: 'Reporter sent info', tone: 'accent' };
+    }
+    return { label: 'Waiting for authority', tone: 'warning' };
   }
-  return report.adminDecision === 'MORE_INFO_REQUESTED'
-    ? { label: 'Admin asked for info', tone: 'info' }
-    : { label: 'Waiting for admin', tone: 'warning' };
+  if (report.infoRequestStatus === 'OPEN') return { label: 'Waiting for reporter', tone: 'info' };
+  if (report.infoRequestStatus === 'ANSWERED' && report.adminDecision === 'MORE_INFO_REQUESTED') {
+    return { label: 'Reporter sent info', tone: 'accent' };
+  }
+  if (report.status !== 'VERIFIED') return { label: 'Community checking', tone: 'neutral' };
+  return { label: 'Waiting for admin', tone: 'warning' };
 }
 
 /** Reports a government officer approved have become projects, so they close to further review. */

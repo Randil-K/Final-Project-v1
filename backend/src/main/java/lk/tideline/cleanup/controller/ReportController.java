@@ -6,6 +6,9 @@ import lk.tideline.cleanup.model.ReportStatus;
 import lk.tideline.cleanup.model.Severity;
 import lk.tideline.cleanup.service.CurrentUserService;
 import lk.tideline.cleanup.service.DocumentStorageService;
+import lk.tideline.cleanup.service.InfoRequestService;
+import lk.tideline.cleanup.dto.InfoRequestDtos.InfoRequestResponse;
+import lk.tideline.cleanup.dto.InfoRequestDtos.InfoResponseRequest;
 import lk.tideline.cleanup.service.ReportService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,11 +35,37 @@ public class ReportController {
     private final ReportService reportService;
     private final CurrentUserService currentUser;
     private final DocumentStorageService storage;
+    private final InfoRequestService infoRequests;
 
-    public ReportController(ReportService reportService, CurrentUserService currentUser, DocumentStorageService storage) {
+    public ReportController(ReportService reportService, CurrentUserService currentUser, DocumentStorageService storage,
+                            InfoRequestService infoRequests) {
         this.reportService = reportService;
         this.currentUser = currentUser;
         this.storage = storage;
+        this.infoRequests = infoRequests;
+    }
+
+    /** Requests for more information and the reporter's answers — reviewers and the reporter only. */
+    @GetMapping("/{id}/info-requests")
+    public List<InfoRequestResponse> infoRequests(@PathVariable Long id) {
+        return infoRequests.list(id, currentUser.require());
+    }
+
+    @PostMapping(value = "/{id}/info-requests/{requestId}/response", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public InfoRequestResponse respond(@PathVariable Long id, @PathVariable Long requestId,
+                                       @Valid @RequestPart("data") InfoResponseRequest request,
+                                       @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+        return infoRequests.respond(id, requestId, currentUser.require(), request.description(), photos);
+    }
+
+    @GetMapping("/info-attachments/{fileName}")
+    public ResponseEntity<Resource> infoAttachment(@PathVariable String fileName) {
+        InfoRequestService.AttachmentFile file = infoRequests.attachment(fileName, currentUser.require());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.contentType()))
+                .cacheControl(CacheControl.noStore())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(new FileSystemResource(file.path()));
     }
 
     @GetMapping

@@ -84,6 +84,9 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/reports/{id}/comments/{commentId}/reactions` (`LIKE` / `HEART`, toggles) | 3 | authenticated |
 | POST | `/api/reports/{id}/moderation` (`APPROVED` / `MORE_INFO_REQUESTED` / `REJECTED`) | 4 | admin |
 | POST | `/api/reports/{id}/authority-decision` (same decisions; approval creates the project) | 5 | authority |
+| GET | `/api/reports/{id}/info-requests` | 4 | admin, authority, the reporter |
+| POST | `/api/reports/{id}/info-requests/{requestId}/response` (multipart: `data` + `photos`) | 4 | the reporter |
+| GET | `/api/reports/info-attachments/{file}` | 4 | admin, authority, the reporter |
 | POST | `/api/reports/{id}/alert-escalation` | 6 | admin, authority |
 | GET | `/api/alerts` · POST `/api/alerts/{id}/read` | 6 | authenticated |
 | GET | `/api/alerts/unread-count` · POST `/api/alerts/read-all` | 6 | authenticated |
@@ -102,8 +105,10 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 ## How the domain rules work
 
 - **Trust threshold.** Every vote recalculates `trustPercentage = confirm / total`. A report
-  moves `PENDING → VERIFYING` on its first vote, and `VERIFYING → VERIFIED` once it reaches
-  75% with at least 5 votes. Both numbers are configurable under `tideline.verification`.
+  moves `PENDING → VERIFYING` on its first vote, and `VERIFYING → VERIFIED` once it has at least
+  8 confirmations and 75% trust (`tideline.verification.minimum-confirmations` and
+  `threshold-percent`). Reporters can't vote on their own report. Verification alerts the
+  administrators, who can then approve or ask for more information; they can reject at any time.
 - **Alert escalation.** A new report alerts available users within 5 km (Haversine distance).
   `POST /api/reports/{id}/alert-escalation` widens that to the next step — 25 km, 100 km,
   then 500 km — as the SRS requires when nobody responds.
@@ -118,6 +123,11 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   `PENDING`, `APPROVED`, `REJECTED` or `MORE_INFO_REQUESTED`. Administrator approval sends it to the
   government authority (`ESCALATED`). Asking for more information posts an official comment and
   alerts the reporter without changing the status. A rejection by either needs a comment.
+- **Requests for more information.** Asking for more information (administrator or authority)
+  opens an information request and sends the reporter a *critical* alert. The reporter answers
+  with a description and up to six photos; the answer is stored privately (photos under
+  `UPLOADS_DIR/info/`, never publicly served) and appears to reviewers under the report's
+  Additional information tab. One request can be open at a time.
 - **Reports become projects.** When the authority approves, the report's status becomes `APPROVED`
   and a cleanup project is created automatically, owned by the person who reported the site. The
   owner gets a "Project owner" badge and the project listed on their profile. From then on it is

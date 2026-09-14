@@ -1,12 +1,13 @@
 import React from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { Icon, IconButton, Button, Avatar, Textarea, Alert } from '../../design-system';
+import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { Icon, IconButton, Badge, Button, Avatar, Textarea, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import MapLink from '../../components/MapLink.jsx';
 import EvidenceGallery from '../../components/EvidenceGallery.jsx';
 import ReportStatusBadge from '../../components/ReportStatusBadge.jsx';
 import CommunityVerificationCard from '../../components/CommunityVerificationCard.jsx';
 import ReviewStatusCard from '../../components/ReviewStatusCard.jsx';
+import InfoRequestsPanel from '../../components/InfoRequestsPanel.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -21,6 +22,10 @@ export default function ReportReview() {
   const { user } = useAuth();
 
   const state = useApi(() => api.reports.get(id), [id]);
+  const infoState = useApi(() => api.reports.infoRequests(id), [id]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') === 'info' ? 'info' : 'review';
+  const showTab = (next) => setSearchParams(next === 'info' ? { tab: 'info' } : {}, { replace: true });
   const [comment, setComment] = React.useState('');
   const [rejectOpen, setRejectOpen] = React.useState(false);
   const [error, setError] = React.useState(null);
@@ -43,6 +48,7 @@ export default function ReportReview() {
         return;
       }
       state.setData(updated);
+      infoState.reload();
       setNotice(message);
       setComment('');
       setRejectOpen(false);
@@ -60,6 +66,11 @@ export default function ReportReview() {
     <Async state={state}>
       {(report) => {
         const canModerate = isAdmin && ['PENDING', 'VERIFYING', 'VERIFIED'].includes(report.status);
+        // Approval and questions wait for 8 community confirmations; rejection doesn't.
+        const verified = report.status === 'VERIFIED';
+        const waitingForReporter = report.infoRequestStatus === 'OPEN';
+        const requests = infoState.data || [];
+        const answered = requests.filter((r) => r.status === 'ANSWERED').length;
         const canDecide = isAuthority && report.status === 'ESCALATED';
         const canWiden = isAdmin && ['PENDING', 'VERIFYING', 'VERIFIED', 'ESCALATED'].includes(report.status);
         const hasComment = Boolean(comment.trim());
@@ -75,7 +86,6 @@ export default function ReportReview() {
 
             {notice ? <Alert tone="success" title="Done" onDismiss={() => setNotice(null)}>{notice}</Alert> : null}
             {error && !rejectOpen ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
-
 
             <EvidenceGallery report={report} />
 
@@ -95,13 +105,47 @@ export default function ReportReview() {
               </div>
             </div>
 
-            <CommunityVerificationCard report={report}>
-              {canModerate && report.trustPercentage < report.thresholdPercent ? (
-                <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                  Below the community threshold — you can still approve it if the evidence is clear.
-                </span>
-              ) : null}
-            </CommunityVerificationCard>
+            <div role="tablist" aria-label="Report sections" style={{ display: 'flex', gap: 'var(--space-5)', borderBottom: '1px solid var(--border-subtle)' }}>
+              {[
+                { key: 'review', label: 'Review' },
+                { key: 'info', label: 'Additional information', count: requests.length, highlight: answered > 0 },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.key}
+                  onClick={() => showTab(t.key)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '10px 2px',
+                    marginBottom: -1,
+                    borderBottom: `2px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`,
+                    font: 'var(--text-label)',
+                    color: tab === t.key ? 'var(--text-strong)' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t.label}
+                  {t.count ? <Badge tone={t.highlight ? 'accent' : 'neutral'} size="sm">{t.count}</Badge> : null}
+                </button>
+              ))}
+            </div>
+
+            {tab === 'info' ? (
+              <>
+                <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                  Only administrators and government officers see this tab.
+                </p>
+                <Async state={infoState}>
+                  {(list) => <InfoRequestsPanel requests={list} reporterName={report.reporter?.fullName} />}
+                </Async>
+              </>
+            ) : (
+            <>
+            <CommunityVerificationCard report={report} />
 
             <ReviewStatusCard report={report} />
 
@@ -130,10 +174,10 @@ export default function ReportReview() {
                 </div>
                 <Textarea
                   label="Official comment"
-                  placeholder={canDecide ? 'Conditions, instructions or reasons for your decision.' : 'Notes for the authority, or what the reporter should clarify.'}
                   hint={canDecide
                     ? 'Required for every decision — the reporter and administrators see it.'
                     : 'Required to request more information or reject — the reporter sees it.'}
+                  placeholder={canDecide ? 'Conditions, instructions or reasons for your decision.' : 'Notes for the authority, what information you need from the reporter, or why you are rejecting.'}
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -143,7 +187,7 @@ export default function ReportReview() {
                     <>
                       <Button
                         iconLeft="flag"
-                        disabled={busy}
+                        disabled={busy || !verified}
                         onClick={() => moderate('APPROVED', 'Approved. The report is with the government authority, and officers have been alerted.')}
                       >
                         Approve and send to authority
@@ -151,8 +195,8 @@ export default function ReportReview() {
                       <Button
                         variant="secondary"
                         iconLeft="message-square"
-                        disabled={busy || !hasComment}
-                        onClick={() => moderate('MORE_INFO_REQUESTED', 'More information requested. Your question is in the discussion and the reporter has been alerted.')}
+                        disabled={busy || !hasComment || !verified || waitingForReporter}
+                        onClick={() => moderate('MORE_INFO_REQUESTED', 'More information requested. The reporter has a critical alert, and their answer will appear under Additional information.')}
                       >
                         Request more info
                       </Button>
@@ -169,8 +213,8 @@ export default function ReportReview() {
                       <Button
                         variant="secondary"
                         iconLeft="message-square"
-                        disabled={busy || !hasComment}
-                        onClick={() => decide('MORE_INFO_REQUESTED', 'More information requested. The reporter and administrators have been alerted.')}
+                        disabled={busy || !hasComment || waitingForReporter}
+                        onClick={() => decide('MORE_INFO_REQUESTED', 'More information requested. The reporter has a critical alert, and their answer will appear under Additional information.')}
                       >
                         Request more info
                       </Button>
@@ -180,6 +224,17 @@ export default function ReportReview() {
                     Reject report
                   </Button>
                 </div>
+                {canModerate && !verified ? (
+                  <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                    Approving and requesting more information open once {report.minimumConfirmations} people confirm the report
+                    with {report.thresholdPercent}% trust. You can reject a false report at any time.
+                  </span>
+                ) : null}
+                {waitingForReporter ? (
+                  <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                    Waiting for the reporter to answer your last request. You can still approve or reject.
+                  </span>
+                ) : null}
               </div>
             ) : null}
 
@@ -194,6 +249,8 @@ export default function ReportReview() {
                 Widen alert radius
               </Button>
             ) : null}
+            </>
+            )}
 
             <Modal
               open={rejectOpen}

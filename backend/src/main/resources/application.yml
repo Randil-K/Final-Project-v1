@@ -49,10 +49,10 @@ management:
         enabled: true
 
 tideline:
-  # The SRS pins community verification at a 75% trust threshold.
+  # A report passes community verification with at least 8 confirmations and 75% trust.
   verification:
     threshold-percent: 75
-    minimum-votes: 5
+    minimum-confirmations: 8
   # Location-based alerting starts local and widens when nobody responds.
   alerts:
     initial-radius-km: 5

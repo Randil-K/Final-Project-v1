@@ -3,6 +3,7 @@ import { Field, Icon, IconButton } from '../design-system';
 import { formatBytes } from '../lib/format.js';
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm';
+const PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
@@ -65,7 +66,7 @@ function Preview({ file, onRemove }) {
 
 // The design system's FileDrop has no working file input, so evidence uses this picker with the
 // same look, plus previews of what will be uploaded.
-export default function EvidencePicker({ label, hint, files, onChange }) {
+export default function EvidencePicker({ label, hint, files, onChange, photosOnly = false }) {
   const inputRef = React.useRef(null);
   const [over, setOver] = React.useState(false);
   const [problem, setProblem] = React.useState(null);
@@ -74,8 +75,10 @@ export default function EvidencePicker({ label, hint, files, onChange }) {
     const next = [...files];
     let issue = null;
     for (const file of Array.from(list || [])) {
-      if (!isPhoto(file) && !isVideo(file)) {
-        issue = `${file.name} isn't a supported photo or video. Use JPG, PNG, WebP, MP4, MOV or WebM.`;
+      if (photosOnly ? !isPhoto(file) : !isPhoto(file) && !isVideo(file)) {
+        issue = photosOnly
+          ? `${file.name} isn't a photo. Use JPG, PNG or WebP.`
+          : `${file.name} isn't a supported photo or video. Use JPG, PNG, WebP, MP4, MOV or WebM.`;
         continue;
       }
       const limit = isVideo(file) ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
@@ -125,19 +128,19 @@ export default function EvidencePicker({ label, hint, files, onChange }) {
         }}
       >
         <Icon name="camera" size="lg" color="var(--sea-600)" />
-        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Add photo or video evidence</span>
+        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{photosOnly ? 'Add photos' : 'Add photo or video evidence'}</span>
         <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
           Drag files here, or tap to take a photo or choose from your gallery
         </span>
         <span style={{ font: 'var(--text-micro)', color: 'var(--text-muted)' }}>
-          Up to {MAX_FILES} files · photos 8 MB · videos 25 MB
+          {photosOnly ? `Up to ${MAX_FILES} photos · 8 MB each` : `Up to ${MAX_FILES} files · photos 8 MB · videos 25 MB`}
         </span>
       </button>
       <input
         ref={inputRef}
         type="file"
         multiple
-        accept={ACCEPT}
+        accept={photosOnly ? PHOTO_ACCEPT : ACCEPT}
         style={{ display: 'none' }}
         onChange={(e) => {
           add(e.target.files);

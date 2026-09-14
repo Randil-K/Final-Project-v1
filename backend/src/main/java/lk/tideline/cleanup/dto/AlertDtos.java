@@ -19,6 +19,7 @@ public final class AlertDtos {
             Long projectId,
             Double radiusKm,
             boolean read,
+            boolean critical,
             Instant createdAt
     ) {
         public static AlertResponse from(Alert alert) {
@@ -31,6 +32,7 @@ public final class AlertDtos {
                     alert.getProjectId(),
                     alert.getRadiusKm(),
                     alert.isReadFlag(),
+                    alert.isCritical(),
                     alert.getCreatedAt());
         }
     }

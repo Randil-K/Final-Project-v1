@@ -95,9 +95,19 @@ export default function ReportDetail() {
 
             <ReviewStatusCard report={report} />
 
-            {isReporter && (report.adminDecision === 'MORE_INFO_REQUESTED' || report.authorityDecision === 'MORE_INFO_REQUESTED') ? (
-              <Alert tone="info" title="Reviewers asked you for more detail">
-                Their question is in the discussion below. Reply there so they can see your answer.
+            {isReporter && report.infoRequestStatus === 'OPEN' ? (
+              <Alert tone="danger" title="Action needed: reviewers need more information">
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+                  Answer their request with a description and photos. Only the reviewers see it.
+                  <Button size="sm" variant="danger" iconRight="arrow-right" onClick={() => navigate(`/app/report/${id}/more-info`)}>
+                    Add information
+                  </Button>
+                </span>
+              </Alert>
+            ) : null}
+            {isReporter && report.infoRequestStatus === 'ANSWERED' ? (
+              <Alert tone="success" title="Your additional information was sent">
+                The reviewers have it. You'll get an alert when they decide.
               </Alert>
             ) : null}
 

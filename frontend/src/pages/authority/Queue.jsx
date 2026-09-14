@@ -96,7 +96,7 @@ export default function Queue() {
                     </span>
                     <span><ReportStatusBadge status={report.status} size="sm" /></span>
                     <span><Badge tone={stage.tone} size="sm">{stage.label}</Badge></span>
-                    <Badge tone={report.trustPercentage >= report.thresholdPercent ? 'success' : 'warning'} size="sm">
+                    <Badge tone={report.trustPercentage >= report.thresholdPercent && report.confirmVotes >= report.minimumConfirmations ? 'success' : 'warning'} size="sm">
                       {report.trustPercentage}%
                     </Badge>
                     <span style={{ color: 'var(--text-muted)', font: 'var(--text-caption)' }}>

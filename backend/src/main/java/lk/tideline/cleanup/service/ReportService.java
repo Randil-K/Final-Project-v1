@@ -38,6 +38,7 @@ public class ReportService {
     private final AlertService alertService;
     private final TidelineProperties properties;
     private final DocumentStorageService storage;
+    private final InfoRequestService infoRequests;
 
     public ReportService(PollutionReportRepository reportRepository,
                          VerificationVoteRepository voteRepository,
@@ -48,7 +49,8 @@ public class ReportService {
                          ProjectService projectService,
                          AlertService alertService,
                          TidelineProperties properties,
-                         DocumentStorageService storage) {
+                         DocumentStorageService storage,
+                         InfoRequestService infoRequests) {
         this.reportRepository = reportRepository;
         this.voteRepository = voteRepository;
         this.commentRepository = commentRepository;
@@ -59,6 +61,11 @@ public class ReportService {
         this.alertService = alertService;
         this.properties = properties;
         this.storage = storage;
+        this.infoRequests = infoRequests;
+    }
+
+    private int minimumConfirmations() {
+        return properties.getVerification().getMinimumConfirmations();
     }
 
     private int thresholdPercent() {
@@ -67,7 +74,8 @@ public class ReportService {
 
     private ReportResponse toResponse(PollutionReport report) {
         CleanupProject project = projectRepository.findFirstByReportId(report.getId()).orElse(null);
-        return ReportResponse.from(report, thresholdPercent(), project);
+        return ReportResponse.from(report, thresholdPercent(), minimumConfirmations(), project,
+                infoRequests.latestStatus(report));
     }
 
     @Transactional(readOnly = true)
@@ -155,6 +163,9 @@ public class ReportService {
                 || report.getStatus() == ReportStatus.CLEANED) {
             throw new IllegalStateException("Voting is closed for this report.");
         }
+        if (report.getReporter().getId().equals(voter.getId())) {
+            throw new IllegalStateException("You can't vote on your own report.");
+        }
 
         VerificationVote vote = voteRepository.findByReportAndVoter(report, voter)
                 .orElseGet(() -> {
@@ -184,17 +195,24 @@ public class ReportService {
             report.setStatus(ReportStatus.VERIFYING);
         }
 
-        boolean threshold = percentage >= thresholdPercent()
-                && total >= properties.getVerification().getMinimumVotes();
+        boolean threshold = percentage >= thresholdPercent() && confirm >= minimumConfirmations();
 
         if (report.getStatus() == ReportStatus.VERIFYING && threshold) {
             report.setStatus(ReportStatus.VERIFIED);
             report.setVerifiedAt(Instant.now());
             alertService.send(report.getReporter(), AlertType.REPORT_VERIFIED,
                     "Your report was verified",
-                    report.getReference() + " passed the " + thresholdPercent()
-                            + "% community threshold. An administrator reviews it next.",
+                    report.getReference() + " was confirmed by " + confirm + " people (" + percentage
+                            + "% trust). An administrator reviews it next.",
                     report.getId(), null, null);
+            // Community verification hands the report to the administrators.
+            for (User admin : userRepository.findByRole(Role.ADMIN)) {
+                alertService.send(admin, AlertType.REPORT_VERIFIED,
+                        "Report ready for your review",
+                        report.getReference() + " at " + report.getLocationName() + " was confirmed by " + confirm
+                                + " people (" + percentage + "% trust). Approve it, reject it, or ask the reporter for more information.",
+                        report.getId(), null, null);
+            }
         }
 
         return report;
@@ -290,6 +308,12 @@ public class ReportService {
         Instant now = Instant.now();
         String reference = report.getReference();
 
+        // Reviewers can remove a false report at any time, but approval and questions wait for the community.
+        if (decision != ReviewDecision.REJECTED && report.getStatus() != ReportStatus.VERIFIED) {
+            throw new IllegalStateException("This report needs " + minimumConfirmations() + " confirmations and "
+                    + thresholdPercent() + "% community trust before an administrator can approve it or ask for more information.");
+        }
+
         switch (decision) {
             case APPROVED -> {
                 report.setStatus(ReportStatus.ESCALATED);
@@ -311,11 +335,8 @@ public class ReportService {
                 }
             }
             case MORE_INFO_REQUESTED -> {
-                require(comment, "Say what needs clarifying. The reporter sees your question.");
-                postOfficialComment(report, admin, comment);
-                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                        "More detail needed on your report",
-                        reference + ": " + comment, report.getId(), null, null);
+                require(comment, "Say what information you need. The reporter sees your request.");
+                infoRequests.open(report, admin, comment);
             }
             case REJECTED -> {
                 require(comment, "Give a reason for rejecting this report. The reporter sees it.");
@@ -380,10 +401,7 @@ public class ReportService {
                 adminTitle = "Authority rejected " + reference;
             }
             default -> {
-                postOfficialComment(report, officer, comment);
-                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                        "The authority needs more detail",
-                        reference + ": " + comment, report.getId(), null, null);
+                infoRequests.open(report, officer, comment);
                 adminTitle = "Authority requested more information on " + reference;
             }
         }
@@ -400,16 +418,6 @@ public class ReportService {
     @Transactional
     public double escalateAlertRadius(Long reportId) {
         return alertService.escalateRadius(get(reportId));
-    }
-
-    /** Questions go in the discussion so the reporter can answer where everyone can see it. */
-    private void postOfficialComment(PollutionReport report, User author, String body) {
-        ReportComment question = new ReportComment();
-        question.setReport(report);
-        question.setAuthor(author);
-        question.setBody(body);
-        question.setOfficial(true);
-        commentRepository.save(question);
     }
 
     private static String trimmed(String value) {

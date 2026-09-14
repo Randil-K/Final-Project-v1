@@ -59,6 +59,14 @@ public class DemoDataSeeder {
             User ishara = user(users, encoder, "Ishara Gunawardena", "ishara@example.lk",
                     Role.CITIZEN, "Western Province", "Mount Lavinia", 6.8389, 79.8653);
 
+            // Community members whose votes carry the demo reports past 8 confirmations.
+            List<User> community = List.of(
+                    user(users, encoder, "Nuwan Jayasuriya", "nuwan@example.lk", Role.CITIZEN, "Western Province", "Negombo", 7.2150, 79.8420),
+                    user(users, encoder, "Dilini Rathnayake", "dilini@example.lk", Role.CITIZEN, "North Western Province", "Kalpitiya", 8.2300, 79.7700),
+                    user(users, encoder, "Pradeep Kumara", "pradeep@example.lk", Role.CITIZEN, "Eastern Province", "Trincomalee", 8.5800, 81.2200),
+                    user(users, encoder, "Hasini Weerasinghe", "hasini@example.lk", Role.CITIZEN, "Southern Province", "Galle", 6.0500, 80.2200),
+                    user(users, encoder, "Malith Senanayake", "malith@example.lk", Role.CITIZEN, "Western Province", "Colombo", 6.9300, 79.8500));
+
             User ngo = user(users, encoder, "Blue Resurgence", "hello@blueresurgence.lk",
                     Role.ORGANIZATION, "Southern Province", "Galle", 6.0535, 80.2210);
             ngo.setOrganizationName("Blue Resurgence NGO");
@@ -111,9 +119,9 @@ public class DemoDataSeeder {
                     "Small pile of household waste bags left behind the dune grass, likely dumped overnight.",
                     Severity.LOW, "Mount Lavinia", "Western Province", 6.8389, 79.8653, 2);
 
-            castVotes(votes, reports, negombo, List.of(sanduni, achini, ishara, ngo), List.of(admin));
-            castVotes(votes, reports, trinco, List.of(sanduni, kasun, ishara, ngo, admin), List.of());
-            castVotes(votes, reports, kalpitiya, List.of(kasun, achini, ishara, ngo, admin), List.of());
+            castVotes(votes, reports, negombo, with(community, sanduni, achini, ishara, ngo), List.of());
+            castVotes(votes, reports, trinco, with(community, sanduni, kasun, ishara), List.of(ngo));
+            castVotes(votes, reports, kalpitiya, with(community, kasun, achini, ishara), List.of());
 
             // Kalpitiya is verified by the community and waits for the administrator (the default).
 
@@ -193,6 +201,12 @@ public class DemoDataSeeder {
 
     private static Instant daysAgo(int days) {
         return Instant.now().minus(days, ChronoUnit.DAYS);
+    }
+
+    private static List<User> with(List<User> community, User... more) {
+        List<User> all = new java.util.ArrayList<>(community);
+        all.addAll(List.of(more));
+        return all;
     }
 
     private User user(UserRepository users, PasswordEncoder encoder, String name, String email,
@@ -308,7 +322,7 @@ public class DemoDataSeeder {
         report.setConfirmVotes(confirm);
         report.setDisputeVotes(dispute);
         report.setTrustPercentage(total == 0 ? 0 : Math.round((confirm * 100f) / total));
-        report.setStatus(report.getTrustPercentage() >= 75 && total >= 5
+        report.setStatus(report.getTrustPercentage() >= 75 && confirm >= 8
                 ? ReportStatus.VERIFIED
                 : ReportStatus.VERIFYING);
         if (report.getStatus() == ReportStatus.VERIFIED) {

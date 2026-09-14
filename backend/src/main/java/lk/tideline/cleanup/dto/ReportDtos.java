@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.CommentReaction;
+import lk.tideline.cleanup.model.InfoRequestStatus;
 import lk.tideline.cleanup.model.PollutionReport;
 import lk.tideline.cleanup.model.ReactionType;
 import lk.tideline.cleanup.model.ReportComment;
@@ -52,6 +53,9 @@ public final class ReportDtos {
             int disputeVotes,
             int trustPercentage,
             int thresholdPercent,
+            int minimumConfirmations,
+            /** Status of the latest request for more information, or null if none was made. */
+            InfoRequestStatus infoRequestStatus,
             ReviewDecision adminDecision,
             String moderationComment,
             Instant adminReviewedAt,
@@ -67,7 +71,8 @@ public final class ReportDtos {
             Instant verifiedAt,
             Instant escalatedAt
     ) {
-        public static ReportResponse from(PollutionReport report, int thresholdPercent, CleanupProject project) {
+        public static ReportResponse from(PollutionReport report, int thresholdPercent, int minimumConfirmations,
+                                          CleanupProject project, InfoRequestStatus infoRequestStatus) {
             return new ReportResponse(
                     report.getId(),
                     report.getReference(),
@@ -88,6 +93,8 @@ public final class ReportDtos {
                     report.getDisputeVotes(),
                     report.getTrustPercentage(),
                     thresholdPercent,
+                    minimumConfirmations,
+                    infoRequestStatus,
                     report.getAdminDecision(),
                     report.getModerationComment(),
                     report.getAdminReviewedAt(),

@@ -182,25 +182,26 @@ class GovernanceTests {
     }
 
     @Test
-    void anAdminClarificationRequestReachesTheReporterAndTheDiscussion() {
+    void anAdminInformationRequestIsACriticalAlertAndStaysOutOfTheDiscussion() {
         User reporter = user(Role.CITIZEN);
-        PollutionReport report = report(reporter, ReportStatus.PENDING);
+        PollutionReport report = report(reporter, ReportStatus.VERIFIED);
 
         ReportResponse response = reportService.moderate(report.getId(),
                 new ModerationRequest(ReviewDecision.MORE_INFO_REQUESTED, "Which end of the beach is this?"), user(Role.ADMIN));
 
         assertThat(response.adminDecision()).isEqualTo(ReviewDecision.MORE_INFO_REQUESTED);
-        assertThat(response.status()).isEqualTo(ReportStatus.PENDING);
-        assertThat(titlesFor(reporter)).contains("More detail needed on your report");
-        assertThat(reportService.comments(report.getId(), null)).anySatisfy(comment -> {
-            assertThat(comment.official()).isTrue();
-            assertThat(comment.body()).isEqualTo("Which end of the beach is this?");
+        assertThat(response.status()).isEqualTo(ReportStatus.VERIFIED);
+        assertThat(response.infoRequestStatus()).isEqualTo(InfoRequestStatus.OPEN);
+        assertThat(alerts.findByRecipientOrderByCreatedAtDesc(reporter)).anySatisfy(alert -> {
+            assertThat(alert.getType()).isEqualTo(AlertType.INFO_REQUESTED);
+            assertThat(alert.isCritical()).isTrue();
         });
+        assertThat(reportService.comments(report.getId(), null)).isEmpty();
     }
 
     @Test
     void aClarificationRequestMustSayWhatIsUnclear() {
-        PollutionReport report = report(user(Role.CITIZEN), ReportStatus.PENDING);
+        PollutionReport report = report(user(Role.CITIZEN), ReportStatus.VERIFIED);
         assertThatThrownBy(() -> reportService.moderate(report.getId(),
                 new ModerationRequest(ReviewDecision.MORE_INFO_REQUESTED, null), user(Role.ADMIN)))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -225,7 +226,7 @@ class GovernanceTests {
         assertThat(response.status()).isEqualTo(ReportStatus.ESCALATED);
         assertThat(response.authorityDecision()).isEqualTo(ReviewDecision.MORE_INFO_REQUESTED);
         assertThat(response.projectId()).isNull();
-        assertThat(titlesFor(reporter)).contains("The authority needs more detail");
+        assertThat(titlesFor(reporter)).contains("Action needed: more information on " + report.getReference());
     }
 
     @Test

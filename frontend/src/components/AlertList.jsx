@@ -17,6 +17,8 @@ const KIND = {
   OPPORTUNITY: { icon: 'anchor', color: 'var(--buoy-600)' },
   ACCOUNT_REVIEW: { icon: 'user', color: 'var(--buoy-600)' },
   COMMENT_REPLY: { icon: 'message-square', color: 'var(--tide-600)' },
+  INFO_REQUESTED: { icon: 'triangle-alert', color: 'var(--danger)' },
+  INFO_RESPONSE: { icon: 'message-square', color: 'var(--sea-600)' },
 };
 
 /** Shared by the volunteer app and the console; `linkFor` maps an alert to the screen it opens. */
@@ -72,6 +74,8 @@ export default function AlertList({ linkFor, empty }) {
             {alerts.map((alert) => {
               const kind = KIND[alert.type] || KIND.NEW_REPORT_NEARBY;
               const target = linkFor(alert);
+              // Critical alerts need the recipient to act, so they stay red until answered.
+              const urgent = alert.critical && !alert.read;
               return (
                 <Card
                   key={alert.id}
@@ -79,7 +83,10 @@ export default function AlertList({ linkFor, empty }) {
                   tone={alert.read ? 'default' : 'accent'}
                   interactive={Boolean(target)}
                   onClick={() => open(alert)}
-                  style={{ cursor: target || !alert.read ? 'pointer' : 'default' }}
+                  style={{
+                    cursor: target || !alert.read ? 'pointer' : 'default',
+                    ...(urgent ? { background: 'var(--danger-bg)', border: '1px solid var(--danger)' } : null),
+                  }}
                 >
                   <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
                     <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
@@ -88,7 +95,11 @@ export default function AlertList({ linkFor, empty }) {
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{alert.title}</span>
-                        {!alert.read ? <Badge tone="accent" dot size="sm">New</Badge> : null}
+                        {urgent ? (
+                          <Badge tone="danger" dot size="sm">Action needed</Badge>
+                        ) : !alert.read ? (
+                          <Badge tone="accent" dot size="sm">New</Badge>
+                        ) : null}
                       </div>
                       <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>{alert.body}</p>
                       <span style={{ font: 'var(--text-micro)', color: 'var(--text-muted)' }}>

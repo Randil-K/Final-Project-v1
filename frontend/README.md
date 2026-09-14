@@ -50,7 +50,8 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
 | Profile | `GET`/`PUT /api/users/me` (account status, project owner badge and owned projects) (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
 | Review queue | `GET /api/reports` |
-| Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · widen alert radius |
+| Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · widen alert radius · Additional information tab (`GET /info-requests`, photos via authenticated blob) |
+| Additional information (reporter) | `GET /api/reports/{id}/info-requests` · `POST /info-requests/{rid}/response` (multipart) |
 | Projects | `GET /api/projects` · `GET /{id}` · `POST /{id}/updates` |
 | Analytics | `GET /api/analytics/summary` |
 | Verifications (admin) | `GET /api/admin/verifications?status=` · `POST /api/admin/verifications/{id}` · `GET /api/admin/documents/{id}` |

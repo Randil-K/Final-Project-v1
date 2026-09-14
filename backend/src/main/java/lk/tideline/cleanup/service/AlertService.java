@@ -77,6 +77,13 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
+    @Transactional
+    public Alert sendCritical(User recipient, AlertType type, String title, String body, Long reportId) {
+        Alert alert = send(recipient, type, title, body, reportId, null, null);
+        alert.setCritical(true);
+        return alert;
+    }
+
     /**
      * Notifies every available user within {@code radiusKm} of the report. Returns how many
      * people were reached so the caller can decide whether the radius needs widening.
