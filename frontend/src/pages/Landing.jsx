@@ -32,7 +32,7 @@ export default function Landing() {
 
   const stats = state.data
     ? [
-        { label: 'Reported sites', value: state.data.reportedSites },
+        { label: 'Open reports', value: state.data.reportedSites },
         { label: 'Verified incidents', value: state.data.verifiedIncidents },
         { label: 'Active projects', value: state.data.activeProjects },
         { label: 'Volunteers', value: state.data.registeredVolunteers },

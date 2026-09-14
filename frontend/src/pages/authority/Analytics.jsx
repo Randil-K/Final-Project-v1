@@ -5,7 +5,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { Async } from '../../components/AsyncState.jsx';
 
 const STAT_CARDS = [
-  { key: 'reportedSites', label: 'Reported sites', icon: 'map-pin' },
+  { key: 'reportedSites', label: 'Open reports', icon: 'map-pin' },
   { key: 'verifiedIncidents', label: 'Verified incidents', icon: 'badge-check' },
   { key: 'escalatedReports', label: 'Escalated reports', icon: 'flag' },
   { key: 'activeProjects', label: 'Active projects', icon: 'waves-horizontal' },
@@ -18,9 +18,7 @@ const STATUS_LABEL = {
   VERIFYING: 'Verifying',
   VERIFIED: 'Verified',
   ESCALATED: 'Escalated',
-  APPROVED: 'Project',
   REJECTED: 'Rejected',
-  CLEANED: 'Cleaned',
 };
 
 export default function Analytics() {
@@ -81,7 +79,7 @@ export default function Analytics() {
                 </Card>
 
                 <Card padding="lg">
-                  <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Reports by status</span>
+                  <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Open reports by status</span>
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, height: 160, marginTop: 'var(--space-6)', paddingBottom: 'var(--space-2)' }}>
                     {statuses.map(([status, count]) => (
                       <div key={status} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>

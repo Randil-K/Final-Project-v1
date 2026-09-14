@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { Icon, IconButton, Badge, Button, Avatar, Textarea, Alert } from '../../design-system';
 import MapLink from '../../components/MapLink.jsx';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
@@ -58,6 +58,8 @@ export default function ReportDetail() {
       {(report) => {
         const votingClosed = CLOSED_REPORT_STATUSES.includes(report.status);
         const isReporter = user?.id === report.reporter?.id;
+        // Once the authority approves, the report lives on only as its project.
+        if (report.projectId) return <Navigate to={projectHref(report.projectId)} replace />;
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -67,18 +69,6 @@ export default function ReportDetail() {
               <ReportStatusBadge status={report.status} size="sm" style={{ marginLeft: 'auto' }} />
             </div>
 
-            {report.projectId ? (
-              <Alert tone="success" title={`This report is now project ${report.projectReference}`}>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
-                  {isReporter
-                    ? 'The government authority approved it and you are the project owner.'
-                    : `The government authority approved it. ${report.reporter?.fullName} owns the project — join the cleanup if you can help.`}
-                  <Button size="sm" iconRight="arrow-right" onClick={() => navigate(projectHref(report.projectId))}>
-                    Go to the project
-                  </Button>
-                </span>
-              </Alert>
-            ) : null}
 
             <PhotoPlaceholder ratio="4/3" count={report.photoUrls?.length} style={{ borderRadius: 'var(--radius-lg)' }} />
 
@@ -121,7 +111,7 @@ export default function ReportDetail() {
               )}
             </CommunityVerificationCard>
 
-            <ReviewStatusCard report={report} projectHref={projectHref} />
+            <ReviewStatusCard report={report} />
 
             {isReporter && (report.adminDecision === 'MORE_INFO_REQUESTED' || report.authorityDecision === 'MORE_INFO_REQUESTED') ? (
               <Alert tone="info" title="Reviewers asked you for more detail">

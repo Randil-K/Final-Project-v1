@@ -1,10 +1,11 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Icon, IconButton, Badge } from '../../design-system';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Icon, IconButton, Badge, Alert } from '../../design-system';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
 import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
+import ProjectOrigin from '../../components/ProjectOrigin.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -15,6 +16,9 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const location = useLocation();
+  // Set when an officer's approval just created this project.
+  const [notice, setNotice] = React.useState(location.state?.notice || null);
   const state = useApi(() => api.projects.get(id), [id]);
 
   return (
@@ -30,6 +34,8 @@ export default function ProjectDetail() {
               <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{project.reference}</span>
               <Badge tone={PROJECT_STATUS_TONE[project.status]} style={{ marginLeft: 'auto' }}>{PROJECT_STATUS_LABEL[project.status]}</Badge>
             </div>
+
+            {notice ? <Alert tone="success" title="Project created" onDismiss={() => setNotice(null)}>{notice}</Alert> : null}
 
             <div>
               <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{project.title}</h1>
@@ -67,6 +73,8 @@ export default function ProjectDetail() {
             </div>
 
             {canPost ? <ProgressUpdateForm projectId={project.id} onUpdated={state.setData} /> : null}
+
+            <ProjectOrigin project={project} />
           </div>
         );
       }}

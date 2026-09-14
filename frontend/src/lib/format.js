@@ -94,11 +94,9 @@ export const ACCOUNT_STATUS = {
 
 /** Where a report is in official review, in a few words for lists. */
 export function reviewStage(report) {
-  if (report.projectReference) return { label: `Project ${report.projectReference}`, tone: 'success' };
   if (report.status === 'REJECTED') {
     return { label: report.authorityDecision === 'REJECTED' ? 'Rejected by authority' : 'Rejected by admin', tone: 'danger' };
   }
-  if (report.status === 'CLEANED') return { label: 'Cleaned', tone: 'success' };
   if (report.status === 'ESCALATED') {
     return report.authorityDecision === 'MORE_INFO_REQUESTED'
       ? { label: 'Authority asked for info', tone: 'info' }

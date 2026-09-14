@@ -13,9 +13,7 @@ const STATUS_FILTERS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'VERIFYING', label: 'Verifying' },
   { value: 'VERIFIED', label: 'Verified' },
-  { value: 'ESCALATED', label: 'Escalated' },
-  { value: 'APPROVED', label: 'Projects' },
-  { value: 'CLEANED', label: 'Cleaned' },
+  { value: 'ESCALATED', label: 'With authority' },
 ];
 
 export default function Feed() {

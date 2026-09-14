@@ -71,7 +71,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/auth/login` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
-| GET | `/api/reports` · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
+| GET | `/api/reports` (open reports only — approved ones are projects) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
 | POST | `/api/reports` | 2 | authenticated |
 | POST | `/api/reports/{id}/votes` | 3 | authenticated |
 | GET/POST | `/api/reports/{id}/comments` | 3 | authenticated |
@@ -112,7 +112,9 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   alerts the reporter without changing the status. A rejection by either needs a comment.
 - **Reports become projects.** When the authority approves, the report's status becomes `APPROVED`
   and a cleanup project is created automatically, owned by the person who reported the site. The
-  owner gets a "Project owner" badge and the project listed on their profile.
+  owner gets a "Project owner" badge and the project listed on their profile. From then on it is
+  only a project: report lists, filters and the `reportedSites` / status counts in analytics leave it
+  out, and the project keeps a link (`reportId`) to its original evidence and approvals.
 - **Project completion.** A progress update at 100% closes the project, marks the linked
   report `CLEANED`, and increments each diver's completed-project count.
 

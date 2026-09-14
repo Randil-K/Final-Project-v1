@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Icon, IconButton, Button, Avatar, Textarea, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import MapLink from '../../components/MapLink.jsx';
@@ -36,8 +36,14 @@ export default function ReportReview() {
     setNotice(null);
     try {
       const updated = await action();
+      const message = typeof successMessage === 'function' ? successMessage(updated) : successMessage;
+      if (updated.projectId) {
+        // The report is a project now — carry on from the project page.
+        navigate(projectHref(updated.projectId), { replace: true, state: { notice: message } });
+        return;
+      }
       state.setData(updated);
-      setNotice(typeof successMessage === 'function' ? successMessage(updated) : successMessage);
+      setNotice(message);
       setComment('');
       setRejectOpen(false);
     } catch (err) {
@@ -57,6 +63,7 @@ export default function ReportReview() {
         const canDecide = isAuthority && report.status === 'ESCALATED';
         const canWiden = isAdmin && ['PENDING', 'VERIFYING', 'VERIFIED', 'ESCALATED'].includes(report.status);
         const hasComment = Boolean(comment.trim());
+        if (report.projectId) return <Navigate to={projectHref(report.projectId)} replace />;
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', maxWidth: 760 }}>
@@ -69,16 +76,6 @@ export default function ReportReview() {
             {notice ? <Alert tone="success" title="Done" onDismiss={() => setNotice(null)}>{notice}</Alert> : null}
             {error && !rejectOpen ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
 
-            {report.projectId ? (
-              <Alert tone="success" title={`This report is now project ${report.projectReference}`}>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
-                  The government authority approved it, so it continues as a cleanup project owned by {report.reporter?.fullName}.
-                  <Button size="sm" iconRight="arrow-right" onClick={() => navigate(projectHref(report.projectId))}>
-                    Open the project
-                  </Button>
-                </span>
-              </Alert>
-            ) : null}
 
             <PhotoPlaceholder ratio="4/3" count={report.photoUrls?.length} style={{ borderRadius: 'var(--radius-lg)' }} />
 
@@ -106,7 +103,7 @@ export default function ReportReview() {
               ) : null}
             </CommunityVerificationCard>
 
-            <ReviewStatusCard report={report} projectHref={projectHref} />
+            <ReviewStatusCard report={report} />
 
             {isAdmin && report.status === 'ESCALATED' ? (
               <Alert tone="info" title="With the government authority">
@@ -165,7 +162,7 @@ export default function ReportReview() {
                       <Button
                         iconLeft="shield-check"
                         disabled={busy || !hasComment}
-                        onClick={() => decide('APPROVED', (updated) => `Approved. ${updated.projectReference} has been created and ${updated.reporter?.fullName} is its project owner.`)}
+                        onClick={() => decide('APPROVED', (updated) => `Approved. Project ${updated.projectReference} has been created and ${updated.reporter?.fullName} is its project owner.`)}
                       >
                         Approve and create project
                       </Button>

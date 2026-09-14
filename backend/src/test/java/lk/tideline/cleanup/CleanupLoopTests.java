@@ -15,6 +15,7 @@ import lk.tideline.cleanup.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
@@ -81,6 +82,20 @@ class CleanupLoopTests {
 
         assertThat(reports.findById(project.reportId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
         assertThat(titlesFor(volunteer)).contains("Cleanup complete");
+    }
+
+    @Test
+    void anApprovedReportIsNoLongerListedAsAReport() {
+        User reporter = user(Role.CITIZEN);
+        PollutionReport open = escalatedReport(reporter);
+        ProjectResponse project = approve(reporter);
+        PageRequest page = PageRequest.of(0, 500);
+
+        assertThat(reportService.search(null, null, null, page).getContent())
+                .extracting(ReportResponse::id)
+                .contains(open.getId())
+                .doesNotContain(project.reportId());
+        assertThat(reportService.search(ReportStatus.APPROVED, null, null, page).getContent()).isEmpty();
     }
 
     @Test

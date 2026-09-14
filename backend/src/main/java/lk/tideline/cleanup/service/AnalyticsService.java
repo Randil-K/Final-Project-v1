@@ -34,14 +34,17 @@ public class AnalyticsService {
     public SummaryResponse summary() {
         Map<String, Long> byStatus = new LinkedHashMap<>();
         for (ReportStatus status : ReportStatus.values()) {
+            if (status.becameProject()) {
+                continue;
+            }
             byStatus.put(status.name(), reportRepository.countByStatus(status));
         }
 
         return new SummaryResponse(
-                reportRepository.count(),
+                reportRepository.countByStatusNotIn(ReportStatus.BECAME_PROJECT),
                 reportRepository.countByStatus(ReportStatus.VERIFIED),
                 reportRepository.countByStatus(ReportStatus.ESCALATED),
-                projectRepository.countByStatus(ProjectStatus.ACTIVE),
+                projectRepository.countByStatus(ProjectStatus.PLANNED) + projectRepository.countByStatus(ProjectStatus.ACTIVE),
                 projectRepository.countByStatus(ProjectStatus.COMPLETED),
                 userRepository.countByRoleIn(List.of(Role.CITIZEN, Role.DIVER)),
                 byStatus,

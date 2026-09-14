@@ -15,7 +15,6 @@ const FILTERS = [
   { value: 'VERIFYING', label: 'Verifying' },
   { value: 'VERIFIED', label: 'Verified' },
   { value: 'ESCALATED', label: 'With authority' },
-  { value: 'APPROVED', label: 'Projects' },
   { value: 'REJECTED', label: 'Rejected' },
 ];
 
@@ -33,7 +32,7 @@ export default function Queue() {
       <div>
         <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Review queue</h1>
         <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Administrators approve reports for the government authority; the authority's approval turns a report into a project.
+          Administrators approve reports for the government authority; once the authority approves, the report becomes a project and moves to Projects.
         </p>
       </div>
 

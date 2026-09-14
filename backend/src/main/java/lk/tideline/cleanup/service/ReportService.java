@@ -62,7 +62,12 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Page<ReportResponse> search(ReportStatus status, Severity severity, String province, Pageable pageable) {
-        return reportRepository.search(status, severity, province, pageable).map(this::toResponse);
+        // Approved reports are projects now; they're found through the projects API instead.
+        if (status != null && status.becameProject()) {
+            return Page.empty(pageable);
+        }
+        return reportRepository.search(status, ReportStatus.BECAME_PROJECT, severity, province, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

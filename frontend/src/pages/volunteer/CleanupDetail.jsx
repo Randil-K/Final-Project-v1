@@ -7,6 +7,7 @@ import ParticipantList from '../../components/ParticipantList.jsx';
 import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
+import ProjectOrigin from '../../components/ProjectOrigin.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -96,11 +97,6 @@ export default function CleanupDetail() {
               ) : null}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
                 <MapLink latitude={project.latitude} longitude={project.longitude} label="Meeting point on the map" />
-                {project.reportId ? (
-                  <Button variant="secondary" size="sm" iconLeft="flag" onClick={() => navigate(`/app/report/${project.reportId}`)}>
-                    Original report
-                  </Button>
-                ) : null}
               </div>
             </div>
 
@@ -128,6 +124,8 @@ export default function CleanupDetail() {
             {isOwner && project.status !== 'COMPLETED' ? (
               <ProgressUpdateForm projectId={project.id} onUpdated={state.setData} />
             ) : null}
+
+            <ProjectOrigin project={project} />
           </div>
         );
       }}

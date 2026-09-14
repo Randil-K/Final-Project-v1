@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Badge, Icon } from '../design-system';
+import { Badge } from '../design-system';
 import { REVIEW_DECISION, formatDate } from '../lib/format.js';
 
 function DecisionBadge({ decision, fallback }) {
@@ -28,10 +27,10 @@ function Step({ title, badge, note, meta, children }) {
 }
 
 /**
- * The review path after community verification: administrator, then government authority, and —
- * once the authority approves — the cleanup project the report became.
+ * The review path after community verification: administrator, then government authority. Approved
+ * reports redirect to their project, so this card only ever shows reports still under review.
  */
-export default function ReviewStatusCard({ report, projectHref }) {
+export default function ReviewStatusCard({ report }) {
   const authorityFallback = report.adminDecision === 'REJECTED' ? 'Not sent' : 'Waiting for administrator';
   const authorityMeta = report.decidedAt
     ? `Updated ${formatDate(report.decidedAt)}${report.authorityOfficer ? ` by ${report.authorityOfficer.fullName}` : ''}`
@@ -64,26 +63,11 @@ export default function ReviewStatusCard({ report, projectHref }) {
 
       <Step
         title="Cleanup project"
-        badge={
-          report.projectId
-            ? <Badge tone="success" icon="check">Created</Badge>
-            : <Badge tone="neutral">After approval</Badge>
-        }
+        badge={<Badge tone="neutral">After approval</Badge>}
       >
-        {report.projectId ? (
-          <Link
-            to={projectHref(report.projectId)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--text-label)', color: 'var(--text-link)' }}
-          >
-            <Icon name="flag" size="sm" />
-            {report.projectReference} · owned by {report.reporter?.fullName}
-            <Icon name="arrow-right" size="sm" />
-          </Link>
-        ) : (
-          <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-            Created automatically when the authority approves, with the reporter as project owner.
-          </span>
-        )}
+        <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+          Created automatically when the authority approves, with the reporter as project owner. From then on it is a project, not a report.
+        </span>
       </Step>
     </div>
   );
