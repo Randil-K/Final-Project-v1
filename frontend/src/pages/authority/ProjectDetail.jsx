@@ -6,6 +6,7 @@ import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
 import ProjectOrigin from '../../components/ProjectOrigin.jsx';
+import UserLink from '../../components/UserLink.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -42,7 +43,7 @@ export default function ProjectDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 4 }}>
                 <Icon name="map-pin" size="sm" />
                 {locationLine(project)}
-                {project.owner ? (user?.id === project.owner.id ? ' · you are the project owner' : ` · project owner ${project.owner.fullName}`) : ''}
+                {project.owner ? (user?.id === project.owner.id ? ' · you are the project owner' : <>{' · project owner '}<UserLink user={project.owner} style={{ color: 'var(--text-link)', fontWeight: 600 }} /></>) : ''}
               </div>
               {project.description ? (
                 <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 8 }}>{project.description}</p>

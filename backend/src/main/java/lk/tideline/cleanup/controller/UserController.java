@@ -3,6 +3,7 @@ package lk.tideline.cleanup.controller;
 import jakarta.validation.Valid;
 import lk.tideline.cleanup.dto.UserDtos.UpdateDiverProfileRequest;
 import lk.tideline.cleanup.dto.UserDtos.UpdateProfileRequest;
+import lk.tideline.cleanup.dto.UserDtos.PublicProfileResponse;
 import lk.tideline.cleanup.dto.UserDtos.UserResponse;
 import lk.tideline.cleanup.service.CurrentUserService;
 import lk.tideline.cleanup.service.UserService;
@@ -35,8 +36,9 @@ public class UserController {
         return userService.updateDiverProfile(currentUser.require().getId(), request);
     }
 
+    /** Another member's profile: no email, phone or location. */
     @GetMapping("/{id}")
-    public UserResponse get(@PathVariable Long id) {
-        return userService.view(id);
+    public PublicProfileResponse get(@PathVariable Long id) {
+        return userService.publicProfile(id, currentUser.require());
     }
 }

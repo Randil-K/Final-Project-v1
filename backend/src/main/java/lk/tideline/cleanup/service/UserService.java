@@ -5,6 +5,7 @@ import lk.tideline.cleanup.dto.UserDtos.AccountReviewResponse;
 import lk.tideline.cleanup.dto.UserDtos.AdminUserResponse;
 import lk.tideline.cleanup.dto.UserDtos.DocumentDownload;
 import lk.tideline.cleanup.dto.UserDtos.OwnedProject;
+import lk.tideline.cleanup.dto.UserDtos.PublicProfileResponse;
 import lk.tideline.cleanup.dto.UserDtos.SuspensionRequest;
 import lk.tideline.cleanup.dto.UserDtos.UpdateDiverProfileRequest;
 import lk.tideline.cleanup.dto.UserDtos.UpdateProfileRequest;
@@ -17,6 +18,7 @@ import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 import lk.tideline.cleanup.repository.AccountDocumentRepository;
 import lk.tideline.cleanup.repository.CleanupProjectRepository;
+import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.ProjectParticipantRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -36,25 +38,52 @@ public class UserService {
     private final AccountDocumentRepository documentRepository;
     private final DocumentStorageService storage;
     private final AlertService alertService;
+    private final PollutionReportRepository reportRepository;
 
     public UserService(UserRepository userRepository,
                        ProjectParticipantRepository participantRepository,
                        CleanupProjectRepository projectRepository,
                        AccountDocumentRepository documentRepository,
                        DocumentStorageService storage,
-                       AlertService alertService) {
+                       AlertService alertService,
+                       PollutionReportRepository reportRepository) {
         this.userRepository = userRepository;
         this.participantRepository = participantRepository;
         this.projectRepository = projectRepository;
         this.documentRepository = documentRepository;
         this.storage = storage;
         this.alertService = alertService;
+        this.reportRepository = reportRepository;
     }
 
     /** Re-loads inside a transaction so the lazy diver profile can be mapped. */
     @Transactional(readOnly = true)
     public UserResponse view(Long id) {
         return toResponse(get(id));
+    }
+
+    /**
+     * Someone's public profile. Accounts still waiting for (or refused) verification, and suspended
+     * accounts, aren't shown to other members.
+     */
+    @Transactional(readOnly = true)
+    public PublicProfileResponse publicProfile(Long id, User viewer) {
+        User user = get(id);
+        boolean self = viewer != null && viewer.getId().equals(user.getId());
+        boolean admin = viewer != null && viewer.getRole() == Role.ADMIN;
+        if (!self && !admin && (user.isSuspended() || user.getAccountStatus() != AccountStatus.APPROVED)) {
+            throw new NotFoundException("User " + id + " was not found.");
+        }
+        Double average = participantRepository.averageMark(user.getId());
+        long marked = participantRepository.countByUserIdAndContributionMarkIsNotNull(user.getId());
+        List<OwnedProject> owned = projectRepository.findByOwnerIdOrderByCreatedAtDesc(user.getId()).stream()
+                .map(OwnedProject::from)
+                .toList();
+        return PublicProfileResponse.from(user,
+                average == null ? null : Math.round(average * 10) / 10.0,
+                (int) marked,
+                reportRepository.countByReporterId(user.getId()),
+                owned);
     }
 
     private User get(Long id) {

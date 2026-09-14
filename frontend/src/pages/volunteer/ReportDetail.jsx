@@ -7,6 +7,7 @@ import ReportStatusBadge from '../../components/ReportStatusBadge.jsx';
 import CommunityVerificationCard from '../../components/CommunityVerificationCard.jsx';
 import ReviewStatusCard from '../../components/ReviewStatusCard.jsx';
 import Discussion from '../../components/Discussion.jsx';
+import UserLink from '../../components/UserLink.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -65,9 +66,9 @@ export default function ReportDetail() {
                 <MapLink latitude={report.latitude} longitude={report.longitude} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                <Avatar name={report.reporter?.fullName || ''} size="sm" />
+                <UserLink user={report.reporter}><Avatar name={report.reporter?.fullName || ''} size="sm" /></UserLink>
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                  {isReporter ? 'Reported by you' : `Reported by ${report.reporter?.fullName}`} · {formatDate(report.createdAt)}
+                  {isReporter ? 'Reported by you' : <>Reported by <UserLink user={report.reporter} style={{ color: 'var(--text-link)', fontWeight: 600 }} /></>} · {formatDate(report.createdAt)}
                 </span>
               </div>
             </div>

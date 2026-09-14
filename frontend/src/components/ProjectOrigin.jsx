@@ -4,6 +4,7 @@ import EvidenceGallery from './EvidenceGallery.jsx';
 import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import UserLink from './UserLink.jsx';
 import { SEVERITY_LABEL, SEVERITY_VAR, formatDate, plural } from '../lib/format.js';
 
 function Row({ icon, children }) {
@@ -46,7 +47,7 @@ export default function ProjectOrigin({ project }) {
           {user?.id === origin.reporter?.id ? (
             <>You spotted this pollution on {formatDate(origin.createdAt)}</>
           ) : (
-            <>Pollution spotted by <strong style={{ color: 'var(--text-heading)' }}>{origin.reporter?.fullName}</strong> on {formatDate(origin.createdAt)}</>
+            <>Pollution spotted by <UserLink user={origin.reporter} style={{ color: 'var(--text-link)', fontWeight: 600 }} /> on {formatDate(origin.createdAt)}</>
           )}
         </span>
       </Row>

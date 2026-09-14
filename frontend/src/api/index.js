@@ -26,6 +26,7 @@ export const api = {
 
   users: {
     me: () => request('/api/users/me'),
+    profile: (id) => request(`/api/users/${id}`),
     updateProfile: (payload) => request('/api/users/me', { method: 'PUT', body: payload }),
     updateDiverProfile: (payload) =>
       request('/api/users/me/diver-profile', { method: 'PUT', body: payload }),

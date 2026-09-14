@@ -48,6 +48,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Alerts (both apps) | `GET /api/alerts` · `POST /{id}/read` · `POST /read-all` · `GET /unread-count` (nav badge) |
 | Opportunities — diver | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` (shows accepted / not selected) |
 | Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
+| Member profile | `GET /api/users/{id}` — names on reports, comments, projects and participants link here |
 | Profile | `GET`/`PUT /api/users/me` (account status, project owner badge and owned projects) (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
 | Review queue | `GET /api/reports?reviewQueue=true` (verified, with authority, rejected) |
 | Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · Additional information tab (`GET /info-requests`, photos via authenticated blob) |

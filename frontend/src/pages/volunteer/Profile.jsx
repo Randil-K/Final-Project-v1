@@ -1,33 +1,38 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Badge, Button, Card, Input, Select, Switch, Tag, Icon, Alert } from '../../design-system';
+import { Badge, Button, Input, Select, Switch, Tag, Alert } from '../../design-system';
+import ProfileOverview, { DetailRow, DetailSection } from '../../components/ProfileOverview.jsx';
+import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
+import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import {
-  ACCOUNT_STATUS,
-  CERTIFICATION_OPTIONS,
-  PROJECT_STATUS_LABEL,
-  PROJECT_STATUS_TONE,
-  PROVINCES,
-  ROLE_LABEL,
-  plural,
-} from '../../lib/format.js';
+import { ACCOUNT_STATUS, CERTIFICATION_OPTIONS, PROVINCES } from '../../lib/format.js';
 
-export default function Profile() {
-  const navigate = useNavigate();
-  const { user, setUser, logout } = useAuth();
-
-  const [form, setForm] = React.useState({
+function formFrom(user) {
+  return {
     fullName: user?.fullName || '',
     phone: user?.phone || '',
     province: user?.province || '',
     city: user?.city || '',
-  });
-  const [diver, setDiver] = React.useState({
+  };
+}
+
+function diverFrom(user) {
+  return {
     certificationLevel: user?.diverProfile?.certificationLevel || '',
     experienceYears: user?.diverProfile?.experienceYears ?? '',
     equipment: user?.diverProfile?.equipment || '',
-  });
+  };
+}
+
+export default function Profile() {
+  const navigate = useNavigate();
+  const { user, setUser, logout } = useAuth();
+  const profileState = useApi(() => (user ? api.users.profile(user.id) : Promise.resolve(null)), [user]);
+
+  const [editing, setEditing] = React.useState(false);
+  const [form, setForm] = React.useState(() => formFrom(user));
+  const [diver, setDiver] = React.useState(() => diverFrom(user));
   const [regions, setRegions] = React.useState(user?.diverProfile?.preferredRegions || []);
   const [available, setAvailable] = React.useState(user?.availableForAlerts ?? true);
   const [status, setStatus] = React.useState(null);
@@ -35,12 +40,20 @@ export default function Profile() {
   const [locating, setLocating] = React.useState(false);
 
   const isDiver = user?.role === 'DIVER';
-  const ownedProjects = user?.ownedProjects || [];
   const hasLocation = user?.latitude != null && user?.longitude != null;
   const remainingRegions = PROVINCES.filter((p) => !regions.includes(p));
 
   const set = (key) => (event) => setForm((f) => ({ ...f, [key]: event.target.value }));
   const setDiverField = (key) => (event) => setDiver((d) => ({ ...d, [key]: event.target.value }));
+
+  function startEditing() {
+    setForm(formFrom(user));
+    setDiver(diverFrom(user));
+    setRegions(user?.diverProfile?.preferredRegions || []);
+    setAvailable(user?.availableForAlerts ?? true);
+    setStatus(null);
+    setEditing(true);
+  }
 
   function captureLocation() {
     setStatus(null);
@@ -52,7 +65,6 @@ export default function Profile() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          // Saved straight away — alerts depend on it, and it's easy to forget the Save button.
           setUser(await api.users.updateProfile({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -86,6 +98,7 @@ export default function Profile() {
         });
       }
       setUser(updated);
+      setEditing(false);
       setStatus({ tone: 'success', title: 'Saved', message: 'Your profile is up to date.' });
     } catch (error) {
       setStatus({ tone: 'danger', title: "That didn't save", message: error.message });
@@ -101,96 +114,73 @@ export default function Profile() {
 
   if (!user) return null;
 
+  const statusAlert = status ? (
+    <Alert tone={status.tone} title={status.title} onDismiss={() => setStatus(null)}>{status.message}</Alert>
+  ) : null;
+
+  if (!editing) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        {statusAlert}
+        <Async state={profileState}>
+          {(profile) => (
+            <ProfileOverview
+              profile={profile}
+              actions={<Button variant="secondary" iconLeft="settings" onClick={startEditing}>Edit profile</Button>}
+            >
+              <DetailSection title="Account">
+                <DetailRow icon="user" label="Email">{user.email}</DetailRow>
+                <DetailRow icon="message-square" label="Phone">{user.phone || '—'}</DetailRow>
+                {isDiver || user.role === 'ORGANIZATION' ? (
+                  <DetailRow icon="shield-check" label="Account status">
+                    <Badge tone={ACCOUNT_STATUS[user.accountStatus]?.tone} size="sm">{ACCOUNT_STATUS[user.accountStatus]?.label}</Badge>
+                  </DetailRow>
+                ) : null}
+                {isDiver ? <DetailRow icon="life-buoy" label="Equipment">{user.diverProfile?.equipment || '—'}</DetailRow> : null}
+                <DetailRow icon="map-pin" label="Alert location">
+                  {hasLocation ? `${user.latitude.toFixed(4)}° N, ${user.longitude.toFixed(4)}° E` : 'Not set'}
+                </DetailRow>
+                <DetailRow icon="bell" label="Cleanup alerts">{user.availableForAlerts ? 'On' : 'Off'}</DetailRow>
+              </DetailSection>
+            </ProfileOverview>
+          )}
+        </Async>
+
+        <Button variant="secondary" iconLeft="log-out" onClick={signOut} style={{ alignSelf: 'flex-start' }}>
+          Sign out
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <Avatar name={user.fullName} role={isDiver ? 'diver' : undefined} size="lg" />
-        <div>
-          <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{user.fullName}</h1>
-          <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-            <Badge tone="accent" icon={isDiver ? 'anchor' : 'user'}>{ROLE_LABEL[user.role] || user.role}</Badge>
-            {isDiver || user.role === 'ORGANIZATION' ? (
-              <Badge tone={ACCOUNT_STATUS[user.accountStatus]?.tone} icon="shield-check">{ACCOUNT_STATUS[user.accountStatus]?.label}</Badge>
-            ) : null}
-            {ownedProjects.length ? (
-              <Badge tone="success" icon="flag">Project owner</Badge>
-            ) : null}
-            {user.averageMark != null ? (
-              <Badge tone="success" icon="badge-check">Rated {user.averageMark} / 5</Badge>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Edit profile</h1>
 
-      {status ? <Alert tone={status.tone} title={status.title} onDismiss={() => setStatus(null)}>{status.message}</Alert> : null}
-
-      {ownedProjects.length ? (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <div>
-            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Project owner</span>
-            <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
-              You reported these sites and the government authority approved them, so you own their cleanup projects.
-            </p>
-          </div>
-          {ownedProjects.map((project) => (
-            <Card key={project.id} padding="md" interactive onClick={() => navigate(`/app/cleanups/${project.id}`)} style={{ cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <span style={{ width: 40, height: 40, flex: '0 0 auto', borderRadius: '50%', background: 'var(--status-verified-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="flag" size="sm" color="var(--status-verified)" />
-                </span>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ font: '600 12px/1.4 var(--font-mono)', color: 'var(--text-muted)' }}>{project.reference}</span>
-                  <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {project.title}
-                  </span>
-                </div>
-                <Badge tone={PROJECT_STATUS_TONE[project.status]}>{PROJECT_STATUS_LABEL[project.status]}</Badge>
-              </div>
-            </Card>
-          ))}
-        </section>
-      ) : null}
-
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Alert location</span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: hasLocation ? 'var(--surface-sunken)' : 'var(--accent-soft)' }}>
-          <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
-            {hasLocation
-              ? `Alerts reach you for reports and cleanups within 5 km of ${user.latitude.toFixed(4)}° N, ${user.longitude.toFixed(4)}° E.`
-              : "No location saved yet, so you won't hear about pollution near you."}
-          </span>
-          <Button variant={hasLocation ? 'secondary' : 'primary'} size="sm" iconLeft="map-pin" onClick={captureLocation} disabled={locating} style={{ alignSelf: 'flex-start' }}>
-            {locating ? 'Locating…' : hasLocation ? 'Update to my current location' : 'Use my current location'}
-          </Button>
-        </div>
-        <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-          <Switch
-            label="Available for cleanup alerts"
-            hint="Turn off if you don't want to be notified for new assignments right now."
-            checked={available}
-            onChange={(e) => setAvailable(e.target.checked)}
-          />
-        </div>
-      </section>
+      {statusAlert}
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Contact details</span>
         <Input label="Full name" value={form.fullName} onChange={set('fullName')} />
-        <Input label="Email" type="email" value={user.email} disabled hint="Your email is the account identifier and cannot be changed here." />
+        <Input label="Email" type="email" value={user.email} disabled />
         <Input label="Phone" type="tel" value={form.phone} onChange={set('phone')} />
         <Input label="City or town" iconLeft="map-pin" value={form.city} onChange={set('city')} />
         <Select label="Province" placeholder="Select your province" options={PROVINCES} value={form.province} onChange={set('province')} />
-        {user.role === 'ORGANIZATION' && user.websiteUrl ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Website</span>
-            <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--text-body-sm)', overflowWrap: 'anywhere' }}>
-              {user.websiteUrl}
-            </a>
-            <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-              Checked by an administrator when you registered. Contact an administrator to change it.
-            </span>
-          </div>
-        ) : null}
+      </section>
+
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Alerts</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+          <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
+            {hasLocation ? `${user.latitude.toFixed(4)}° N, ${user.longitude.toFixed(4)}° E` : 'No location saved'}
+          </span>
+          <Button variant="secondary" size="sm" iconLeft="map-pin" onClick={captureLocation} disabled={locating} style={{ alignSelf: 'flex-start' }}>
+            {locating ? 'Locating…' : hasLocation ? 'Update to my current location' : 'Use my current location'}
+          </Button>
+        </div>
+        <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+          <Switch label="Available for cleanup alerts" checked={available} onChange={(e) => setAvailable(e.target.checked)} />
+        </div>
       </section>
 
       {isDiver ? (
@@ -202,18 +192,15 @@ export default function Profile() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Preferred working regions</span>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              {regions.map((region) => (
-                <Tag key={region} icon="map-pin" onRemove={() => setRegions((rs) => rs.filter((r) => r !== region))}>
-                  {region}
-                </Tag>
-              ))}
-              {!regions.length ? (
-                <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                  None chosen — you'll hear about opportunities in every region.
-                </span>
-              ) : null}
-            </div>
+            {regions.length ? (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                {regions.map((region) => (
+                  <Tag key={region} icon="map-pin" onRemove={() => setRegions((rs) => rs.filter((r) => r !== region))}>
+                    {region}
+                  </Tag>
+                ))}
+              </div>
+            ) : null}
             {remainingRegions.length ? (
               <Select
                 placeholder="Add a region"
@@ -229,30 +216,12 @@ export default function Profile() {
         </section>
       ) : null}
 
-      {user.role === 'DIVER' || user.role === 'CITIZEN' ? (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Volunteer record</span>
-          {isDiver ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
-              <Icon name="check-check" size="sm" color="var(--status-verified)" />
-              {plural(user.diverProfile?.completedProjects ?? 0, 'cleanup project')} completed
-            </div>
-          ) : null}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
-            <Icon name="badge-check" size="sm" color="var(--accent)" />
-            {user.averageMark != null
-              ? `Rated ${user.averageMark} / 5 by project owners across ${plural(user.markedCleanups, 'cleanup')}`
-              : 'No ratings yet — project owners rate you after your first completed cleanup.'}
-          </div>
-        </section>
-      ) : null}
-
       <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
         <Button fullWidth onClick={save} loading={busy} disabled={busy}>
           {busy ? 'Saving…' : 'Save changes'}
         </Button>
-        <Button variant="secondary" iconLeft="log-out" onClick={signOut}>
-          Sign out
+        <Button variant="secondary" onClick={() => { setStatus(null); setEditing(false); }} disabled={busy}>
+          Cancel
         </Button>
       </div>
     </div>

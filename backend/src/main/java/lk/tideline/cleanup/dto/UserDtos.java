@@ -65,6 +65,54 @@ public final class UserDtos {
         }
     }
 
+    /**
+     * What other signed-in people see on someone's profile. No email, phone or saved location.
+     */
+    public record PublicProfileResponse(
+            Long id,
+            String fullName,
+            Role role,
+            boolean verified,
+            String province,
+            String city,
+            Instant memberSince,
+            String organizationName,
+            OrganizationType organizationType,
+            String websiteUrl,
+            CertificationLevel certificationLevel,
+            Integer experienceYears,
+            List<String> preferredRegions,
+            Integer completedProjects,
+            Double averageMark,
+            Integer markedCleanups,
+            long reportsSubmitted,
+            List<OwnedProject> ownedProjects
+    ) {
+        public static PublicProfileResponse from(User user, Double averageMark, Integer markedCleanups,
+                                                 long reportsSubmitted, List<OwnedProject> ownedProjects) {
+            DiverProfile diver = user.getDiverProfile();
+            return new PublicProfileResponse(
+                    user.getId(),
+                    user.getFullName(),
+                    user.getRole(),
+                    user.getAccountStatus() == AccountStatus.APPROVED,
+                    user.getProvince(),
+                    user.getCity(),
+                    user.getCreatedAt(),
+                    user.getOrganizationName(),
+                    user.getOrganizationType(),
+                    user.getWebsiteUrl(),
+                    diver == null ? null : diver.getCertificationLevel(),
+                    diver == null ? null : diver.getExperienceYears(),
+                    diver == null ? null : List.copyOf(diver.getPreferredRegions()),
+                    diver == null ? null : diver.getCompletedProjects(),
+                    averageMark,
+                    markedCleanups,
+                    reportsSubmitted,
+                    ownedProjects);
+        }
+    }
+
     public record OwnedProject(Long id, String reference, String title, ProjectStatus status) {
         public static OwnedProject from(CleanupProject project) {
             return new OwnedProject(project.getId(), project.getReference(), project.getTitle(), project.getStatus());

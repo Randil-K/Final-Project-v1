@@ -43,6 +43,8 @@ public interface PollutionReportRepository extends JpaRepository<PollutionReport
 
     long countByStatus(ReportStatus status);
 
+    long countByReporterId(Long reporterId);
+
     long countByStatusNotIn(Collection<ReportStatus> statuses);
 
     @Query("select r.province, count(r) from PollutionReport r group by r.province order by count(r) desc")

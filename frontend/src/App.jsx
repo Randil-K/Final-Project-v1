@@ -16,6 +16,7 @@ import SubmitReport from './pages/volunteer/SubmitReport.jsx';
 import Alerts from './pages/volunteer/Alerts.jsx';
 import Opportunities from './pages/volunteer/Opportunities.jsx';
 import Profile from './pages/volunteer/Profile.jsx';
+import UserProfile from './pages/volunteer/UserProfile.jsx';
 import Cleanups from './pages/volunteer/Cleanups.jsx';
 import CleanupDetail from './pages/volunteer/CleanupDetail.jsx';
 
@@ -74,6 +75,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <Opportunities />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="users/:id"
+              element={
+                <RequireAuth>
+                  <UserProfile />
                 </RequireAuth>
               }
             />

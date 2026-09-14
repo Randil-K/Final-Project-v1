@@ -75,6 +75,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/auth/register` (multipart: `data` JSON + `certificates` files) | 1 | public (citizen / diver / organisation only) |
 | POST | `/api/auth/login` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
+| GET | `/api/users/{id}` (public profile: no email, phone or location; unverified accounts hidden) | 1 | authenticated |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
 | GET | `/api/reports` (open reports only — approved ones are projects; `reviewQueue=true` for the admin queue) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
 | POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |

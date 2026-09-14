@@ -5,6 +5,7 @@ import { Async } from './AsyncState.jsx';
 import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
 import { formatDate, timeAgo } from '../lib/format.js';
+import UserLink from './UserLink.jsx';
 
 const REACTIONS = [
   { type: 'LIKE', label: 'Like', icon: 'thumbs-up', color: 'var(--tide-600)', countKey: 'likeCount' },
@@ -30,11 +31,13 @@ function Comment({ comment, user, onReact, onReply, reacting, small }) {
   const mine = user?.id === comment.author?.id;
   return (
     <div style={{ display: 'flex', gap: 10 }}>
-      <Avatar name={comment.author?.fullName || ''} size={small ? 'xs' : 'sm'} role={comment.official ? 'authority' : undefined} />
+      <UserLink user={comment.author} style={{ flex: '0 0 auto', height: 'fit-content' }}>
+        <Avatar name={comment.author?.fullName || ''} size={small ? 'xs' : 'sm'} role={comment.official ? 'authority' : undefined} />
+      </UserLink>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
         <div style={{ alignSelf: 'flex-start', maxWidth: '100%', padding: '8px 12px', borderRadius: 'var(--radius-lg)', background: 'var(--surface-sunken)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--text-label)', color: 'var(--text-heading)' }}>
-            {mine ? 'You' : comment.author?.fullName}
+            <UserLink user={comment.author}>{mine ? 'You' : comment.author?.fullName}</UserLink>
             {comment.official ? <Badge tone="info" size="sm">Official</Badge> : null}
           </span>
           <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{comment.body}</p>
