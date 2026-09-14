@@ -29,9 +29,6 @@ export default function Queue() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       <div>
         <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Review queue</h1>
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Reports arrive here once at least 8 people confirm them with 75% trust. Administrators approve them for the government authority; once the authority approves, the report becomes a project and moves to Projects.
-        </p>
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

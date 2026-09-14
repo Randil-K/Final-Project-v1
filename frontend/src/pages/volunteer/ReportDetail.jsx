@@ -98,7 +98,6 @@ export default function ReportDetail() {
             {isReporter && report.infoRequestStatus === 'OPEN' ? (
               <Alert tone="danger" title="Action needed: reviewers need more information">
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
-                  Answer their request with a description and photos. Only the reviewers see it.
                   <Button size="sm" variant="danger" iconRight="arrow-right" onClick={() => navigate(`/app/report/${id}/more-info`)}>
                     Add information
                   </Button>

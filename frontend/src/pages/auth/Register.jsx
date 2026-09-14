@@ -177,7 +177,7 @@ export default function Register() {
               <DocumentPicker
                 label="Certificates"
                 required
-                hint="Your diving certification card or logbook page. Only administrators can see these."
+                hint="Your diving certification card or logbook page."
                 files={certificates}
                 onChange={setCertificates}
               />

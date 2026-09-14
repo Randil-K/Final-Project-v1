@@ -58,14 +58,7 @@ export default function ReviewStatusCard({ report }) {
         meta={authorityMeta}
       />
 
-      <Step
-        title="Cleanup project"
-        badge={<Badge tone="neutral">After approval</Badge>}
-      >
-        <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-          Created automatically when the authority approves, with the reporter as project owner. From then on it is a project, not a report.
-        </span>
-      </Step>
+      <Step title="Cleanup project" badge={<Badge tone="neutral">After approval</Badge>} />
     </div>
   );
 }

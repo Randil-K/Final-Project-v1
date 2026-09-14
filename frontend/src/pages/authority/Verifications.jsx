@@ -87,9 +87,6 @@ export default function Verifications() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       <div>
         <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Account verifications</h1>
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Volunteer divers and organisations can't sign in until you check their certificates or website and approve them.
-        </p>
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

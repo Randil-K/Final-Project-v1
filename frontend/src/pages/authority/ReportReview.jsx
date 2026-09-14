@@ -135,9 +135,6 @@ export default function ReportReview() {
 
             {tab === 'info' ? (
               <>
-                <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                  Only administrators and government officers see this tab.
-                </p>
                 <Async state={infoState}>
                   {(list) => <InfoRequestsPanel requests={list} reporterName={report.reporter?.fullName} />}
                 </Async>
@@ -223,17 +220,6 @@ export default function ReportReview() {
                     Reject report
                   </Button>
                 </div>
-                {canModerate && !verified ? (
-                  <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                    Approving and requesting more information open once {report.minimumConfirmations} people confirm the report
-                    with {report.thresholdPercent}% trust. You can reject a false report at any time.
-                  </span>
-                ) : null}
-                {waitingForReporter ? (
-                  <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                    Waiting for the reporter to answer your last request. You can still approve or reject.
-                  </span>
-                ) : null}
               </div>
             ) : null}
 

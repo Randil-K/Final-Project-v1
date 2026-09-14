@@ -102,7 +102,6 @@ export default function MoreInfo() {
 
                 <EvidencePicker
                   label="Photos"
-                  hint="Optional. Only the reviewers see these."
                   photosOnly
                   files={photos}
                   onChange={setPhotos}
