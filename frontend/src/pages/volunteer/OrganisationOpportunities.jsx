@@ -6,6 +6,7 @@ import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { APPLICATION_STATUS, CERTIFICATION_LABEL, CERTIFICATION_OPTIONS, PROVINCES, plural } from '../../lib/format.js';
+import { mediaUrl } from '../../api/client.js';
 
 const EMPTY = { title: '', description: '', region: '', requiredCertification: '', paid: false };
 
@@ -176,7 +177,7 @@ function Applicant({ application, busy, onDecide }) {
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-      <Avatar name={application.diver?.fullName || ''} size="sm" role="diver" />
+      <Avatar name={application.diver?.fullName || ''} src={mediaUrl(application.diver?.avatarUrl)} size="sm" role="diver" />
       <div style={{ flex: 1, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{application.diver?.fullName}</span>
         <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>{record}</span>

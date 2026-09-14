@@ -7,6 +7,7 @@ import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { ACCOUNT_STATUS, CERTIFICATION_OPTIONS, PROVINCES } from '../../lib/format.js';
+import AvatarEditor from '../../components/AvatarEditor.jsx';
 
 function formFrom(user) {
   return {
@@ -128,6 +129,17 @@ export default function Profile() {
             <ProfileOverview
               profile={profile}
               actions={<Button variant="secondary" iconLeft="settings" onClick={startEditing}>Edit profile</Button>}
+              avatar={
+                <AvatarEditor
+                  user={user}
+                  name={user.role === 'ORGANIZATION' && user.organizationName ? user.organizationName : user.fullName}
+                  role={isDiver ? 'diver' : undefined}
+                  onChange={(updated) => {
+                    setUser(updated);
+                    setStatus(null);
+                  }}
+                />
+              }
             >
               <DetailSection title="Account">
                 <DetailRow icon="user" label="Email">{user.email}</DetailRow>

@@ -14,6 +14,7 @@ import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { formatDate, locationLine } from '../../lib/format.js';
+import { mediaUrl } from '../../api/client.js';
 
 const projectHref = (projectId) => `/console/projects/${projectId}`;
 
@@ -97,7 +98,7 @@ export default function ReportReview() {
               </div>
               <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)' }}>{report.description}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <Avatar name={report.reporter?.fullName || ''} size="sm" />
+                <Avatar name={report.reporter?.fullName || ''} src={mediaUrl(report.reporter?.avatarUrl)} size="sm" />
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginRight: 'auto' }}>
                   {user?.id === report.reporter?.id ? 'Reported by you' : <>Reported by <UserLink user={report.reporter} style={{ color: 'var(--text-link)', fontWeight: 600 }} /></>} · {formatDate(report.createdAt)}
                 </span>

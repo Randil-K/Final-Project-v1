@@ -10,6 +10,7 @@ import {
   formatDate,
   plural,
 } from '../lib/format.js';
+import { mediaUrl } from '../api/client.js';
 
 export function DetailRow({ icon, label, children }) {
   return (
@@ -40,7 +41,7 @@ function Stat({ value, label }) {
 }
 
 /** Everything anyone can see on a member's profile; `actions` sits beside the name (e.g. Edit). */
-export default function ProfileOverview({ profile, actions, children }) {
+export default function ProfileOverview({ profile, actions, avatar, children }) {
   const navigate = useNavigate();
   const isDiver = profile.role === 'DIVER';
   const isOrganisation = profile.role === 'ORGANIZATION';
@@ -51,7 +52,7 @@ export default function ProfileOverview({ profile, actions, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-        <Avatar name={displayName} role={isDiver ? 'diver' : undefined} size="lg" />
+        {avatar ?? <Avatar name={displayName} src={mediaUrl(profile.avatarUrl)} role={isDiver ? 'diver' : undefined} size={88} />}
         <div style={{ flex: 1, minWidth: 200 }}>
           <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{displayName}</h1>
           <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>

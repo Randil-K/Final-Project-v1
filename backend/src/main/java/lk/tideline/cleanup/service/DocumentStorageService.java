@@ -35,6 +35,8 @@ public class DocumentStorageService {
     public static final int MAX_EVIDENCE_FILES = 6;
     private static final String EVIDENCE_FOLDER = "evidence";
     private static final String INFO_FOLDER = "info";
+    private static final String AVATAR_FOLDER = "avatars";
+    public static final long MAX_AVATAR_BYTES = 5L * 1024 * 1024;
     private static final Pattern INFO_NAME = Pattern.compile("[0-9a-f-]{36}\\.(jpg|png|webp)");
     private static final Pattern EVIDENCE_NAME = Pattern.compile("[0-9a-f-]{36}\\.(jpg|png|webp|mp4|mov|webm)");
 
@@ -45,6 +47,7 @@ public class DocumentStorageService {
         try {
             Files.createDirectories(root.resolve(EVIDENCE_FOLDER));
             Files.createDirectories(root.resolve(INFO_FOLDER));
+            Files.createDirectories(root.resolve(AVATAR_FOLDER));
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot create the upload directory " + root, e);
         }
@@ -122,6 +125,47 @@ public class DocumentStorageService {
             }
         }
         return checked;
+    }
+
+    /** A profile picture: one JPG, PNG or WebP image up to 5 MB. */
+    public CheckedFile checkAvatar(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Choose a photo to upload.");
+        }
+        CheckedFile checked = checkInfoPhotos(List.of(file)).get(0);
+        if (checked.bytes().length > MAX_AVATAR_BYTES) {
+            throw new IllegalArgumentException(checked.originalName() + " is larger than 5 MB.");
+        }
+        return checked;
+    }
+
+    public String saveAvatar(CheckedFile file) {
+        String storedName = UUID.randomUUID() + file.extension();
+        write(AVATAR_FOLDER + "/" + storedName, file.bytes());
+        return storedName;
+    }
+
+    public Path avatarPath(String storedName) {
+        if (storedName == null || !INFO_NAME.matcher(storedName).matches()) {
+            throw new NotFoundException("That file was not found.");
+        }
+        Path path = resolve(AVATAR_FOLDER + "/" + storedName);
+        if (!Files.isRegularFile(path)) {
+            throw new NotFoundException("That file was not found.");
+        }
+        return path;
+    }
+
+    /** Best-effort: a missing file is fine, the account no longer points at it. */
+    public void deleteAvatar(String storedName) {
+        if (storedName == null || !INFO_NAME.matcher(storedName).matches()) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(resolve(AVATAR_FOLDER + "/" + storedName));
+        } catch (IOException ignored) {
+            // Leaving an orphaned file behind is harmless.
+        }
     }
 
     public String saveInfoPhoto(CheckedFile file) {

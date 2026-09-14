@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*", "/api/reports/evidence/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projects", "/api/projects/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/analytics/summary").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/analytics/summary", "/api/users/avatars/*").permitAll()
                         .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))

@@ -20,9 +20,15 @@ public final class UserDtos {
     private UserDtos() {
     }
 
+    /** Where a member's profile picture is served, or null when they haven't added one. */
+    public static String avatarUrlOf(User user) {
+        return user == null || user.getAvatarStoredName() == null ? null : "/api/users/avatars/" + user.getAvatarStoredName();
+    }
+
     public record UserResponse(
             Long id,
             String fullName,
+            String avatarUrl,
             String email,
             String phone,
             Role role,
@@ -46,6 +52,7 @@ public final class UserDtos {
             return new UserResponse(
                     user.getId(),
                     user.getFullName(),
+                    avatarUrlOf(user),
                     user.getEmail(),
                     user.getPhone(),
                     user.getRole(),
@@ -71,6 +78,7 @@ public final class UserDtos {
     public record PublicProfileResponse(
             Long id,
             String fullName,
+            String avatarUrl,
             Role role,
             boolean verified,
             String province,
@@ -94,6 +102,7 @@ public final class UserDtos {
             return new PublicProfileResponse(
                     user.getId(),
                     user.getFullName(),
+                    avatarUrlOf(user),
                     user.getRole(),
                     user.getAccountStatus() == AccountStatus.APPROVED,
                     user.getProvince(),
@@ -120,12 +129,12 @@ public final class UserDtos {
     }
 
     /** Compact author reference embedded in reports, comments and projects. */
-    public record UserSummary(Long id, String fullName, Role role) {
+    public record UserSummary(Long id, String fullName, Role role, String avatarUrl) {
         public static UserSummary from(User user) {
             if (user == null) {
                 return null;
             }
-            return new UserSummary(user.getId(), user.getFullName(), user.getRole());
+            return new UserSummary(user.getId(), user.getFullName(), user.getRole(), avatarUrlOf(user));
         }
     }
 
@@ -174,6 +183,7 @@ public final class UserDtos {
     public record AdminUserResponse(
             Long id,
             String fullName,
+            String avatarUrl,
             String email,
             Role role,
             AccountStatus accountStatus,
@@ -187,6 +197,7 @@ public final class UserDtos {
             return new AdminUserResponse(
                     user.getId(),
                     user.getFullName(),
+                    avatarUrlOf(user),
                     user.getEmail(),
                     user.getRole(),
                     user.getAccountStatus(),

@@ -8,6 +8,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { formatDate, reviewStage } from '../../lib/format.js';
+import { mediaUrl } from '../../api/client.js';
 
 const FILTERS = [
   { value: 'all', label: 'All reports' },
@@ -80,7 +81,7 @@ export default function Queue() {
                   >
                     <span style={{ font: '600 12px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{report.reference}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                      <Avatar name={report.reporter?.fullName || ''} size="xs" />
+                      <Avatar name={report.reporter?.fullName || ''} src={mediaUrl(report.reporter?.avatarUrl)} size="xs" />
                       <span style={{ color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {report.title}
                       </span>

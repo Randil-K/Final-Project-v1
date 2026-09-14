@@ -5,6 +5,7 @@ import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { ACCOUNT_STATUS, ROLE_LABEL, formatDate } from '../../lib/format.js';
+import { mediaUrl } from '../../api/client.js';
 
 const COLUMNS = 'minmax(240px, 2fr) 150px 170px 100px 110px 120px';
 
@@ -74,7 +75,7 @@ export default function Users() {
               {users.map((user) => (
                 <div key={user.id} style={{ display: 'grid', gridTemplateColumns: COLUMNS, alignItems: 'center', padding: 'var(--space-3) var(--space-4)', borderTop: '1px solid var(--border-subtle)', font: 'var(--text-body-sm)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                    <Avatar name={user.fullName} size="sm" />
+                    <Avatar name={user.fullName} src={mediaUrl(user.avatarUrl)} size="sm" />
                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                       <span style={{ color: 'var(--text-heading)', font: 'var(--text-label)' }}>{user.fullName}</span>
                       <span style={{ color: 'var(--text-muted)', font: 'var(--text-caption)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</span>

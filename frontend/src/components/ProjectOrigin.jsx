@@ -6,6 +6,7 @@ import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import UserLink from './UserLink.jsx';
 import { SEVERITY_LABEL, SEVERITY_VAR, formatDate, plural } from '../lib/format.js';
+import { mediaUrl } from '../api/client.js';
 
 function Row({ icon, children }) {
   return (
@@ -43,7 +44,7 @@ export default function ProjectOrigin({ project }) {
 
       <Row icon="user">
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Avatar name={origin.reporter?.fullName || ''} size="xs" />
+          <Avatar name={origin.reporter?.fullName || ''} src={mediaUrl(origin.reporter?.avatarUrl)} size="xs" />
           {user?.id === origin.reporter?.id ? (
             <>You spotted this pollution on {formatDate(origin.createdAt)}</>
           ) : (

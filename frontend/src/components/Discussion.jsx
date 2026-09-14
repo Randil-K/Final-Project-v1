@@ -6,6 +6,7 @@ import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
 import { formatDate, timeAgo } from '../lib/format.js';
 import UserLink from './UserLink.jsx';
+import { mediaUrl } from '../api/client.js';
 
 const REACTIONS = [
   { type: 'LIKE', label: 'Like', icon: 'thumbs-up', color: 'var(--tide-600)', countKey: 'likeCount' },
@@ -32,7 +33,7 @@ function Comment({ comment, user, onReact, onReply, reacting, small }) {
   return (
     <div style={{ display: 'flex', gap: 10 }}>
       <UserLink user={comment.author} style={{ flex: '0 0 auto', height: 'fit-content' }}>
-        <Avatar name={comment.author?.fullName || ''} size={small ? 'xs' : 'sm'} role={comment.official ? 'authority' : undefined} />
+        <Avatar name={comment.author?.fullName || ''} src={mediaUrl(comment.author?.avatarUrl)} size={small ? 'xs' : 'sm'} role={comment.official ? 'authority' : undefined} />
       </UserLink>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
         <div style={{ alignSelf: 'flex-start', maxWidth: '100%', padding: '8px 12px', borderRadius: 'var(--radius-lg)', background: 'var(--surface-sunken)' }}>

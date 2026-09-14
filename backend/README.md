@@ -76,6 +76,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/auth/login` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | GET | `/api/users/{id}` (public profile: no email, phone or location; unverified accounts hidden) | 1 | authenticated |
+| PUT / DELETE | `/api/users/me/avatar` (multipart `photo`: JPG, PNG or WebP up to 5 MB) | 1 | authenticated |
+| GET | `/api/users/avatars/{file}` | 1 | public |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
 | GET | `/api/reports` (open reports only — approved ones are projects; `reviewQueue=true` for the admin queue) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
 | POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |

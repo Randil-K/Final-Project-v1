@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, Badge, Icon } from '../design-system';
 import ProtectedImage from './ProtectedImage.jsx';
 import { formatDate, plural } from '../lib/format.js';
+import { mediaUrl } from '../api/client.js';
 
 const STATUS = {
   OPEN: { label: 'Waiting for reporter', tone: 'warning' },
@@ -34,7 +35,7 @@ export default function InfoRequestsPanel({ requests, reporterName }) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                <Avatar name={request.requestedBy?.fullName || ''} size="xs" role="authority" />
+                <Avatar name={request.requestedBy?.fullName || ''} src={mediaUrl(request.requestedBy?.avatarUrl)} size="xs" role="authority" />
                 {roleName(request.requestedBy)} · {request.requestedBy?.fullName} · {formatDate(request.createdAt)}
               </span>
               <Badge tone={status.tone} size="sm">{status.label}</Badge>

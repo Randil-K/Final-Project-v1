@@ -4,6 +4,7 @@ import { Icon, Avatar, Badge } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import { ROLE_LABEL } from '../lib/format.js';
+import { mediaUrl } from '../api/client.js';
 
 const NAV = [
   { to: '/console', label: 'Review queue', icon: 'list-filter', end: true },
@@ -73,7 +74,7 @@ export default function AuthorityShell() {
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 var(--space-2)' }}>
-            <Avatar name={user?.fullName || ''} role="authority" size="sm" />
+            <Avatar name={user?.fullName || ''} src={mediaUrl(user?.avatarUrl)} role="authority" size="sm" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
               <span style={{ font: 'var(--text-label)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.fullName}

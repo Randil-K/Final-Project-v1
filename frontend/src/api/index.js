@@ -27,6 +27,12 @@ export const api = {
   users: {
     me: () => request('/api/users/me'),
     profile: (id) => request(`/api/users/${id}`),
+    updateAvatar: (file) => {
+      const form = new FormData();
+      form.append('photo', file);
+      return request('/api/users/me/avatar', { method: 'PUT', body: form });
+    },
+    removeAvatar: () => request('/api/users/me/avatar', { method: 'DELETE' }),
     updateProfile: (payload) => request('/api/users/me', { method: 'PUT', body: payload }),
     updateDiverProfile: (payload) =>
       request('/api/users/me/diver-profile', { method: 'PUT', body: payload }),

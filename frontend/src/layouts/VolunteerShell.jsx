@@ -4,6 +4,7 @@ import { Icon, Avatar, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import AccountReviewPopup from '../components/AccountReviewPopup.jsx';
+import { mediaUrl } from '../api/client.js';
 
 const TABS = [
   { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
@@ -59,7 +60,7 @@ export default function VolunteerShell() {
             >
               {[user.city, user.province].filter(Boolean).join(' · ')}
             </span>
-            <Avatar name={user.fullName} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
+            <Avatar name={user.fullName} src={mediaUrl(user.avatarUrl)} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
           </button>
           </div>
         ) : (

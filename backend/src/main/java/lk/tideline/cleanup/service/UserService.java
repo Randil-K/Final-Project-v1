@@ -23,6 +23,7 @@ import lk.tideline.cleanup.repository.ProjectParticipantRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +85,27 @@ public class UserService {
                 (int) marked,
                 reportRepository.countByReporterId(user.getId()),
                 owned);
+    }
+
+    @Transactional
+    public UserResponse updateAvatar(Long userId, MultipartFile photo) {
+        User user = get(userId);
+        DocumentStorageService.CheckedFile checked = storage.checkAvatar(photo);
+        String previous = user.getAvatarStoredName();
+        user.setAvatarStoredName(storage.saveAvatar(checked));
+        userRepository.save(user);
+        storage.deleteAvatar(previous);
+        return toResponse(user);
+    }
+
+    @Transactional
+    public UserResponse removeAvatar(Long userId) {
+        User user = get(userId);
+        String previous = user.getAvatarStoredName();
+        user.setAvatarStoredName(null);
+        userRepository.save(user);
+        storage.deleteAvatar(previous);
+        return toResponse(user);
     }
 
     private User get(Long id) {

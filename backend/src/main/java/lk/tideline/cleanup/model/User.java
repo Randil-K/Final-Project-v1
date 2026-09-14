@@ -68,6 +68,10 @@ public class User {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private OrganizationType organizationType;
 
+    /** Generated file name of the profile picture under the uploads avatars folder, or null. */
+    @Column(length = 80)
+    private String avatarStoredName;
+
     /** Organisations give their website so an administrator can check they are genuine. */
     @Column(length = 300)
     private String websiteUrl;

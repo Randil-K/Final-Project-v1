@@ -13,6 +13,7 @@ import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { CLOSED_REPORT_STATUSES, formatDate, locationLine } from '../../lib/format.js';
+import { mediaUrl } from '../../api/client.js';
 
 const projectHref = (projectId) => `/app/cleanups/${projectId}`;
 
@@ -66,7 +67,7 @@ export default function ReportDetail() {
                 <MapLink latitude={report.latitude} longitude={report.longitude} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                <UserLink user={report.reporter}><Avatar name={report.reporter?.fullName || ''} size="sm" /></UserLink>
+                <UserLink user={report.reporter}><Avatar name={report.reporter?.fullName || ''} src={mediaUrl(report.reporter?.avatarUrl)} size="sm" /></UserLink>
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
                   {isReporter ? 'Reported by you' : <>Reported by <UserLink user={report.reporter} style={{ color: 'var(--text-link)', fontWeight: 600 }} /></>} · {formatDate(report.createdAt)}
                 </span>

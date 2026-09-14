@@ -3,6 +3,7 @@ import { Avatar, Badge, Alert } from '../design-system';
 import ChipButton from './ChipButton.jsx';
 import { api } from '../api/index.js';
 import UserLink from './UserLink.jsx';
+import { mediaUrl } from '../api/client.js';
 
 /** Visible to the project owner and officials; the owner rates each person once the cleanup is done. */
 export default function ParticipantList({ project, canRate, onRated }) {
@@ -38,7 +39,7 @@ export default function ParticipantList({ project, canRate, onRated }) {
       {project.participants.map((p) => (
         <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Avatar name={p.user?.fullName || ''} size="sm" role={p.role === 'DIVER' ? 'diver' : undefined} />
+            <Avatar name={p.user?.fullName || ''} src={mediaUrl(p.user?.avatarUrl)} size="sm" role={p.role === 'DIVER' ? 'diver' : undefined} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}><UserLink user={p.user} /></span>
               <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>{p.role === 'DIVER' ? 'Diver' : 'Volunteer'}</span>
