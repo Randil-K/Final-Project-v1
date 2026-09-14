@@ -203,6 +203,12 @@ public class UserService {
             }
             user.setAccountStatus(AccountStatus.REJECTED);
             user.setAccountReviewNote(request.reason().trim());
+            // Kept in their alerts too, so the decision is still on record if they are approved later.
+            alertService.send(user, AlertType.ACCOUNT_REVIEW,
+                    "Your registration wasn't approved",
+                    "An administrator reviewed your " + (user.getRole() == Role.DIVER ? "certificates" : "organisation")
+                            + " and couldn't approve it: " + request.reason().trim(),
+                    null, null, null);
         }
 
         return AccountReviewResponse.from(userRepository.save(user));

@@ -104,7 +104,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   least one certificate (PDF, JPG or PNG, 5 MB each, up to 5 — checked by file content, not
   extension) and organisations must give a website link. Both start as `PENDING_REVIEW`, get no
   token at registration, and can't sign in until an administrator approves them; a rejection
-  needs a reason, which the applicant sees when they try to sign in. Files are stored under
+  needs a reason. Either decision is sent to the applicant's alerts; the frontend also pops it up
+  on their next sign-in (approved) or sign-in attempt (rejected, with the reason). Files are stored under
   `UPLOADS_DIR` (default `uploads/`) with random names and served only to administrators.
 - **Report review.** Each report carries an administrator decision and an authority decision:
   `PENDING`, `APPROVED`, `REJECTED` or `MORE_INFO_REQUESTED`. Administrator approval sends it to the

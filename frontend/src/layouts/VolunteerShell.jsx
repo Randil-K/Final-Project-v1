@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
+import AccountReviewPopup from '../components/AccountReviewPopup.jsx';
 
 const TABS = [
   { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
@@ -64,6 +65,7 @@ export default function VolunteerShell() {
       <main style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
         <Outlet />
       </main>
+      <AccountReviewPopup />
 
       <nav
         style={{

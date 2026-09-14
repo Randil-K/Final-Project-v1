@@ -79,6 +79,7 @@ class GovernanceTests {
 
         userService.reviewAccount(registered.user().id(), new AccountReviewRequest(true, null));
         assertThat(authService.login(new LoginRequest(email, "password123")).token()).isNotBlank();
+        assertThat(titlesFor(users.findByEmailIgnoreCase(email).orElseThrow())).contains("Your account has been verified");
     }
 
     @Test
@@ -94,6 +95,7 @@ class GovernanceTests {
         assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
                 .isInstanceOf(AccountReviewException.class)
                 .hasMessageContaining("Certificate has expired.");
+        assertThat(titlesFor(users.findByEmailIgnoreCase(email).orElseThrow())).contains("Your registration wasn't approved");
     }
 
     @Test

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Input, Alert } from '../../design-system';
+import Modal from '../../components/Modal.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
 export default function Login() {
@@ -31,6 +32,10 @@ export default function Login() {
     }
   }
 
+  // Pending and rejected applicants can't sign in, so their registration status pops up here instead.
+  const reviewError = error && ['ACCOUNT_PENDING', 'ACCOUNT_REJECTED'].includes(error.code) ? error : null;
+  const rejected = reviewError?.code === 'ACCOUNT_REJECTED';
+
   return (
     <div style={{ minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-page-warm)', padding: 'var(--space-6)' }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
@@ -48,15 +53,7 @@ export default function Login() {
               </p>
             </div>
 
-            {error ? (
-              error.code === 'ACCOUNT_PENDING' ? (
-                <Alert tone="warning" title="Your account is waiting for verification">{error.message}</Alert>
-              ) : error.code === 'ACCOUNT_REJECTED' ? (
-                <Alert tone="danger" title="Your account wasn't approved">{error.message}</Alert>
-              ) : (
-                <Alert tone="danger" title="Could not sign in">{error.message}</Alert>
-              )
-            ) : null}
+            {error && !reviewError ? <Alert tone="danger" title="Could not sign in">{error.message}</Alert> : null}
 
             <Input
               label="Email"
@@ -114,6 +111,21 @@ export default function Login() {
           </div>
         </Card>
       </div>
+
+      <Modal
+        open={Boolean(reviewError)}
+        title={rejected ? "Your registration wasn't approved" : 'Your account is pending verification'}
+        onClose={() => setError(null)}
+        footer={
+          <Button onClick={() => setError(null)}>{rejected ? 'Close' : 'Got it'}</Button>
+        }
+      >
+        <Alert tone={rejected ? 'danger' : 'warning'} title={rejected ? 'Registration not approved' : 'Pending verification'}>
+          {rejected
+            ? reviewError?.message
+            : "An administrator is checking your certificates or website. You'll be able to sign in once it's approved, and we'll let you know here and in your alerts."}
+        </Alert>
+      </Modal>
     </div>
   );
 }
