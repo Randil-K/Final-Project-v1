@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Non-registered users get read-only access to the report feed.
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/*", "/api/reports/evidence/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/projects", "/api/projects/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/analytics/summary").permitAll()
                         .requestMatchers("/h2-console/**", "/actuator/health", "/actuator/health/**").permitAll()

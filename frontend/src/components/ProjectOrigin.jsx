@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar, Icon } from '../design-system';
-import PhotoPlaceholder from './PhotoPlaceholder.jsx';
+import EvidenceGallery from './EvidenceGallery.jsx';
 import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
 import { SEVERITY_LABEL, SEVERITY_VAR, formatDate, plural } from '../lib/format.js';
@@ -34,7 +34,7 @@ export default function ProjectOrigin({ project }) {
         </p>
       </div>
 
-      <PhotoPlaceholder ratio="16/9" count={origin.photoUrls?.length} style={{ borderRadius: 'var(--radius-md)' }} />
+      <EvidenceGallery report={origin} ratio="16/9" radius="var(--radius-md)" />
 
       <Row icon="user">
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

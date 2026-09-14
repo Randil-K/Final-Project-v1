@@ -18,9 +18,16 @@ public class ReportPhoto {
     @JoinColumn(name = "report_id")
     private PollutionReport report;
 
-    /** Evidence is referenced by URL; binary upload is a later phase. */
+    /** Where the photo or video is served from: /api/reports/evidence/{storedName} for uploads. */
     @Column(nullable = false, length = 1000)
     private String url;
+
+    /** Set for uploaded files; null for evidence referenced by an external URL. */
+    @Column(unique = true, length = 80)
+    private String storedName;
+
+    @Column(length = 100)
+    private String contentType;
 
     private String caption;
 }

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,6 +33,7 @@ public class ReportService {
     private final ProjectService projectService;
     private final AlertService alertService;
     private final TidelineProperties properties;
+    private final DocumentStorageService storage;
 
     public ReportService(PollutionReportRepository reportRepository,
                          VerificationVoteRepository voteRepository,
@@ -40,7 +42,8 @@ public class ReportService {
                          CleanupProjectRepository projectRepository,
                          ProjectService projectService,
                          AlertService alertService,
-                         TidelineProperties properties) {
+                         TidelineProperties properties,
+                         DocumentStorageService storage) {
         this.reportRepository = reportRepository;
         this.voteRepository = voteRepository;
         this.commentRepository = commentRepository;
@@ -49,6 +52,7 @@ public class ReportService {
         this.projectService = projectService;
         this.alertService = alertService;
         this.properties = properties;
+        this.storage = storage;
     }
 
     private int thresholdPercent() {
@@ -82,6 +86,12 @@ public class ReportService {
 
     @Transactional
     public ReportResponse create(CreateReportRequest request, User reporter) {
+        return create(request, List.of(), reporter);
+    }
+
+    @Transactional
+    public ReportResponse create(CreateReportRequest request, List<MultipartFile> evidence, User reporter) {
+        List<DocumentStorageService.CheckedFile> files = storage.checkEvidence(evidence);
         PollutionReport report = new PollutionReport();
         report.setReference("TMP-" + UUID.randomUUID());
         report.setTitle(request.title());
@@ -101,6 +111,16 @@ public class ReportService {
                 photo.setUrl(url);
                 report.getPhotos().add(photo);
             }
+        }
+        for (DocumentStorageService.CheckedFile file : files) {
+            String storedName = storage.saveEvidence(file);
+            ReportPhoto photo = new ReportPhoto();
+            photo.setReport(report);
+            photo.setStoredName(storedName);
+            photo.setContentType(file.contentType());
+            photo.setUrl("/api/reports/evidence/" + storedName);
+            photo.setCaption(file.originalName());
+            report.getPhotos().add(photo);
         }
 
         PollutionReport saved = reportRepository.saveAndFlush(report);

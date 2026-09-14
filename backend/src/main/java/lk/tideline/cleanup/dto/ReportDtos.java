@@ -43,6 +43,8 @@ public final class ReportDtos {
             Double longitude,
             UserDtos.UserSummary reporter,
             List<String> photoUrls,
+            /** The same evidence with its type, so clients can show videos as videos. */
+            List<EvidenceResponse> evidence,
             int confirmVotes,
             int disputeVotes,
             int trustPercentage,
@@ -76,6 +78,9 @@ public final class ReportDtos {
                     report.getLongitude(),
                     UserDtos.UserSummary.from(report.getReporter()),
                     report.getPhotos().stream().map(photo -> photo.getUrl()).toList(),
+                    report.getPhotos().stream()
+                            .map(photo -> new EvidenceResponse(photo.getUrl(), photo.getContentType()))
+                            .toList(),
                     report.getConfirmVotes(),
                     report.getDisputeVotes(),
                     report.getTrustPercentage(),
@@ -93,6 +98,9 @@ public final class ReportDtos {
                     report.getVerifiedAt(),
                     report.getEscalatedAt());
         }
+    }
+
+    public record EvidenceResponse(String url, String contentType) {
     }
 
     public record VoteRequest(@NotNull Boolean confirmed) {

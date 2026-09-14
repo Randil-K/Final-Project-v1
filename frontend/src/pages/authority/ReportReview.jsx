@@ -3,7 +3,7 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Icon, IconButton, Button, Avatar, Textarea, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import MapLink from '../../components/MapLink.jsx';
-import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
+import EvidenceGallery from '../../components/EvidenceGallery.jsx';
 import ReportStatusBadge from '../../components/ReportStatusBadge.jsx';
 import CommunityVerificationCard from '../../components/CommunityVerificationCard.jsx';
 import ReviewStatusCard from '../../components/ReviewStatusCard.jsx';
@@ -77,7 +77,7 @@ export default function ReportReview() {
             {error && !rejectOpen ? <Alert tone="danger" title="That didn't work">{error}</Alert> : null}
 
 
-            <PhotoPlaceholder ratio="4/3" count={report.photoUrls?.length} style={{ borderRadius: 'var(--radius-lg)' }} />
+            <EvidenceGallery report={report} />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{report.title}</h1>

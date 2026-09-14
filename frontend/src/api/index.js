@@ -34,7 +34,12 @@ export const api = {
   reports: {
     list: (params) => request(`/api/reports${query(params)}`, { auth: false }),
     get: (id) => request(`/api/reports/${id}`, { auth: false }),
-    create: (payload) => request('/api/reports', { method: 'POST', body: payload }),
+    create: (payload, evidence = []) => {
+      const form = new FormData();
+      form.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+      evidence.forEach((file) => form.append('evidence', file));
+      return request('/api/reports', { method: 'POST', body: form });
+    },
     vote: (id, confirmed) =>
       request(`/api/reports/${id}/votes`, { method: 'POST', body: { confirmed } }),
     comments: (id) => request(`/api/reports/${id}/comments`),

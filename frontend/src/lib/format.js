@@ -68,13 +68,17 @@ export function locationLine(item) {
   return [item?.locationName, item?.province].filter(Boolean).join(' · ');
 }
 
-/** Sri Lanka's coastal provinces — the regions this system covers. */
+/** All nine provinces of Sri Lanka. Inland provinces are included for rivers, lakes and reservoirs. */
 export const PROVINCES = [
   'Western Province',
+  'Central Province',
   'Southern Province',
-  'Eastern Province',
   'Northern Province',
+  'Eastern Province',
   'North Western Province',
+  'North Central Province',
+  'Uva Province',
+  'Sabaragamuwa Province',
 ];
 
 export const CERTIFICATION_OPTIONS = Object.entries(CERTIFICATION_LABEL).map(([value, label]) => ({ value, label }));

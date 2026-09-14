@@ -1,5 +1,8 @@
 // A trailing slash would produce "//api/..." paths.
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+
+/** Uploaded files are served by the API; prefix its origin when the frontend is hosted elsewhere. */
+export const mediaUrl = (url) => (url && url.startsWith('/api/') ? `${BASE_URL}${url}` : url);
 const TOKEN_KEY = 'tideline.token';
 const UNREACHABLE = 'Cannot reach the server — check that the API is running on port 8080.';
 

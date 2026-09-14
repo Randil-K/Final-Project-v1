@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Icon } from '../design-system';
-import PhotoPlaceholder from './PhotoPlaceholder.jsx';
+import { EvidenceCover } from './EvidenceGallery.jsx';
 import ReportStatusBadge from './ReportStatusBadge.jsx';
 import { SEVERITY_LABEL, SEVERITY_VAR, locationLine } from '../lib/format.js';
 
@@ -9,7 +9,7 @@ export default function ReportCard({ report, basePath = '/app/report' }) {
   const navigate = useNavigate();
   return (
     <Card padding="none" interactive onClick={() => navigate(`${basePath}/${report.id}`)} style={{ cursor: 'pointer', overflow: 'hidden' }}>
-      <PhotoPlaceholder count={report.photoUrls?.length} />
+      <EvidenceCover report={report} />
       <div style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{report.reference}</span>

@@ -38,7 +38,7 @@ details, demo accounts and the full endpoint list.
 | # | Module | Frontend | Backend |
 | --- | --- | --- | --- |
 | 1 | User registration & profile | yes | yes (certificate upload, admin account verification) |
-| 2 | Pollution reporting | yes | yes (evidence by URL, no binary upload yet) |
+| 2 | Pollution reporting | yes | yes (photo and video evidence upload) |
 | 3 | Community verification & trust | yes | yes (75% threshold, configurable) |
 | 4 | Admin review & moderation | yes | yes |
 | 5 | Government approval workflow | yes | yes |
@@ -49,7 +49,6 @@ details, demo accounts and the full endpoint list.
 
 ## Still to do
 
-- File upload for photo and video evidence — the API stores evidence as URLs today.
 - Geocoding for location validation, and an embedded pollution map (screens link to
   OpenStreetMap for now).
 - Scheduled reminders to volunteers (module 6) and a complaints channel (module 4).

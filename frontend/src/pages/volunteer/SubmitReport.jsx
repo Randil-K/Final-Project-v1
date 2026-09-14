@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icon, IconButton, Button, Input, Textarea, Select, FileDrop, Alert } from '../../design-system';
+import { Icon, IconButton, Button, Input, Textarea, Select, Alert } from '../../design-system';
+import EvidencePicker from '../../components/EvidencePicker.jsx';
 import { api } from '../../api/index.js';
+import { PROVINCES } from '../../lib/format.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
 const SEVERITIES = [
@@ -9,14 +11,6 @@ const SEVERITIES = [
   { value: 'MEDIUM', label: 'Medium — noticeable, spreading' },
   { value: 'HIGH', label: 'High — large area, harmful materials' },
   { value: 'CRITICAL', label: 'Critical — active spill or hazard' },
-];
-
-const PROVINCES = [
-  'Western Province',
-  'Southern Province',
-  'Eastern Province',
-  'Northern Province',
-  'North Western Province',
 ];
 
 export default function SubmitReport() {
@@ -38,11 +32,6 @@ export default function SubmitReport() {
   const [created, setCreated] = React.useState(null);
 
   const set = (key) => (event) => setForm((f) => ({ ...f, [key]: event.target.value }));
-
-  function pickFiles() {
-    // Binary upload is not wired yet — the API stores evidence as URLs.
-    setFiles((current) => [...current, `evidence-${current.length + 1}.jpg`]);
-  }
 
   function captureLocation() {
     setError(null);
@@ -82,8 +71,7 @@ export default function SubmitReport() {
         province: form.province || null,
         latitude: coords.latitude,
         longitude: coords.longitude,
-        photoUrls: files.map((name) => `https://placeholder.tideline.lk/evidence/${name}`),
-      });
+      }, files);
       setCreated(report);
     } catch (err) {
       setError(err.message);
@@ -119,11 +107,11 @@ export default function SubmitReport() {
 
       {error ? <Alert tone="danger" title="Check this before submitting">{error}</Alert> : null}
 
-      <FileDrop
+      <EvidencePicker
         label="Evidence"
         hint="Add at least one photo — reports with evidence are verified about twice as fast."
         files={files}
-        onPick={pickFiles}
+        onChange={setFiles}
       />
 
       <Input label="Site name" required placeholder="e.g. Negombo" iconLeft="map-pin" value={form.locationName} onChange={set('locationName')} />

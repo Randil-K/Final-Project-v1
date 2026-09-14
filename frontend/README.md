@@ -44,7 +44,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Feed | `GET /api/reports?status=` |
 | Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` (shows review progress; once approved, report links redirect to the project) |
 | Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (project owner) · `POST /{id}/participants/{pid}/mark` (project owner, once complete) |
-| Submit report | `POST /api/reports` with browser geolocation |
+| Submit report | `POST /api/reports` (multipart, with photo and video evidence) and browser geolocation |
 | Alerts (both apps) | `GET /api/alerts` · `POST /{id}/read` · `POST /read-all` · `GET /unread-count` (nav badge) |
 | Opportunities — diver | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` (shows accepted / not selected) |
 | Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
@@ -74,6 +74,4 @@ upstream.
 
 ## Not built yet
 
-- Binary upload for photo and video evidence — the API stores evidence as URLs, and the
-  submission form currently sends placeholder URLs.
 - An embedded map. Reports and cleanups link out to OpenStreetMap instead.

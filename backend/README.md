@@ -72,7 +72,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
 | GET | `/api/reports` (open reports only — approved ones are projects) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
-| POST | `/api/reports` | 2 | authenticated |
+| POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |
+| GET | `/api/reports/evidence/{file}` (uploaded evidence, supports range requests) | 2 | public |
 | POST | `/api/reports/{id}/votes` | 3 | authenticated |
 | GET/POST | `/api/reports/{id}/comments` | 3 | authenticated |
 | POST | `/api/reports/{id}/moderation` (`APPROVED` / `MORE_INFO_REQUESTED` / `REJECTED`) | 4 | admin |
@@ -148,5 +149,4 @@ src/main/java/lk/tideline/cleanup/
 
 ## Not built yet
 
-- Photo upload for report evidence — evidence is referenced by URL for now (certificate upload exists).
 - Geocoding / map API integration.

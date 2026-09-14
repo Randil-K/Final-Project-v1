@@ -5,14 +5,23 @@ import lk.tideline.cleanup.dto.ReportDtos.*;
 import lk.tideline.cleanup.model.ReportStatus;
 import lk.tideline.cleanup.model.Severity;
 import lk.tideline.cleanup.service.CurrentUserService;
+import lk.tideline.cleanup.service.DocumentStorageService;
 import lk.tideline.cleanup.service.ReportService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +31,12 @@ public class ReportController {
 
     private final ReportService reportService;
     private final CurrentUserService currentUser;
+    private final DocumentStorageService storage;
 
-    public ReportController(ReportService reportService, CurrentUserService currentUser) {
+    public ReportController(ReportService reportService, CurrentUserService currentUser, DocumentStorageService storage) {
         this.reportService = reportService;
         this.currentUser = currentUser;
+        this.storage = storage;
     }
 
     @GetMapping
@@ -42,10 +53,29 @@ public class ReportController {
         return reportService.view(id);
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ReportResponse> create(@Valid @RequestBody CreateReportRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(reportService.create(request, currentUser.require()));
+    }
+
+    /** Module 2: a report with uploaded photo and video evidence. */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ReportResponse> createWithEvidence(@Valid @RequestPart("data") CreateReportRequest request,
+                                                             @RequestPart(value = "evidence", required = false) List<MultipartFile> evidence) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reportService.create(request, evidence, currentUser.require()));
+    }
+
+    /** Evidence is public like the reports themselves. Served as a resource so videos can seek. */
+    @GetMapping("/evidence/{fileName}")
+    public ResponseEntity<Resource> evidence(@PathVariable String fileName) {
+        Path path = storage.evidencePath(fileName);
+        return ResponseEntity.ok()
+                .contentType(MediaTypeFactory.getMediaType(fileName).orElse(MediaType.APPLICATION_OCTET_STREAM))
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(7)).cachePublic())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(new FileSystemResource(path));
     }
 
     /** Module 3 — community verification vote. */
