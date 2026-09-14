@@ -1,5 +1,6 @@
 package lk.tideline.cleanup.repository;
 
+import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(Role role);
 
     List<User> findAllByOrderByCreatedAtDesc();
+
+    List<User> findByAccountStatusAndRoleInOrderByCreatedAtAsc(AccountStatus accountStatus, List<Role> roles);
 
     long countByRoleIn(List<Role> roles);
 }

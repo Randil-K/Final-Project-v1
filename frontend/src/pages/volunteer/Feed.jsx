@@ -14,6 +14,7 @@ const STATUS_FILTERS = [
   { value: 'VERIFYING', label: 'Verifying' },
   { value: 'VERIFIED', label: 'Verified' },
   { value: 'ESCALATED', label: 'Escalated' },
+  { value: 'APPROVED', label: 'Projects' },
   { value: 'CLEANED', label: 'Cleaned' },
 ];
 

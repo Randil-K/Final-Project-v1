@@ -15,6 +15,7 @@ const KIND = {
   PROJECT_UPDATE: { icon: 'check-check', color: 'var(--status-verified)' },
   AUTHORITY_DECISION: { icon: 'shield-check', color: 'var(--sea-600)' },
   OPPORTUNITY: { icon: 'anchor', color: 'var(--buoy-600)' },
+  ACCOUNT_REVIEW: { icon: 'user', color: 'var(--buoy-600)' },
 };
 
 /** Shared by the volunteer app and the console; `linkFor` maps an alert to the screen it opens. */

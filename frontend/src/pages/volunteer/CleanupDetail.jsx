@@ -51,8 +51,8 @@ export default function CleanupDetail() {
     }
     if (isOwner) {
       return (
-        <Alert tone="info" title="You're leading this cleanup">
-          Post progress below — the person who reported the site is told when it reaches 100%.
+        <Alert tone="info" title="You're the project owner">
+          You reported this site and the government authority approved it. Post progress below as the cleanup goes.
         </Alert>
       );
     }
@@ -89,7 +89,7 @@ export default function CleanupDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
                 <Icon name="map-pin" size="sm" />
                 {locationLine(project)}
-                {project.owner ? ` · led by ${project.owner.fullName}` : ''}
+                {project.owner ? ` · project owner ${project.owner.fullName}` : ''}
               </div>
               {project.description ? (
                 <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 4 }}>{project.description}</p>

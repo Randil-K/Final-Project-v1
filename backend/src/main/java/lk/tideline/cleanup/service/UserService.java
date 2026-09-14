@@ -1,13 +1,22 @@
 package lk.tideline.cleanup.service;
 
+import lk.tideline.cleanup.dto.UserDtos.AccountReviewRequest;
+import lk.tideline.cleanup.dto.UserDtos.AccountReviewResponse;
 import lk.tideline.cleanup.dto.UserDtos.AdminUserResponse;
+import lk.tideline.cleanup.dto.UserDtos.DocumentDownload;
+import lk.tideline.cleanup.dto.UserDtos.OwnedProject;
 import lk.tideline.cleanup.dto.UserDtos.SuspensionRequest;
 import lk.tideline.cleanup.dto.UserDtos.UpdateDiverProfileRequest;
 import lk.tideline.cleanup.dto.UserDtos.UpdateProfileRequest;
 import lk.tideline.cleanup.dto.UserDtos.UserResponse;
+import lk.tideline.cleanup.model.AccountDocument;
+import lk.tideline.cleanup.model.AccountStatus;
+import lk.tideline.cleanup.model.AlertType;
 import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
+import lk.tideline.cleanup.repository.AccountDocumentRepository;
+import lk.tideline.cleanup.repository.CleanupProjectRepository;
 import lk.tideline.cleanup.repository.ProjectParticipantRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -19,12 +28,27 @@ import java.util.List;
 @Service
 public class UserService {
 
+    private static final List<Role> VERIFIED_ROLES = List.of(Role.DIVER, Role.ORGANIZATION);
+
     private final UserRepository userRepository;
     private final ProjectParticipantRepository participantRepository;
+    private final CleanupProjectRepository projectRepository;
+    private final AccountDocumentRepository documentRepository;
+    private final DocumentStorageService storage;
+    private final AlertService alertService;
 
-    public UserService(UserRepository userRepository, ProjectParticipantRepository participantRepository) {
+    public UserService(UserRepository userRepository,
+                       ProjectParticipantRepository participantRepository,
+                       CleanupProjectRepository projectRepository,
+                       AccountDocumentRepository documentRepository,
+                       DocumentStorageService storage,
+                       AlertService alertService) {
         this.userRepository = userRepository;
         this.participantRepository = participantRepository;
+        this.projectRepository = projectRepository;
+        this.documentRepository = documentRepository;
+        this.storage = storage;
+        this.alertService = alertService;
     }
 
     /** Re-loads inside a transaction so the lazy diver profile can be mapped. */
@@ -41,9 +65,13 @@ public class UserService {
     private UserResponse toResponse(User user) {
         Double average = participantRepository.averageMark(user.getId());
         long marked = participantRepository.countByUserIdAndContributionMarkIsNotNull(user.getId());
+        List<OwnedProject> owned = projectRepository.findByOwnerIdOrderByCreatedAtDesc(user.getId()).stream()
+                .map(OwnedProject::from)
+                .toList();
         return UserResponse.from(user,
                 average == null ? null : Math.round(average * 10) / 10.0,
-                (int) marked);
+                (int) marked,
+                owned);
     }
 
     @Transactional
@@ -139,5 +167,51 @@ public class UserService {
         user.setSuspended(request.suspended());
         user.setSuspensionReason(request.suspended() ? request.reason().trim() : null);
         return AdminUserResponse.from(userRepository.save(user));
+    }
+
+    /** Divers and organisations waiting for, or already through, administrator verification. */
+    @Transactional(readOnly = true)
+    public List<AccountReviewResponse> verifications(AccountStatus status) {
+        return userRepository.findByAccountStatusAndRoleInOrderByCreatedAtAsc(status, VERIFIED_ROLES).stream()
+                .map(AccountReviewResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public AccountReviewResponse reviewAccount(Long userId, AccountReviewRequest request) {
+        User user = get(userId);
+
+        if (!VERIFIED_ROLES.contains(user.getRole())) {
+            throw new IllegalStateException("Only volunteer divers and organisations need verification.");
+        }
+        if (user.getAccountStatus() == AccountStatus.APPROVED) {
+            throw new IllegalStateException("This account is already verified.");
+        }
+
+        if (request.approved()) {
+            user.setAccountStatus(AccountStatus.APPROVED);
+            user.setAccountReviewNote(null);
+            alertService.send(user, AlertType.ACCOUNT_REVIEW,
+                    "Your account has been verified",
+                    user.getRole() == Role.DIVER
+                            ? "An administrator checked your certificates. You can now join cleanups and apply for diving work."
+                            : "An administrator checked your organisation. You can now post opportunities for divers.",
+                    null, null, null);
+        } else {
+            if (request.reason() == null || request.reason().isBlank()) {
+                throw new IllegalArgumentException("Give a reason. The applicant sees it when they try to sign in.");
+            }
+            user.setAccountStatus(AccountStatus.REJECTED);
+            user.setAccountReviewNote(request.reason().trim());
+        }
+
+        return AccountReviewResponse.from(userRepository.save(user));
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentDownload document(Long documentId) {
+        AccountDocument document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("That document was not found."));
+        return new DocumentDownload(document.getOriginalName(), document.getContentType(), storage.read(document));
     }
 }

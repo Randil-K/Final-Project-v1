@@ -3,9 +3,11 @@ package lk.tideline.cleanup.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.PollutionReport;
 import lk.tideline.cleanup.model.ReportComment;
 import lk.tideline.cleanup.model.ReportStatus;
+import lk.tideline.cleanup.model.ReviewDecision;
 import lk.tideline.cleanup.model.Severity;
 
 import java.time.Instant;
@@ -45,14 +47,22 @@ public final class ReportDtos {
             int disputeVotes,
             int trustPercentage,
             int thresholdPercent,
+            ReviewDecision adminDecision,
             String moderationComment,
+            Instant adminReviewedAt,
+            /** Null until an administrator sends the report to the authority. */
+            ReviewDecision authorityDecision,
             String authorityComment,
-            Boolean authorityApproved,
+            UserDtos.UserSummary authorityOfficer,
+            Instant decidedAt,
+            /** The project this report became once the authority approved it. */
+            Long projectId,
+            String projectReference,
             Instant createdAt,
             Instant verifiedAt,
             Instant escalatedAt
     ) {
-        public static ReportResponse from(PollutionReport report, int thresholdPercent) {
+        public static ReportResponse from(PollutionReport report, int thresholdPercent, CleanupProject project) {
             return new ReportResponse(
                     report.getId(),
                     report.getReference(),
@@ -70,9 +80,15 @@ public final class ReportDtos {
                     report.getDisputeVotes(),
                     report.getTrustPercentage(),
                     thresholdPercent,
+                    report.getAdminDecision(),
                     report.getModerationComment(),
+                    report.getAdminReviewedAt(),
+                    report.getAuthorityDecision(),
                     report.getAuthorityComment(),
-                    report.getAuthorityApproved(),
+                    UserDtos.UserSummary.from(report.getAuthorityOfficer()),
+                    report.getDecidedAt(),
+                    project == null ? null : project.getId(),
+                    project == null ? null : project.getReference(),
                     report.getCreatedAt(),
                     report.getVerifiedAt(),
                     report.getEscalatedAt());
@@ -102,16 +118,16 @@ public final class ReportDtos {
         }
     }
 
-    /** Admin moderation decision (module 4). */
+    /** Module 4 — approve (send to the authority), reject, or ask the reporter for more information. */
     public record ModerationRequest(
-            @NotNull ReportStatus status,
+            @NotNull ReviewDecision decision,
             @Size(max = 1000) String comment
     ) {
     }
 
-    /** Authority approval or rejection of an escalated report (module 5). */
+    /** Module 5 — approve (creates the project), reject, or ask for more information. A comment is required. */
     public record AuthorityDecisionRequest(
-            @NotNull Boolean approved,
+            @NotNull ReviewDecision decision,
             @NotBlank @Size(max = 1000) String comment
     ) {
     }

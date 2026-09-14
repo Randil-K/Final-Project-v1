@@ -1,4 +1,4 @@
-import { request } from './client.js';
+import { request, requestBlob } from './client.js';
 
 function query(params) {
   const search = new URLSearchParams();
@@ -15,8 +15,13 @@ export const api = {
   auth: {
     login: (email, password) =>
       request('/api/auth/login', { method: 'POST', body: { email, password }, auth: false }),
-    register: (payload) =>
-      request('/api/auth/register', { method: 'POST', body: payload, auth: false }),
+    /** Multipart: the account details as a JSON "data" part, plus any certificate files. */
+    register: (data, certificates = []) => {
+      const form = new FormData();
+      form.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+      certificates.forEach((file) => form.append('certificates', file));
+      return request('/api/auth/register', { method: 'POST', body: form, auth: false });
+    },
   },
 
   users: {
@@ -35,14 +40,12 @@ export const api = {
     comments: (id) => request(`/api/reports/${id}/comments`),
     comment: (id, bodyText) =>
       request(`/api/reports/${id}/comments`, { method: 'POST', body: { body: bodyText } }),
-    moderate: (id, status, comment) =>
-      request(`/api/reports/${id}/moderation`, { method: 'POST', body: { status, comment } }),
-    escalate: (id) => request(`/api/reports/${id}/escalation`, { method: 'POST' }),
-    authorityDecision: (id, approved, comment) =>
-      request(`/api/reports/${id}/authority-decision`, {
-        method: 'POST',
-        body: { approved, comment },
-      }),
+    /** decision: APPROVED (sends it to the authority), REJECTED or MORE_INFO_REQUESTED. */
+    moderate: (id, decision, comment) =>
+      request(`/api/reports/${id}/moderation`, { method: 'POST', body: { decision, comment } }),
+    /** decision: APPROVED (creates the project), REJECTED or MORE_INFO_REQUESTED. */
+    authorityDecision: (id, decision, comment) =>
+      request(`/api/reports/${id}/authority-decision`, { method: 'POST', body: { decision, comment } }),
     widenAlert: (id) => request(`/api/reports/${id}/alert-escalation`, { method: 'POST' }),
   },
 
@@ -50,7 +53,6 @@ export const api = {
     // Public, but sending the token lets the API report whether the viewer has joined.
     list: (params) => request(`/api/projects${query(params)}`),
     get: (id) => request(`/api/projects/${id}`),
-    create: (payload) => request('/api/projects', { method: 'POST', body: payload }),
     join: (id, participantRole) =>
       request(`/api/projects/${id}/participants`, { method: 'POST', body: { participantRole } }),
     addUpdate: (id, payload) =>
@@ -81,6 +83,10 @@ export const api = {
     users: (search) => request(`/api/admin/users${query({ query: search })}`),
     setSuspension: (id, suspended, reason) =>
       request(`/api/admin/users/${id}/suspension`, { method: 'POST', body: { suspended, reason } }),
+    verifications: (status) => request(`/api/admin/verifications${query({ status })}`),
+    reviewAccount: (id, approved, reason) =>
+      request(`/api/admin/verifications/${id}`, { method: 'POST', body: { approved, reason } }),
+    document: (id) => requestBlob(`/api/admin/documents/${id}`),
   },
 
   analytics: {

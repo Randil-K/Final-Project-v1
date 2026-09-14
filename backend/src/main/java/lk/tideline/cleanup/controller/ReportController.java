@@ -66,21 +66,14 @@ public class ReportController {
                 .body(reportService.comment(id, currentUser.require(), request));
     }
 
-    /** Module 4 — administrator moderation. */
+    /** Module 4 — the administrator approves (sends to the authority), rejects, or requests more information. */
     @PostMapping("/{id}/moderation")
     @PreAuthorize("hasRole('ADMIN')")
     public ReportResponse moderate(@PathVariable Long id, @Valid @RequestBody ModerationRequest request) {
         return reportService.moderate(id, request, currentUser.require());
     }
 
-    /** Module 5 — forward a verified report to the relevant government body. */
-    @PostMapping("/{id}/escalation")
-    @PreAuthorize("hasAnyRole('ADMIN','AUTHORITY')")
-    public ReportResponse escalate(@PathVariable Long id) {
-        return reportService.escalate(id, currentUser.require());
-    }
-
-    /** Module 5 — the authority officer's approval or rejection. */
+    /** Module 5 — the authority officer approves (creating the project), rejects, or requests more information. */
     @PostMapping("/{id}/authority-decision")
     @PreAuthorize("hasRole('AUTHORITY')")
     public ReportResponse decide(@PathVariable Long id, @Valid @RequestBody AuthorityDecisionRequest request) {

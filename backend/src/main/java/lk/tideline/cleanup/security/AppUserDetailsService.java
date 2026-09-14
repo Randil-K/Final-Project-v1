@@ -1,5 +1,6 @@
 package lk.tideline.cleanup.security;
 
+import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.User;
 import lk.tideline.cleanup.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,7 +29,7 @@ public class AppUserDetailsService implements UserDetailsService {
                 .withUsername(user.getEmail())
                 .password(user.getPasswordHash())
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())))
-                .disabled(user.isSuspended())
+                .disabled(user.isSuspended() || user.getAccountStatus() != AccountStatus.APPROVED)
                 .build();
     }
 }

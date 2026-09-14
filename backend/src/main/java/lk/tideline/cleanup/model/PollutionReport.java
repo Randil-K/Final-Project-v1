@@ -74,8 +74,18 @@ public class PollutionReport {
     @Column(nullable = false)
     private double alertRadiusKm = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReviewDecision adminDecision = ReviewDecision.PENDING;
+
     @Column(length = 1000)
     private String moderationComment;
+
+    private Instant adminReviewedAt;
+
+    /** Null until an administrator approves the report and sends it to the authority. */
+    @Enumerated(EnumType.STRING)
+    private ReviewDecision authorityDecision;
 
     @Column(length = 1000)
     private String authorityComment;
@@ -83,9 +93,6 @@ public class PollutionReport {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "authority_officer_id")
     private User authorityOfficer;
-
-    /** Null until a government officer has decided on an escalated report. */
-    private Boolean authorityApproved;
 
     private Instant escalatedAt;
     private Instant decidedAt;

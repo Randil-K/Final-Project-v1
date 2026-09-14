@@ -79,6 +79,44 @@ export const PROVINCES = [
 
 export const CERTIFICATION_OPTIONS = Object.entries(CERTIFICATION_LABEL).map(([value, label]) => ({ value, label }));
 
+export const REVIEW_DECISION = {
+  PENDING: { label: 'Pending', tone: 'warning', icon: 'clock' },
+  APPROVED: { label: 'Approved', tone: 'success', icon: 'badge-check' },
+  REJECTED: { label: 'Rejected', tone: 'danger', icon: 'x' },
+  MORE_INFO_REQUESTED: { label: 'More info requested', tone: 'info', icon: 'message-square' },
+};
+
+export const ACCOUNT_STATUS = {
+  APPROVED: { label: 'Verified', tone: 'success' },
+  PENDING_REVIEW: { label: 'Pending verification', tone: 'warning' },
+  REJECTED: { label: 'Not approved', tone: 'danger' },
+};
+
+/** Where a report is in official review, in a few words for lists. */
+export function reviewStage(report) {
+  if (report.projectReference) return { label: `Project ${report.projectReference}`, tone: 'success' };
+  if (report.status === 'REJECTED') {
+    return { label: report.authorityDecision === 'REJECTED' ? 'Rejected by authority' : 'Rejected by admin', tone: 'danger' };
+  }
+  if (report.status === 'CLEANED') return { label: 'Cleaned', tone: 'success' };
+  if (report.status === 'ESCALATED') {
+    return report.authorityDecision === 'MORE_INFO_REQUESTED'
+      ? { label: 'Authority asked for info', tone: 'info' }
+      : { label: 'Waiting for authority', tone: 'warning' };
+  }
+  return report.adminDecision === 'MORE_INFO_REQUESTED'
+    ? { label: 'Admin asked for info', tone: 'info' }
+    : { label: 'Waiting for admin', tone: 'warning' };
+}
+
+/** Reports a government officer approved have become projects, so they close to further review. */
+export const CLOSED_REPORT_STATUSES = ['APPROVED', 'REJECTED', 'CLEANED'];
+
+export function formatBytes(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 /** Worded for the diver who applied. */
 export const APPLICATION_STATUS = {
   PENDING: { label: 'Application sent', tone: 'accent' },

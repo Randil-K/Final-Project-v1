@@ -20,17 +20,6 @@ public final class ProjectDtos {
     private ProjectDtos() {
     }
 
-    public record CreateProjectRequest(
-            @NotBlank @Size(max = 120) String title,
-            @Size(max = 2000) String description,
-            Long reportId,
-            @NotBlank String locationName,
-            String province,
-            Double latitude,
-            Double longitude
-    ) {
-    }
-
     public record ProjectResponse(
             Long id,
             String reference,

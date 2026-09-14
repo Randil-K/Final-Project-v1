@@ -29,7 +29,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
   submission, cleanups (list, join, organiser progress), alerts, opportunities, profile.
 - `src/pages/volunteer/OrganisationOpportunities.jsx` — what an organisation sees on the
   Opportunities tab: post assignments, review applicants' diving record, accept or decline.
-- `src/pages/authority/` — review queue, report review, projects, project detail, alerts,
+- `src/pages/authority/` — review queue, report review, projects, project detail, alerts, account verifications,
   analytics, and users (administrators only).
 - `src/components/` — shared pieces: `AlertList`, `ProjectCard`, `ProjectProgress`,
   `ProjectTimeline`, `ProgressUpdateForm`, `ParticipantList` (organiser ratings), `MapLink`,
@@ -40,24 +40,25 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Screen | Calls |
 | --- | --- |
 | Landing | `GET /api/analytics/summary` (public) |
-| Login / Register | `POST /api/auth/login` · `/register` |
+| Login / Register | `POST /api/auth/login` · `/register` (multipart, with certificates for divers and a website for organisations; divers and organisations see a pending-verification screen) |
 | Feed | `GET /api/reports?status=` |
-| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` · `POST /api/projects` |
-| Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (organiser) · `POST /{id}/participants/{pid}/mark` (organiser, once complete) |
+| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` (shows review progress and the project once approved) |
+| Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (project owner) · `POST /{id}/participants/{pid}/mark` (project owner, once complete) |
 | Submit report | `POST /api/reports` with browser geolocation |
 | Alerts (both apps) | `GET /api/alerts` · `POST /{id}/read` · `POST /read-all` · `GET /unread-count` (nav badge) |
 | Opportunities — diver | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` (shows accepted / not selected) |
 | Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
-| Profile | `GET`/`PUT /api/users/me` (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
+| Profile | `GET`/`PUT /api/users/me` (account status, project owner badge and owned projects) (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
 | Review queue | `GET /api/reports` |
-| Report review | verify, reject, request clarification, escalate, authority decision, widen alert radius |
+| Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · widen alert radius |
 | Projects | `GET /api/projects` · `GET /{id}` · `POST /{id}/updates` |
 | Analytics | `GET /api/analytics/summary` |
+| Verifications (admin) | `GET /api/admin/verifications?status=` · `POST /api/admin/verifications/{id}` · `GET /api/admin/documents/{id}` |
 | Users (admin) | `GET /api/admin/users?query=` · `POST /api/admin/users/{id}/suspension` |
 
-The review screen shows different actions per role: an administrator gets verify / reject /
-escalate / widen-alert, while an authority officer gets approve / reject on an escalated
-report — mirroring the backend's permissions rather than guessing at them.
+The review screen shows different actions per role: an administrator gets approve (send to the
+authority) / request more info / reject / widen-alert, while an authority officer gets approve
+(create the project) / request more info / reject on a report sent to them — mirroring the backend's permissions rather than guessing at them.
 
 ## Deviations from the vendored design system
 

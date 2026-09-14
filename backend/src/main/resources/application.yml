@@ -25,6 +25,12 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  # Divers attach up to five certificates of 5 MB each when they register.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 26MB
+
 server:
   # Hosts such as Render and Railway inject PORT.
   port: ${PORT:8080}
@@ -54,6 +60,8 @@ tideline:
     jwt-expiry-minutes: 720
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
+  uploads:
+    directory: ${UPLOADS_DIR:uploads}
   seed-demo-data: true
 
 logging:

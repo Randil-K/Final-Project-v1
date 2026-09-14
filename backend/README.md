@@ -55,9 +55,11 @@ All seeded accounts use the password `password123`.
 | --- | --- |
 | `admin@tideline.lk` | ADMIN |
 | `officer@mepa.gov.lk` | AUTHORITY |
-| `sanduni@example.lk` | DIVER |
-| `kasun@example.lk` | CITIZEN |
-| `hello@blueresurgence.lk` | ORGANIZATION |
+| `sanduni@example.lk` | DIVER (verified) |
+| `kasun@example.lk` | CITIZEN — owns project CP-118 |
+| `hello@blueresurgence.lk` | ORGANIZATION (verified) |
+| `tharindu@example.lk` | DIVER — pending verification, can't sign in yet |
+| `team@coralguard.example.org` | ORGANIZATION — pending verification, can't sign in yet |
 
 ## API
 
@@ -65,7 +67,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 
 | Method | Path | Module | Access |
 | --- | --- | --- | --- |
-| POST | `/api/auth/register` | 1 | public (citizen / diver / organisation only) |
+| POST | `/api/auth/register` (multipart: `data` JSON + `certificates` files) | 1 | public (citizen / diver / organisation only) |
 | POST | `/api/auth/login` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
@@ -73,13 +75,12 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/reports` | 2 | authenticated |
 | POST | `/api/reports/{id}/votes` | 3 | authenticated |
 | GET/POST | `/api/reports/{id}/comments` | 3 | authenticated |
-| POST | `/api/reports/{id}/moderation` | 4 | admin |
-| POST | `/api/reports/{id}/escalation` | 5 | admin, authority |
-| POST | `/api/reports/{id}/authority-decision` | 5 | authority |
+| POST | `/api/reports/{id}/moderation` (`APPROVED` / `MORE_INFO_REQUESTED` / `REJECTED`) | 4 | admin |
+| POST | `/api/reports/{id}/authority-decision` (same decisions; approval creates the project) | 5 | authority |
 | POST | `/api/reports/{id}/alert-escalation` | 6 | admin, authority |
 | GET | `/api/alerts` · POST `/api/alerts/{id}/read` | 6 | authenticated |
 | GET | `/api/alerts/unread-count` · POST `/api/alerts/read-all` | 6 | authenticated |
-| GET/POST | `/api/projects` (`?reportId=` to find a report's cleanup) | 7 | read public, create authenticated |
+| GET | `/api/projects` (`?reportId=` to find a report's project) | 7 | public |
 | POST | `/api/projects/{id}/participants` | 7 | authenticated |
 | POST | `/api/projects/{id}/updates` | 7 | project owner, admin, authority |
 | POST | `/api/projects/{id}/participants/{participantId}/mark` | 8 | project owner, once complete |
@@ -88,6 +89,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/opportunities/{id}/applications` · POST `/applications/{id}/decision` | 8 | posting organisation, admin |
 | GET | `/api/analytics/summary` | 9 | public |
 | GET | `/api/admin/users?query=` · POST `/api/admin/users/{id}/suspension` | 4 | admin |
+| GET | `/api/admin/verifications?status=` · POST `/api/admin/verifications/{id}` | 1 | admin |
+| GET | `/api/admin/documents/{id}` (view an uploaded certificate) | 1 | admin |
 
 ## How the domain rules work
 
@@ -97,28 +100,35 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 - **Alert escalation.** A new report alerts available users within 5 km (Haversine distance).
   `POST /api/reports/{id}/alert-escalation` widens that to the next step — 25 km, 100 km,
   then 500 km — as the SRS requires when nobody responds.
-- **Authority workflow.** Only a verified report can be escalated; only an escalated report
-  can be decided by an authority officer, and a rejection requires an official comment.
+- **Account verification.** Citizens can sign in straight away. Volunteer divers must attach at
+  least one certificate (PDF, JPG or PNG, 5 MB each, up to 5 — checked by file content, not
+  extension) and organisations must give a website link. Both start as `PENDING_REVIEW`, get no
+  token at registration, and can't sign in until an administrator approves them; a rejection
+  needs a reason, which the applicant sees when they try to sign in. Files are stored under
+  `UPLOADS_DIR` (default `uploads/`) with random names and served only to administrators.
+- **Report review.** Each report carries an administrator decision and an authority decision:
+  `PENDING`, `APPROVED`, `REJECTED` or `MORE_INFO_REQUESTED`. Administrator approval sends it to the
+  government authority (`ESCALATED`). Asking for more information posts an official comment and
+  alerts the reporter without changing the status. A rejection by either needs a comment.
+- **Reports become projects.** When the authority approves, the report's status becomes `APPROVED`
+  and a cleanup project is created automatically, owned by the person who reported the site. The
+  owner gets a "Project owner" badge and the project listed on their profile.
 - **Project completion.** A progress update at 100% closes the project, marks the linked
   report `CLEANED`, and increments each diver's completed-project count.
 
-- **Closing the loop for reporters.** The reporter is alerted when a cleanup is planned for their
-  report and again when the site is cleaned. A report gets at most one cleanup, and an escalated
-  report can't get one until the authority approves it.
+- **Closing the loop for reporters.** The reporter is alerted at each review decision, when their
+  report becomes a project, and when the site is cleaned.
 - **Enum columns.** Hibernate 6 can map enum fields to native `enum(...)` columns on MySQL, and
   `ddl-auto: update` won't alter them. Check the column type before adding a constant (say, a new
   `AlertType`) against an existing database — you may need a manual `ALTER TABLE`.
 
-- **Moderation.** An administrator can verify, reject, or ask the reporter for clarification —
-  the question is posted to the report's discussion as an official comment and the report goes
-  back to Verifying. Moderation is blocked while an authority is deciding and after a cleanup.
-- **Officials hear about their work.** Authority officers are alerted when a report is escalated
-  to them, and administrators when an officer approves or rejects.
+- **Officials hear about their work.** Administrators are alerted about new accounts to verify
+  and about authority decisions; authority officers when a report is sent to them.
 - **Suspension.** A suspended account cannot sign in, and tokens issued before the suspension
   stop working on the next request. Administrator accounts cannot be suspended.
-- **Ratings.** Once a cleanup is complete its organiser rates each participant 1–5; the average
+- **Ratings.** Once a cleanup is complete its project owner rates each participant 1–5; the average
   appears on the participant's profile and on their opportunity applications. Participant names
-  are only returned to the organiser and officials.
+  are only returned to the project owner and officials.
 
 ## Layout
 
@@ -135,6 +145,5 @@ src/main/java/lk/tideline/cleanup/
 
 ## Not built yet
 
-- Binary file upload — evidence is referenced by URL for now.
+- Photo upload for report evidence — evidence is referenced by URL for now (certificate upload exists).
 - Geocoding / map API integration.
-- Automated tests beyond the context-load smoke test.

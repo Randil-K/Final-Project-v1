@@ -10,6 +10,7 @@ const NAV = [
   { to: '/console/projects', label: 'Projects', icon: 'map-pin' },
   { to: '/console/alerts', label: 'Alerts', icon: 'bell', showUnread: true },
   { to: '/console/analytics', label: 'Analytics', icon: 'chart-column' },
+  { to: '/console/verifications', label: 'Verifications', icon: 'badge-check', adminOnly: true },
   { to: '/console/users', label: 'Users', icon: 'users', adminOnly: true },
 ];
 

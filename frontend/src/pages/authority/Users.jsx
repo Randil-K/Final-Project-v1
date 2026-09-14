@@ -4,7 +4,7 @@ import Modal from '../../components/Modal.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
-import { ROLE_LABEL, formatDate } from '../../lib/format.js';
+import { ACCOUNT_STATUS, ROLE_LABEL, formatDate } from '../../lib/format.js';
 
 const COLUMNS = 'minmax(240px, 2fr) 150px 170px 100px 110px 120px';
 
@@ -84,7 +84,13 @@ export default function Users() {
                   <span style={{ color: 'var(--text-muted)' }}>{[user.city, user.province].filter(Boolean).join(', ') || '—'}</span>
                   <span style={{ color: 'var(--text-muted)', font: 'var(--text-caption)' }}>{formatDate(user.createdAt, false)}</span>
                   <span title={user.suspensionReason || undefined}>
-                    {user.suspended ? <Badge tone="danger" size="sm">Suspended</Badge> : <Badge tone="success" size="sm">Active</Badge>}
+                    {user.suspended ? (
+                      <Badge tone="danger" size="sm">Suspended</Badge>
+                    ) : user.accountStatus !== 'APPROVED' ? (
+                      <Badge tone={ACCOUNT_STATUS[user.accountStatus].tone} size="sm">{ACCOUNT_STATUS[user.accountStatus].label}</Badge>
+                    ) : (
+                      <Badge tone="success" size="sm">Active</Badge>
+                    )}
                   </span>
                   <span style={{ justifySelf: 'end' }}>
                     {user.role === 'ADMIN' ? null : user.suspended ? (

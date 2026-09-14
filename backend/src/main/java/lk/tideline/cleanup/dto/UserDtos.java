@@ -2,9 +2,13 @@ package lk.tideline.cleanup.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lk.tideline.cleanup.model.AccountDocument;
+import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.CertificationLevel;
+import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.OrganizationType;
+import lk.tideline.cleanup.model.ProjectStatus;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 
@@ -22,6 +26,7 @@ public final class UserDtos {
             String email,
             String phone,
             Role role,
+            AccountStatus accountStatus,
             String province,
             String city,
             Double latitude,
@@ -29,22 +34,22 @@ public final class UserDtos {
             boolean availableForAlerts,
             String organizationName,
             OrganizationType organizationType,
+            String websiteUrl,
             DiverProfileResponse diverProfile,
             /** Average organiser rating (1-5) across completed cleanups; null until someone rates them. */
             Double averageMark,
-            Integer markedCleanups
+            Integer markedCleanups,
+            /** Projects created from this user's reports — the "project owner" badge. */
+            List<OwnedProject> ownedProjects
     ) {
-        public static UserResponse from(User user) {
-            return from(user, null, null);
-        }
-
-        public static UserResponse from(User user, Double averageMark, Integer markedCleanups) {
+        public static UserResponse from(User user, Double averageMark, Integer markedCleanups, List<OwnedProject> ownedProjects) {
             return new UserResponse(
                     user.getId(),
                     user.getFullName(),
                     user.getEmail(),
                     user.getPhone(),
                     user.getRole(),
+                    user.getAccountStatus(),
                     user.getProvince(),
                     user.getCity(),
                     user.getLatitude(),
@@ -52,9 +57,17 @@ public final class UserDtos {
                     user.isAvailableForAlerts(),
                     user.getOrganizationName(),
                     user.getOrganizationType(),
+                    user.getWebsiteUrl(),
                     DiverProfileResponse.from(user.getDiverProfile()),
                     averageMark,
-                    markedCleanups);
+                    markedCleanups,
+                    ownedProjects);
+        }
+    }
+
+    public record OwnedProject(Long id, String reference, String title, ProjectStatus status) {
+        public static OwnedProject from(CleanupProject project) {
+            return new OwnedProject(project.getId(), project.getReference(), project.getTitle(), project.getStatus());
         }
     }
 
@@ -115,6 +128,7 @@ public final class UserDtos {
             String fullName,
             String email,
             Role role,
+            AccountStatus accountStatus,
             String province,
             String city,
             boolean suspended,
@@ -127,6 +141,7 @@ public final class UserDtos {
                     user.getFullName(),
                     user.getEmail(),
                     user.getRole(),
+                    user.getAccountStatus(),
                     user.getProvince(),
                     user.getCity(),
                     user.isSuspended(),
@@ -139,5 +154,66 @@ public final class UserDtos {
             @NotNull Boolean suspended,
             @Size(max = 500) String reason
     ) {
+    }
+
+    /** What an administrator checks before verifying a diver or organisation. */
+    public record AccountReviewResponse(
+            Long id,
+            String fullName,
+            String email,
+            String phone,
+            Role role,
+            AccountStatus accountStatus,
+            String reviewNote,
+            String province,
+            String city,
+            CertificationLevel certificationLevel,
+            Integer experienceYears,
+            String organizationName,
+            OrganizationType organizationType,
+            String websiteUrl,
+            List<DocumentResponse> documents,
+            Instant createdAt
+    ) {
+        public static AccountReviewResponse from(User user) {
+            DiverProfile profile = user.getDiverProfile();
+            return new AccountReviewResponse(
+                    user.getId(),
+                    user.getFullName(),
+                    user.getEmail(),
+                    user.getPhone(),
+                    user.getRole(),
+                    user.getAccountStatus(),
+                    user.getAccountReviewNote(),
+                    user.getProvince(),
+                    user.getCity(),
+                    profile == null ? null : profile.getCertificationLevel(),
+                    profile == null ? null : profile.getExperienceYears(),
+                    user.getOrganizationName(),
+                    user.getOrganizationType(),
+                    user.getWebsiteUrl(),
+                    user.getDocuments().stream().map(DocumentResponse::from).toList(),
+                    user.getCreatedAt());
+        }
+    }
+
+    public record DocumentResponse(Long id, String name, String contentType, long sizeBytes, Instant uploadedAt) {
+        public static DocumentResponse from(AccountDocument document) {
+            return new DocumentResponse(
+                    document.getId(),
+                    document.getOriginalName(),
+                    document.getContentType(),
+                    document.getSizeBytes(),
+                    document.getUploadedAt());
+        }
+    }
+
+    public record AccountReviewRequest(
+            @NotNull Boolean approved,
+            @Size(max = 500) String reason
+    ) {
+    }
+
+    public record DocumentDownload(String name, String contentType, byte[] bytes) {
     }
 }

@@ -3,6 +3,7 @@ package lk.tideline.cleanup.service;
 import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.dto.ReportDtos.*;
 import lk.tideline.cleanup.model.*;
+import lk.tideline.cleanup.repository.CleanupProjectRepository;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.ReportCommentRepository;
 import lk.tideline.cleanup.repository.UserRepository;
@@ -27,6 +28,8 @@ public class ReportService {
     private final VerificationVoteRepository voteRepository;
     private final ReportCommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final CleanupProjectRepository projectRepository;
+    private final ProjectService projectService;
     private final AlertService alertService;
     private final TidelineProperties properties;
 
@@ -34,12 +37,16 @@ public class ReportService {
                          VerificationVoteRepository voteRepository,
                          ReportCommentRepository commentRepository,
                          UserRepository userRepository,
+                         CleanupProjectRepository projectRepository,
+                         ProjectService projectService,
                          AlertService alertService,
                          TidelineProperties properties) {
         this.reportRepository = reportRepository;
         this.voteRepository = voteRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
+        this.projectService = projectService;
         this.alertService = alertService;
         this.properties = properties;
     }
@@ -49,7 +56,8 @@ public class ReportService {
     }
 
     private ReportResponse toResponse(PollutionReport report) {
-        return ReportResponse.from(report, thresholdPercent());
+        CleanupProject project = projectRepository.findFirstByReportId(report.getId()).orElse(null);
+        return ReportResponse.from(report, thresholdPercent(), project);
     }
 
     @Transactional(readOnly = true)
@@ -62,8 +70,7 @@ public class ReportService {
         return toResponse(get(id));
     }
 
-    /** Entity accessor for other services; callers must already be in a transaction. */
-    public PollutionReport get(Long id) {
+    private PollutionReport get(Long id) {
         return reportRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Report " + id + " was not found."));
     }
@@ -112,7 +119,9 @@ public class ReportService {
     public ReportResponse vote(Long reportId, User voter, boolean confirmed) {
         PollutionReport report = get(reportId);
 
-        if (report.getStatus() == ReportStatus.REJECTED || report.getStatus() == ReportStatus.CLEANED) {
+        if (report.getStatus() == ReportStatus.REJECTED
+                || report.getStatus() == ReportStatus.APPROVED
+                || report.getStatus() == ReportStatus.CLEANED) {
             throw new IllegalStateException("Voting is closed for this report.");
         }
 
@@ -153,7 +162,7 @@ public class ReportService {
             alertService.send(report.getReporter(), AlertType.REPORT_VERIFIED,
                     "Your report was verified",
                     report.getReference() + " passed the " + thresholdPercent()
-                            + "% community threshold and has moved to Verified.",
+                            + "% community threshold. An administrator reviews it next.",
                     report.getId(), null, null);
         }
 
@@ -179,124 +188,129 @@ public class ReportService {
     }
 
     /**
-     * Module 4 — an administrator verifies, rejects, or asks the reporter for clarification
-     * (which returns the report to Verifying).
+     * Module 4 — the administrator approves a report (sending it to the government authority),
+     * rejects it, or asks the reporter for more information.
      */
     @Transactional
     public ReportResponse moderate(Long reportId, ModerationRequest request, User admin) {
         PollutionReport report = get(reportId);
 
-        if (report.getStatus() == ReportStatus.ESCALATED) {
-            throw new IllegalStateException("This report is with the authority. Wait for their decision before moderating it.");
-        }
-        if (report.getStatus() == ReportStatus.CLEANED) {
-            throw new IllegalStateException("This site has already been cleaned.");
-        }
-
-        ReportStatus target = request.status();
-        if (target != ReportStatus.VERIFIED && target != ReportStatus.REJECTED && target != ReportStatus.VERIFYING) {
-            throw new IllegalArgumentException("An administrator can only verify, reject, or ask for clarification.");
-        }
-
-        boolean clarification = target == ReportStatus.VERIFYING;
-        String comment = request.comment() == null || request.comment().isBlank() ? null : request.comment().trim();
-        if (clarification && comment == null) {
-            throw new IllegalArgumentException("Say what needs clarifying. The reporter sees your question.");
-        }
-
-        report.setStatus(target);
-        report.setModerationComment(comment);
-        report.setUpdatedAt(Instant.now());
-        if (target == ReportStatus.VERIFIED) {
-            report.setVerifiedAt(Instant.now());
-        }
-
-        if (clarification) {
-            // Posted to the discussion so the reporter can answer where the community can see it.
-            ReportComment question = new ReportComment();
-            question.setReport(report);
-            question.setAuthor(admin);
-            question.setBody(comment);
-            question.setOfficial(true);
-            commentRepository.save(question);
-        }
-
-        String title = switch (target) {
-            case VERIFIED -> "Your report was verified";
-            case REJECTED -> "Your report was rejected";
-            default -> "More detail needed on your report";
-        };
-        String body = clarification
-                ? report.getReference() + ": " + comment
-                : report.getReference() + " is now " + target.name().toLowerCase() + (comment == null ? "." : ". " + comment);
-        alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION, title, body, report.getId(), null, null);
-
-        return toResponse(report);
-    }
-
-    /** Module 5 — a verified report is forwarded to the relevant government body. */
-    @Transactional
-    public ReportResponse escalate(Long reportId, User actor) {
-        PollutionReport report = get(reportId);
-
-        if (report.getStatus() != ReportStatus.VERIFIED && report.getStatus() != ReportStatus.VERIFYING) {
-            throw new IllegalStateException("Only a verified report can be escalated to an authority.");
-        }
-
-        report.setStatus(ReportStatus.ESCALATED);
-        report.setEscalatedAt(Instant.now());
-        report.setUpdatedAt(Instant.now());
-
-        alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                "Your report was escalated",
-                report.getReference() + " has been sent to the relevant government authority for review.",
-                report.getId(), null, null);
-
-        for (User officer : userRepository.findByRole(Role.AUTHORITY)) {
-            if (officer.isSuspended()) {
-                continue;
+        switch (report.getStatus()) {
+            case ESCALATED -> throw new IllegalStateException(
+                    "This report is with the government authority. Wait for their decision.");
+            case APPROVED, CLEANED -> throw new IllegalStateException("This report has already become a project.");
+            case REJECTED -> throw new IllegalStateException("This report was rejected and is closed.");
+            default -> {
             }
-            alertService.send(officer, AlertType.AUTHORITY_DECISION,
-                    "Report escalated for your review",
-                    report.getReference() + " at " + report.getLocationName() + " — " + report.getTrustPercentage()
-                            + "% community trust. Approve or reject the cleanup request.",
-                    report.getId(), null, null);
         }
 
+        ReviewDecision decision = request.decision();
+        String comment = trimmed(request.comment());
+        Instant now = Instant.now();
+        String reference = report.getReference();
+
+        switch (decision) {
+            case APPROVED -> {
+                report.setStatus(ReportStatus.ESCALATED);
+                report.setEscalatedAt(now);
+                report.setAuthorityDecision(ReviewDecision.PENDING);
+                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
+                        "An administrator approved your report",
+                        reference + " has been sent to the government authority for a decision.",
+                        report.getId(), null, null);
+                for (User officer : userRepository.findByRole(Role.AUTHORITY)) {
+                    if (officer.isSuspended()) {
+                        continue;
+                    }
+                    alertService.send(officer, AlertType.AUTHORITY_DECISION,
+                            "Report escalated for your review",
+                            reference + " at " + report.getLocationName() + " — " + report.getTrustPercentage()
+                                    + "% community trust. Approve it to create a cleanup project, reject it, or ask for more detail.",
+                            report.getId(), null, null);
+                }
+            }
+            case MORE_INFO_REQUESTED -> {
+                require(comment, "Say what needs clarifying. The reporter sees your question.");
+                postOfficialComment(report, admin, comment);
+                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
+                        "More detail needed on your report",
+                        reference + ": " + comment, report.getId(), null, null);
+            }
+            case REJECTED -> {
+                require(comment, "Give a reason for rejecting this report. The reporter sees it.");
+                report.setStatus(ReportStatus.REJECTED);
+                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
+                        "Your report was rejected",
+                        reference + ": " + comment, report.getId(), null, null);
+            }
+            default -> throw new IllegalArgumentException("Choose approve, reject, or request more information.");
+        }
+
+        report.setAdminDecision(decision);
+        report.setModerationComment(comment);
+        report.setAdminReviewedAt(now);
+        report.setUpdatedAt(now);
         return toResponse(report);
     }
 
-    /** Module 5 — the authority officer approves or rejects the cleanup request. */
+    /**
+     * Module 5 — the government officer approves, rejects, or asks for more information. Approval
+     * finishes the report: it becomes a cleanup project owned by the person who reported it.
+     */
     @Transactional
     public ReportResponse decideAsAuthority(Long reportId, AuthorityDecisionRequest request, User officer) {
         PollutionReport report = get(reportId);
 
         if (report.getStatus() != ReportStatus.ESCALATED) {
-            throw new IllegalStateException("Only an escalated report can be decided by an authority.");
+            throw new IllegalStateException("Only a report an administrator has sent to the authority can be decided.");
         }
+        ReviewDecision decision = request.decision();
+        if (decision == ReviewDecision.PENDING) {
+            throw new IllegalArgumentException("Choose approve, reject, or request more information.");
+        }
+
+        String comment = request.comment().trim();
+        Instant now = Instant.now();
+        String reference = report.getReference();
 
         report.setAuthorityOfficer(officer);
-        report.setAuthorityComment(request.comment());
-        report.setAuthorityApproved(request.approved());
-        report.setDecidedAt(Instant.now());
-        report.setUpdatedAt(Instant.now());
+        report.setAuthorityDecision(decision);
+        report.setAuthorityComment(comment);
+        report.setDecidedAt(now);
+        report.setUpdatedAt(now);
 
-        if (!request.approved()) {
-            report.setStatus(ReportStatus.REJECTED);
+        String adminTitle;
+        switch (decision) {
+            case APPROVED -> {
+                report.setStatus(ReportStatus.APPROVED);
+                CleanupProject project = projectService.createFromApprovedReport(report);
+                alertService.send(report.getReporter(), AlertType.PROJECT_PLANNED,
+                        "Your report is now a project",
+                        officer.getFullName() + " approved " + reference + ", so it is now project "
+                                + project.getReference() + " and you are its project owner. Their note: " + comment,
+                        report.getId(), project.getId(), null);
+                adminTitle = "Authority approved " + reference;
+            }
+            case REJECTED -> {
+                report.setStatus(ReportStatus.REJECTED);
+                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
+                        "The authority rejected your report",
+                        reference + ": " + comment, report.getId(), null, null);
+                adminTitle = "Authority rejected " + reference;
+            }
+            default -> {
+                postOfficialComment(report, officer, comment);
+                alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
+                        "The authority needs more detail",
+                        reference + ": " + comment, report.getId(), null, null);
+                adminTitle = "Authority requested more information on " + reference;
+            }
         }
 
-        alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                request.approved() ? "Cleanup approved by the authority" : "Cleanup request rejected",
-                report.getReference() + ": " + request.comment(),
-                report.getId(), null, null);
-
         // Module 5 — "notify admin about approval status".
-        String decision = request.approved() ? "approved" : "rejected";
         for (User admin : userRepository.findByRole(Role.ADMIN)) {
-            alertService.send(admin, AlertType.AUTHORITY_DECISION,
-                    "Authority " + decision + " " + report.getReference(),
-                    officer.getFullName() + " " + decision + " the cleanup request: " + request.comment(),
-                    report.getId(), null, null);
+            alertService.send(admin, AlertType.AUTHORITY_DECISION, adminTitle,
+                    officer.getFullName() + ": " + comment, report.getId(), null, null);
         }
 
         return toResponse(report);
@@ -307,8 +321,23 @@ public class ReportService {
         return alertService.escalateRadius(get(reportId));
     }
 
-    void markCleaned(PollutionReport report) {
-        report.setStatus(ReportStatus.CLEANED);
-        report.setUpdatedAt(Instant.now());
+    /** Questions go in the discussion so the reporter can answer where everyone can see it. */
+    private void postOfficialComment(PollutionReport report, User author, String body) {
+        ReportComment question = new ReportComment();
+        question.setReport(report);
+        question.setAuthor(author);
+        question.setBody(body);
+        question.setOfficial(true);
+        commentRepository.save(question);
+    }
+
+    private static String trimmed(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static void require(String value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
     }
 }

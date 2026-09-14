@@ -26,6 +26,7 @@ import ProjectDetail from './pages/authority/ProjectDetail.jsx';
 import Analytics from './pages/authority/Analytics.jsx';
 import ConsoleAlerts from './pages/authority/ConsoleAlerts.jsx';
 import Users from './pages/authority/Users.jsx';
+import Verifications from './pages/authority/Verifications.jsx';
 
 const CONSOLE_ROLES = ['ADMIN', 'AUTHORITY'];
 
@@ -91,6 +92,14 @@ export default function App() {
             <Route path="projects/:id" element={<ProjectDetail />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="alerts" element={<ConsoleAlerts />} />
+            <Route
+              path="verifications"
+              element={
+                <RequireAuth roles={['ADMIN']}>
+                  <Verifications />
+                </RequireAuth>
+              }
+            />
             <Route
               path="users"
               element={

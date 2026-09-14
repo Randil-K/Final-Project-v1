@@ -31,11 +31,14 @@ export function AuthProvider({ children }) {
         setUser(result.user);
         return result.user;
       },
-      async register(payload) {
-        const result = await api.auth.register(payload);
-        setToken(result.token);
-        setUser(result.user);
-        return result.user;
+      /** Divers and organisations get no token — they wait for an administrator to verify them. */
+      async register(data, certificates) {
+        const result = await api.auth.register(data, certificates);
+        if (result.token) {
+          setToken(result.token);
+          setUser(result.user);
+        }
+        return result;
       },
       logout() {
         clearToken();

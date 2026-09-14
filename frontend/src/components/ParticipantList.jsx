@@ -3,7 +3,7 @@ import { Avatar, Badge, Alert } from '../design-system';
 import ChipButton from './ChipButton.jsx';
 import { api } from '../api/index.js';
 
-/** Visible to the organiser and officials; the organiser rates each person once the cleanup is done. */
+/** Visible to the project owner and officials; the owner rates each person once the cleanup is done. */
 export default function ParticipantList({ project, canRate, onRated }) {
   const [busyId, setBusyId] = React.useState(null);
   const [error, setError] = React.useState(null);

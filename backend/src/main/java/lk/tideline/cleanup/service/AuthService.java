@@ -4,37 +4,55 @@ import lk.tideline.cleanup.dto.AuthDtos.AuthResponse;
 import lk.tideline.cleanup.dto.AuthDtos.LoginRequest;
 import lk.tideline.cleanup.dto.AuthDtos.RegisterRequest;
 import lk.tideline.cleanup.dto.UserDtos.UserResponse;
+import lk.tideline.cleanup.model.AccountStatus;
+import lk.tideline.cleanup.model.AlertType;
 import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 import lk.tideline.cleanup.repository.UserRepository;
 import lk.tideline.cleanup.security.JwtService;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import lk.tideline.cleanup.service.DocumentStorageService.CheckedFile;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final UserService userService;
+    private final DocumentStorageService storage;
+    private final AlertService alertService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       UserService userService,
+                       DocumentStorageService storage,
+                       AlertService alertService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.userService = userService;
+        this.storage = storage;
+        this.alertService = alertService;
     }
 
+    /**
+     * Community members can sign in straight away. Volunteer divers (with certificates) and
+     * organisations (with a website) wait for an administrator, so they get no token.
+     */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, List<MultipartFile> certificates) {
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
             throw new IllegalStateException("An account already uses that email address.");
         }
@@ -43,6 +61,22 @@ public class AuthService {
         if (role == Role.ADMIN || role == Role.AUTHORITY) {
             // Government officers and administrators are provisioned internally, never self-registered.
             throw new IllegalArgumentException("That role cannot be self-registered. Contact an administrator.");
+        }
+
+        List<CheckedFile> files = storage.check(certificates);
+        if (role == Role.DIVER && files.isEmpty()) {
+            throw new IllegalArgumentException("Attach at least one diving certificate so an administrator can verify you.");
+        }
+        if (role != Role.DIVER && !files.isEmpty()) {
+            throw new IllegalArgumentException("Only volunteer divers attach certificates.");
+        }
+
+        String website = null;
+        if (role == Role.ORGANIZATION) {
+            if (request.organizationName() == null || request.organizationName().isBlank()) {
+                throw new IllegalArgumentException("Add your organisation's name.");
+            }
+            website = normaliseWebsite(request.websiteUrl());
         }
 
         User user = new User();
@@ -57,6 +91,8 @@ public class AuthService {
         user.setLongitude(request.longitude());
         user.setOrganizationName(request.organizationName());
         user.setOrganizationType(request.organizationType());
+        user.setWebsiteUrl(website);
+        user.setAccountStatus(role == Role.CITIZEN ? AccountStatus.APPROVED : AccountStatus.PENDING_REVIEW);
 
         if (role == Role.DIVER) {
             DiverProfile profile = new DiverProfile();
@@ -66,21 +102,70 @@ public class AuthService {
         }
 
         User saved = userRepository.save(user);
-        return tokenFor(saved);
+        for (CheckedFile file : files) {
+            saved.getDocuments().add(storage.save(saved, file));
+        }
+        userRepository.saveAndFlush(saved);
+
+        UserResponse view = userService.view(saved.getId());
+        if (saved.getAccountStatus() != AccountStatus.APPROVED) {
+            notifyAdministrators(saved, files.size());
+            return new AuthResponse(null, 0, view);
+        }
+        return new AuthResponse(jwtService.issueToken(saved), jwtService.expirySeconds(), view);
     }
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        User user = userRepository.findByEmailIgnoreCase(request.email()).orElse(null);
+        if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Bad credentials");
+        }
+        // Status is only revealed to someone who knows the password.
+        if (user.isSuspended()) {
+            throw new DisabledException("Suspended");
+        }
+        if (user.getAccountStatus() == AccountStatus.PENDING_REVIEW) {
+            throw new AccountReviewException("ACCOUNT_PENDING",
+                    "Your account is waiting for an administrator to verify it. You can sign in once it's approved.");
+        }
+        if (user.getAccountStatus() == AccountStatus.REJECTED) {
+            String note = user.getAccountReviewNote();
+            throw new AccountReviewException("ACCOUNT_REJECTED",
+                    "Your account application wasn't approved" + (note == null ? "." : ": " + note));
+        }
 
-        User user = userRepository.findByEmailIgnoreCase(request.email())
-                .orElseThrow(() -> new NotFoundException("No account for " + request.email()));
-
-        return tokenFor(user);
+        return new AuthResponse(jwtService.issueToken(user), jwtService.expirySeconds(), userService.view(user.getId()));
     }
 
-    private AuthResponse tokenFor(User user) {
-        return new AuthResponse(jwtService.issueToken(user), jwtService.expirySeconds(), UserResponse.from(user));
+    private void notifyAdministrators(User applicant, int certificateCount) {
+        String title = applicant.getRole() == Role.DIVER ? "New volunteer diver to verify" : "New organisation to verify";
+        String body = applicant.getRole() == Role.DIVER
+                ? applicant.getFullName() + " registered with " + certificateCount
+                        + (certificateCount == 1 ? " certificate." : " certificates.")
+                : applicant.getOrganizationName() + " registered. Check " + applicant.getWebsiteUrl() + " before approving.";
+        for (User admin : userRepository.findByRole(Role.ADMIN)) {
+            alertService.send(admin, AlertType.ACCOUNT_REVIEW, title, body, null, null, null);
+        }
+    }
+
+    static String normaliseWebsite(String raw) {
+        String invalid = "That website link isn't valid. It should look like https://example.org";
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("Add your organisation's website so an administrator can check it.");
+        }
+        URI uri;
+        try {
+            uri = new URI(raw.trim());
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(invalid);
+        }
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                || host == null || !host.contains(".")) {
+            throw new IllegalArgumentException(invalid);
+        }
+        return uri.toString();
     }
 }

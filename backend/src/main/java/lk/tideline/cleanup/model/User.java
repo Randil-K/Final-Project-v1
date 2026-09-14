@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -48,13 +50,29 @@ public class User {
     @Column(length = 500)
     private String suspensionReason;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus accountStatus = AccountStatus.APPROVED;
+
+    /** An administrator's reason when an application is not approved. */
+    @Column(length = 500)
+    private String accountReviewNote;
+
     private String organizationName;
 
     @Enumerated(EnumType.STRING)
     private OrganizationType organizationType;
 
+    /** Organisations give their website so an administrator can check they are genuine. */
+    @Column(length = 300)
+    private String websiteUrl;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private DiverProfile diverProfile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("uploadedAt ASC")
+    private List<AccountDocument> documents = new ArrayList<>();
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();

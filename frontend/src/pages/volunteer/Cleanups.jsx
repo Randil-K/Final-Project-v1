@@ -23,7 +23,7 @@ export default function Cleanups() {
       <div>
         <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Cleanups</h1>
         <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Join a cleanup near you, or follow the ones you've joined.
+          Reports the government authority approved, now running as cleanup projects. Join one near you.
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default function Cleanups() {
       <Async
         state={state}
         isEmpty={(list) => !list?.length}
-        empty="No cleanups here yet — you can start one from any verified report."
+        empty="No cleanup projects here yet — a report becomes a project once the government authority approves it."
         emptyIcon="users"
       >
         {(projects) => (

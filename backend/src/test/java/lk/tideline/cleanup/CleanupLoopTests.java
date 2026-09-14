@@ -1,13 +1,16 @@
 package lk.tideline.cleanup;
 
-import lk.tideline.cleanup.dto.ProjectDtos.CreateProjectRequest;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectResponse;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectUpdateRequest;
+import lk.tideline.cleanup.dto.ReportDtos.AuthorityDecisionRequest;
+import lk.tideline.cleanup.dto.ReportDtos.ReportResponse;
+import lk.tideline.cleanup.dto.UserDtos.OwnedProject;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.AlertRepository;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.UserRepository;
 import lk.tideline.cleanup.service.ProjectService;
+import lk.tideline.cleanup.service.ReportService;
 import lk.tideline.cleanup.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +23,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** The report → cleanup → "your site was cleaned" loop, end to end through the service layer. */
+/** Authority approval → project owned by the reporter → cleaned, end to end through the service layer. */
 @SpringBootTest
-@TestPropertySource(properties = "tideline.seed-demo-data=false")
+@TestPropertySource(properties = {"tideline.seed-demo-data=false", "tideline.uploads.directory=target/test-uploads"})
 class CleanupLoopTests {
 
     @Autowired
@@ -35,88 +38,105 @@ class CleanupLoopTests {
     private AlertRepository alerts;
 
     @Autowired
+    private ReportService reportService;
+
+    @Autowired
     private ProjectService projects;
 
     @Autowired
     private UserService userService;
 
     @Test
-    void reporterHearsWhenACleanupIsPlannedAndWhenTheSiteIsCleaned() {
+    void authorityApprovalTurnsTheReportIntoAProjectOwnedByTheReporter() {
         User reporter = user(Role.CITIZEN);
-        User organiser = user(Role.DIVER);
-        User volunteer = user(Role.CITIZEN);
-        PollutionReport report = report(reporter, ReportStatus.VERIFIED, null);
+        PollutionReport report = escalatedReport(reporter);
 
-        ProjectResponse project = projects.create(request(report), organiser);
+        ReportResponse decided = reportService.decideAsAuthority(report.getId(),
+                new AuthorityDecisionRequest(ReviewDecision.APPROVED, "Approved."), user(Role.AUTHORITY));
+
+        assertThat(decided.status()).isEqualTo(ReportStatus.APPROVED);
+        assertThat(decided.authorityDecision()).isEqualTo(ReviewDecision.APPROVED);
+        assertThat(decided.projectId()).isNotNull();
+
+        ProjectResponse project = projects.view(decided.projectId(), reporter);
+        assertThat(project.owner().id()).isEqualTo(reporter.getId());
+        assertThat(project.reportId()).isEqualTo(report.getId());
+        assertThat(project.status()).isEqualTo(ProjectStatus.PLANNED);
+
+        assertThat(userService.view(reporter.getId()).ownedProjects())
+                .extracting(OwnedProject::id)
+                .containsExactly(project.id());
+        assertThat(titlesFor(reporter)).contains("Your report is now a project");
+    }
+
+    @Test
+    void completingTheProjectMarksTheReportCleaned() {
+        User reporter = user(Role.CITIZEN);
+        User volunteer = user(Role.CITIZEN);
+        ProjectResponse project = approve(reporter);
+
         projects.join(project.id(), volunteer, null);
         projects.addUpdate(project.id(),
-                new ProjectUpdateRequest(UpdateStage.AFTER, "All clear.", null, 100, 12.5), organiser);
+                new ProjectUpdateRequest(UpdateStage.AFTER, "All clear.", null, 100, 12.5), reporter);
 
-        assertThat(titlesFor(reporter)).containsExactlyInAnyOrder(
-                "A cleanup is planned for your report",
-                "The site you reported has been cleaned");
+        assertThat(reports.findById(project.reportId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
         assertThat(titlesFor(volunteer)).contains("Cleanup complete");
-        assertThat(reports.findById(report.getId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
     }
 
     @Test
-    void aReportGetsOnlyOneCleanup() {
-        PollutionReport report = report(user(Role.CITIZEN), ReportStatus.VERIFIED, null);
-        projects.create(request(report), user(Role.DIVER));
-
-        assertThatThrownBy(() -> projects.create(request(report), user(Role.DIVER)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already planned");
-    }
-
-    @Test
-    void anEscalatedReportWaitsForTheAuthorityToApprove() {
+    void anApprovedReportCannotBeDecidedAgainOrVotedOn() {
         User reporter = user(Role.CITIZEN);
-        PollutionReport pending = report(reporter, ReportStatus.ESCALATED, null);
-        assertThatThrownBy(() -> projects.create(request(pending), user(Role.DIVER)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("authority");
+        ProjectResponse project = approve(reporter);
 
-        PollutionReport approved = report(reporter, ReportStatus.ESCALATED, true);
-        assertThat(projects.create(request(approved), user(Role.DIVER)).reportId()).isEqualTo(approved.getId());
+        assertThatThrownBy(() -> reportService.decideAsAuthority(project.reportId(),
+                new AuthorityDecisionRequest(ReviewDecision.APPROVED, "Again."), user(Role.AUTHORITY)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> reportService.vote(project.reportId(), user(Role.CITIZEN), true))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("closed");
     }
 
     @Test
-    void theOrganiserCannotJoinTheirOwnCleanup() {
-        User organiser = user(Role.DIVER);
-        ProjectResponse project = projects.create(
-                request(report(user(Role.CITIZEN), ReportStatus.VERIFIED, null)), organiser);
+    void theOwnerCannotJoinTheirOwnProject() {
+        User reporter = user(Role.CITIZEN);
+        ProjectResponse project = approve(reporter);
 
-        assertThatThrownBy(() -> projects.join(project.id(), organiser, null))
+        assertThatThrownBy(() -> projects.join(project.id(), reporter, null))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void theOrganiserRatesContributionsOnceTheCleanupIsComplete() {
-        User organiser = user(Role.DIVER);
+    void theOwnerRatesContributionsOnceTheProjectIsComplete() {
+        User owner = user(Role.CITIZEN);
         User volunteer = user(Role.DIVER);
-        ProjectResponse project = projects.create(
-                request(report(user(Role.CITIZEN), ReportStatus.VERIFIED, null)), organiser);
+        ProjectResponse project = approve(owner);
         projects.join(project.id(), volunteer, null);
 
         assertThat(projects.view(project.id(), volunteer).participants())
-                .as("participants stay private to the organiser")
+                .as("participants stay private to the owner")
                 .isNull();
-        Long participantId = projects.view(project.id(), organiser).participants().get(0).id();
+        Long participantId = projects.view(project.id(), owner).participants().get(0).id();
 
-        assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, organiser))
+        assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, owner))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("complete");
 
         projects.addUpdate(project.id(),
-                new ProjectUpdateRequest(UpdateStage.AFTER, "Done.", null, 100, null), organiser);
+                new ProjectUpdateRequest(UpdateStage.AFTER, "Done.", null, 100, null), owner);
 
         assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, volunteer))
                 .isInstanceOf(IllegalStateException.class);
 
-        projects.mark(project.id(), participantId, 4, organiser);
+        projects.mark(project.id(), participantId, 4, owner);
         assertThat(userService.view(volunteer.getId()).averageMark()).isEqualTo(4.0);
         assertThat(titlesFor(volunteer)).contains("Your contribution was rated");
+    }
+
+    private ProjectResponse approve(User reporter) {
+        PollutionReport report = escalatedReport(reporter);
+        ReportResponse decided = reportService.decideAsAuthority(report.getId(),
+                new AuthorityDecisionRequest(ReviewDecision.APPROVED, "Approved."), user(Role.AUTHORITY));
+        return projects.view(decided.projectId(), reporter);
     }
 
     private List<String> titlesFor(User user) {
@@ -132,23 +152,20 @@ class CleanupLoopTests {
         return users.save(user);
     }
 
-    private PollutionReport report(User reporter, ReportStatus status, Boolean authorityApproved) {
+    private PollutionReport escalatedReport(User reporter) {
         PollutionReport report = new PollutionReport();
         report.setReference("T-" + UUID.randomUUID());
         report.setTitle("Test debris");
         report.setDescription("Test report.");
         report.setSeverity(Severity.MEDIUM);
-        report.setStatus(status);
-        report.setAuthorityApproved(authorityApproved);
+        report.setStatus(ReportStatus.ESCALATED);
+        report.setAdminDecision(ReviewDecision.APPROVED);
+        report.setAuthorityDecision(ReviewDecision.PENDING);
         report.setLocationName("Negombo");
         report.setProvince("Western Province");
         report.setLatitude(7.2083);
         report.setLongitude(79.8358);
         report.setReporter(reporter);
         return reports.save(report);
-    }
-
-    private CreateProjectRequest request(PollutionReport report) {
-        return new CreateProjectRequest("Test cleanup", null, report.getId(), "Negombo", "Western Province", null, null);
     }
 }

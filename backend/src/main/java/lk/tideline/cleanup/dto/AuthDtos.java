@@ -24,7 +24,8 @@ public final class AuthDtos {
             Double longitude,
             String organizationName,
             OrganizationType organizationType,
-            CertificationLevel certificationLevel
+            CertificationLevel certificationLevel,
+            @Size(max = 300) String websiteUrl
     ) {
     }
 
@@ -34,6 +35,7 @@ public final class AuthDtos {
     ) {
     }
 
+    /** The token is absent for divers and organisations, who wait for administrator verification. */
     public record AuthResponse(
             String token,
             long expiresInSeconds,

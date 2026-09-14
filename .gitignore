@@ -18,6 +18,9 @@ target/
 !**/.mvn/wrapper/*.jar
 .mvn/timing.properties
 
+# Uploaded account documents (certificates) written by the dev server
+backend/uploads/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

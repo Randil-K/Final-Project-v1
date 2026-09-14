@@ -5,29 +5,35 @@ import lk.tideline.cleanup.dto.AuthDtos.LoginRequest;
 import lk.tideline.cleanup.dto.AuthDtos.RegisterRequest;
 import lk.tideline.cleanup.dto.ReportDtos.AuthorityDecisionRequest;
 import lk.tideline.cleanup.dto.ReportDtos.ModerationRequest;
+import lk.tideline.cleanup.dto.ReportDtos.ReportResponse;
+import lk.tideline.cleanup.dto.UserDtos.AccountReviewRequest;
 import lk.tideline.cleanup.dto.UserDtos.SuspensionRequest;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.AlertRepository;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.UserRepository;
+import lk.tideline.cleanup.service.AccountReviewException;
 import lk.tideline.cleanup.service.AuthService;
 import lk.tideline.cleanup.service.ReportService;
 import lk.tideline.cleanup.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Module 4 moderation and account control, and module 5 notifications to officials. */
+/** Account verification, moderation, and the administrator and authority review decisions. */
 @SpringBootTest
-@TestPropertySource(properties = "tideline.seed-demo-data=false")
+@TestPropertySource(properties = {"tideline.seed-demo-data=false", "tideline.uploads.directory=target/test-uploads"})
 class GovernanceTests {
 
     @Autowired
@@ -48,12 +54,95 @@ class GovernanceTests {
     @Autowired
     private ReportService reportService;
 
+    // ---- account verification ----
+
+    @Test
+    void aDiverWaitsForVerificationBeforeSigningIn() {
+        User admin = user(Role.ADMIN);
+        String email = UUID.randomUUID() + "@test.lk";
+
+        AuthResponse registered = authService.register(
+                registration(email, Role.DIVER, null, null), List.of(pdf("padi.pdf")));
+
+        assertThat(registered.token()).isNull();
+        assertThat(registered.user().accountStatus()).isEqualTo(AccountStatus.PENDING_REVIEW);
+        assertThat(titlesFor(admin)).contains("New volunteer diver to verify");
+        assertThat(userService.verifications(AccountStatus.PENDING_REVIEW))
+                .anySatisfy(account -> {
+                    assertThat(account.email()).isEqualTo(email);
+                    assertThat(account.documents()).hasSize(1);
+                });
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
+                .isInstanceOf(AccountReviewException.class)
+                .extracting("code").isEqualTo("ACCOUNT_PENDING");
+
+        userService.reviewAccount(registered.user().id(), new AccountReviewRequest(true, null));
+        assertThat(authService.login(new LoginRequest(email, "password123")).token()).isNotBlank();
+    }
+
+    @Test
+    void aRejectedApplicantSeesTheReasonWhenSigningIn() {
+        String email = UUID.randomUUID() + "@test.lk";
+        AuthResponse registered = authService.register(
+                registration(email, Role.DIVER, null, null), List.of(pdf("card.pdf")));
+
+        assertThatThrownBy(() -> userService.reviewAccount(registered.user().id(), new AccountReviewRequest(false, " ")))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        userService.reviewAccount(registered.user().id(), new AccountReviewRequest(false, "Certificate has expired."));
+        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
+                .isInstanceOf(AccountReviewException.class)
+                .hasMessageContaining("Certificate has expired.");
+    }
+
+    @Test
+    void aDiverMustAttachACertificate() {
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.DIVER, null, null), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("certificate");
+    }
+
+    @Test
+    void aFileIsCheckedByItsContentsNotItsName() {
+        MultipartFile disguised = new MockMultipartFile("certificates", "certificate.pdf", "application/pdf",
+                "<script>alert(1)</script>".getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.DIVER, null, null), List.of(disguised)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not a PDF, JPG or PNG");
+    }
+
+    @Test
+    void anOrganisationNeedsAValidWebsite() {
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.ORGANIZATION, "Reef Friends", "javascript:alert(1)"), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("website");
+
+        AuthResponse registered = authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.ORGANIZATION, "Reef Friends", "https://reef-friends.example.org"),
+                List.of());
+        assertThat(registered.token()).isNull();
+        assertThat(registered.user().websiteUrl()).isEqualTo("https://reef-friends.example.org");
+    }
+
+    @Test
+    void aCommunityMemberCanSignInStraightAway() {
+        AuthResponse registered = authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.CITIZEN, null, null), List.of());
+        assertThat(registered.token()).isNotBlank();
+        assertThat(registered.user().accountStatus()).isEqualTo(AccountStatus.APPROVED);
+    }
+
+    // ---- suspension ----
+
     @Test
     void aSuspendedMemberCannotSignInUntilReinstated() {
         String email = UUID.randomUUID() + "@test.lk";
-        AuthResponse registered = authService.register(new RegisterRequest(
-                "Suspended Member", email, "password123", null, Role.CITIZEN,
-                null, null, null, null, null, null, null));
+        AuthResponse registered = authService.register(registration(email, Role.CITIZEN, null, null), List.of());
 
         userService.setSuspension(registered.user().id(), new SuspensionRequest(true, "Repeated false reports."));
         assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
@@ -70,35 +159,36 @@ class GovernanceTests {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    @Test
-    void aSuspensionNeedsAReason() {
-        User member = user(Role.CITIZEN);
-        assertThatThrownBy(() -> userService.setSuspension(member.getId(), new SuspensionRequest(true, " ")))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
+    // ---- report review ----
 
     @Test
-    void escalationAlertsOfficersAndTheirDecisionAlertsAdministrators() {
+    void adminApprovalSendsTheReportToTheAuthorityAndAlertsOfficers() {
         User officer = user(Role.AUTHORITY);
         User admin = user(Role.ADMIN);
         PollutionReport report = report(user(Role.CITIZEN), ReportStatus.VERIFIED);
 
-        reportService.escalate(report.getId(), admin);
+        ReportResponse approved = reportService.moderate(report.getId(), new ModerationRequest(ReviewDecision.APPROVED, null), admin);
+
+        assertThat(approved.status()).isEqualTo(ReportStatus.ESCALATED);
+        assertThat(approved.adminDecision()).isEqualTo(ReviewDecision.APPROVED);
+        assertThat(approved.authorityDecision()).isEqualTo(ReviewDecision.PENDING);
         assertThat(titlesFor(officer)).contains("Report escalated for your review");
 
         reportService.decideAsAuthority(report.getId(),
-                new AuthorityDecisionRequest(true, "Approved with conditions."), officer);
+                new AuthorityDecisionRequest(ReviewDecision.APPROVED, "Approved with conditions."), officer);
         assertThat(titlesFor(admin)).contains("Authority approved " + report.getReference());
     }
 
     @Test
-    void aClarificationRequestReachesTheReporterAndTheDiscussion() {
+    void anAdminClarificationRequestReachesTheReporterAndTheDiscussion() {
         User reporter = user(Role.CITIZEN);
         PollutionReport report = report(reporter, ReportStatus.PENDING);
 
-        reportService.moderate(report.getId(),
-                new ModerationRequest(ReportStatus.VERIFYING, "Which end of the beach is this?"), user(Role.ADMIN));
+        ReportResponse response = reportService.moderate(report.getId(),
+                new ModerationRequest(ReviewDecision.MORE_INFO_REQUESTED, "Which end of the beach is this?"), user(Role.ADMIN));
 
+        assertThat(response.adminDecision()).isEqualTo(ReviewDecision.MORE_INFO_REQUESTED);
+        assertThat(response.status()).isEqualTo(ReportStatus.PENDING);
         assertThat(titlesFor(reporter)).contains("More detail needed on your report");
         assertThat(reportService.comments(report.getId())).anySatisfy(comment -> {
             assertThat(comment.official()).isTrue();
@@ -110,7 +200,7 @@ class GovernanceTests {
     void aClarificationRequestMustSayWhatIsUnclear() {
         PollutionReport report = report(user(Role.CITIZEN), ReportStatus.PENDING);
         assertThatThrownBy(() -> reportService.moderate(report.getId(),
-                new ModerationRequest(ReportStatus.VERIFYING, null), user(Role.ADMIN)))
+                new ModerationRequest(ReviewDecision.MORE_INFO_REQUESTED, null), user(Role.ADMIN)))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -118,8 +208,43 @@ class GovernanceTests {
     void moderationWaitsWhileTheAuthorityDecides() {
         PollutionReport report = report(user(Role.CITIZEN), ReportStatus.ESCALATED);
         assertThatThrownBy(() -> reportService.moderate(report.getId(),
-                new ModerationRequest(ReportStatus.REJECTED, "No."), user(Role.ADMIN)))
+                new ModerationRequest(ReviewDecision.REJECTED, "No."), user(Role.ADMIN)))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void theAuthorityCanAskForMoreInformationWithoutDeciding() {
+        User reporter = user(Role.CITIZEN);
+        PollutionReport report = report(reporter, ReportStatus.ESCALATED);
+
+        ReportResponse response = reportService.decideAsAuthority(report.getId(),
+                new AuthorityDecisionRequest(ReviewDecision.MORE_INFO_REQUESTED, "How deep is the sheen?"), user(Role.AUTHORITY));
+
+        assertThat(response.status()).isEqualTo(ReportStatus.ESCALATED);
+        assertThat(response.authorityDecision()).isEqualTo(ReviewDecision.MORE_INFO_REQUESTED);
+        assertThat(response.projectId()).isNull();
+        assertThat(titlesFor(reporter)).contains("The authority needs more detail");
+    }
+
+    @Test
+    void anAuthorityRejectionClosesTheReport() {
+        PollutionReport report = report(user(Role.CITIZEN), ReportStatus.ESCALATED);
+
+        ReportResponse response = reportService.decideAsAuthority(report.getId(),
+                new AuthorityDecisionRequest(ReviewDecision.REJECTED, "Outside coastal jurisdiction."), user(Role.AUTHORITY));
+
+        assertThat(response.status()).isEqualTo(ReportStatus.REJECTED);
+        assertThat(response.projectId()).isNull();
+    }
+
+    private static RegisterRequest registration(String email, Role role, String organisationName, String website) {
+        return new RegisterRequest("Test Person", email, "password123", null, role,
+                null, null, null, null, organisationName, null, null, website);
+    }
+
+    private static MultipartFile pdf(String name) {
+        return new MockMultipartFile("certificates", name, "application/pdf",
+                "%PDF-1.4\n% test certificate\n".getBytes(StandardCharsets.US_ASCII));
     }
 
     private List<String> titlesFor(User user) {
@@ -142,6 +267,10 @@ class GovernanceTests {
         report.setDescription("Test report.");
         report.setSeverity(Severity.MEDIUM);
         report.setStatus(status);
+        if (status == ReportStatus.ESCALATED) {
+            report.setAdminDecision(ReviewDecision.APPROVED);
+            report.setAuthorityDecision(ReviewDecision.PENDING);
+        }
         report.setLocationName("Negombo");
         report.setProvince("Western Province");
         report.setLatitude(7.2083);

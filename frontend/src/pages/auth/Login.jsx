@@ -25,7 +25,7 @@ export default function Login() {
       const target = location.state?.from || home;
       navigate(target, { replace: true });
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setBusy(false);
     }
@@ -48,7 +48,15 @@ export default function Login() {
               </p>
             </div>
 
-            {error ? <Alert tone="danger" title="Could not sign in">{error}</Alert> : null}
+            {error ? (
+              error.code === 'ACCOUNT_PENDING' ? (
+                <Alert tone="warning" title="Your account is waiting for verification">{error.message}</Alert>
+              ) : error.code === 'ACCOUNT_REJECTED' ? (
+                <Alert tone="danger" title="Your account wasn't approved">{error.message}</Alert>
+              ) : (
+                <Alert tone="danger" title="Could not sign in">{error.message}</Alert>
+              )
+            ) : null}
 
             <Input
               label="Email"
@@ -86,6 +94,7 @@ export default function Login() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
             {[
               ['sanduni@example.lk', 'volunteer diver'],
+              ['kasun@example.lk', 'project owner'],
               ['admin@tideline.lk', 'administrator'],
               ['officer@mepa.gov.lk', 'authority officer'],
             ].map(([demoEmail, role]) => (

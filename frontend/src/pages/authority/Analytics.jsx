@@ -18,6 +18,7 @@ const STATUS_LABEL = {
   VERIFYING: 'Verifying',
   VERIFIED: 'Verified',
   ESCALATED: 'Escalated',
+  APPROVED: 'Project',
   REJECTED: 'Rejected',
   CLEANED: 'Cleaned',
 };

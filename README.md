@@ -4,7 +4,11 @@ Group 8 · Institute of Technology, University of Moratuwa.
 
 A platform connecting citizens, volunteer divers, government authorities and organisations
 around one loop for Sri Lanka's coastline: **report a polluted site → let the community
-verify it → escalate it to an authority → clean it up and record the result.**
+verify it → an administrator approves it → the government authority approves it and it becomes a
+cleanup project owned by the reporter → clean it up and record the result.**
+
+Volunteer divers (with certificates) and organisations (with a website link) are verified by an
+administrator before they can sign in.
 
 ```
 ├── frontend/   React + Vite, built on the Tideline design system
@@ -33,7 +37,7 @@ details, demo accounts and the full endpoint list.
 
 | # | Module | Frontend | Backend |
 | --- | --- | --- | --- |
-| 1 | User registration & profile | yes | yes |
+| 1 | User registration & profile | yes | yes (certificate upload, admin account verification) |
 | 2 | Pollution reporting | yes | yes (evidence by URL, no binary upload yet) |
 | 3 | Community verification & trust | yes | yes (75% threshold, configurable) |
 | 4 | Admin review & moderation | yes | yes |

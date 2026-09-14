@@ -5,8 +5,6 @@ import lk.tideline.cleanup.dto.ProjectDtos.*;
 import lk.tideline.cleanup.model.ProjectStatus;
 import lk.tideline.cleanup.service.CurrentUserService;
 import lk.tideline.cleanup.service.ProjectService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,12 +31,6 @@ public class ProjectController {
     @GetMapping("/{id}")
     public ProjectResponse get(@PathVariable Long id) {
         return projectService.view(id, currentUser.find().orElse(null));
-    }
-
-    @PostMapping
-    public ResponseEntity<ProjectResponse> create(@Valid @RequestBody CreateProjectRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(projectService.create(request, currentUser.require()));
     }
 
     @PostMapping("/{id}/participants")

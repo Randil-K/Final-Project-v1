@@ -15,7 +15,14 @@ public class TidelineProperties {
     private Alerts alerts = new Alerts();
     private Security security = new Security();
     private Cors cors = new Cors();
+    private Uploads uploads = new Uploads();
     private boolean seedDemoData = false;
+
+    @Getter
+    @Setter
+    public static class Uploads {
+        private String directory = "uploads";
+    }
 
     @Getter
     @Setter

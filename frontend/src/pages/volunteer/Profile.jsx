@@ -1,9 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Badge, Button, Input, Select, Switch, Tag, Icon, Alert } from '../../design-system';
+import { Avatar, Badge, Button, Card, Input, Select, Switch, Tag, Icon, Alert } from '../../design-system';
 import { api } from '../../api/index.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { CERTIFICATION_OPTIONS, PROVINCES, ROLE_LABEL, plural } from '../../lib/format.js';
+import {
+  ACCOUNT_STATUS,
+  CERTIFICATION_OPTIONS,
+  PROJECT_STATUS_LABEL,
+  PROJECT_STATUS_TONE,
+  PROVINCES,
+  ROLE_LABEL,
+  plural,
+} from '../../lib/format.js';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -27,6 +35,7 @@ export default function Profile() {
   const [locating, setLocating] = React.useState(false);
 
   const isDiver = user?.role === 'DIVER';
+  const ownedProjects = user?.ownedProjects || [];
   const hasLocation = user?.latitude != null && user?.longitude != null;
   const remainingRegions = PROVINCES.filter((p) => !regions.includes(p));
 
@@ -100,6 +109,12 @@ export default function Profile() {
           <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>{user.fullName}</h1>
           <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge tone="accent" icon={isDiver ? 'anchor' : 'user'}>{ROLE_LABEL[user.role] || user.role}</Badge>
+            {isDiver || user.role === 'ORGANIZATION' ? (
+              <Badge tone={ACCOUNT_STATUS[user.accountStatus]?.tone} icon="shield-check">{ACCOUNT_STATUS[user.accountStatus]?.label}</Badge>
+            ) : null}
+            {ownedProjects.length ? (
+              <Badge tone="success" icon="flag">Project owner</Badge>
+            ) : null}
             {user.averageMark != null ? (
               <Badge tone="success" icon="badge-check">Rated {user.averageMark} / 5</Badge>
             ) : null}
@@ -108,6 +123,33 @@ export default function Profile() {
       </div>
 
       {status ? <Alert tone={status.tone} title={status.title} onDismiss={() => setStatus(null)}>{status.message}</Alert> : null}
+
+      {ownedProjects.length ? (
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div>
+            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Project owner</span>
+            <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
+              You reported these sites and the government authority approved them, so you own their cleanup projects.
+            </p>
+          </div>
+          {ownedProjects.map((project) => (
+            <Card key={project.id} padding="md" interactive onClick={() => navigate(`/app/cleanups/${project.id}`)} style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <span style={{ width: 40, height: 40, flex: '0 0 auto', borderRadius: '50%', background: 'var(--status-verified-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="flag" size="sm" color="var(--status-verified)" />
+                </span>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ font: '600 12px/1.4 var(--font-mono)', color: 'var(--text-muted)' }}>{project.reference}</span>
+                  <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {project.title}
+                  </span>
+                </div>
+                <Badge tone={PROJECT_STATUS_TONE[project.status]}>{PROJECT_STATUS_LABEL[project.status]}</Badge>
+              </div>
+            </Card>
+          ))}
+        </section>
+      ) : null}
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Alert location</span>
@@ -138,6 +180,17 @@ export default function Profile() {
         <Input label="Phone" type="tel" value={form.phone} onChange={set('phone')} />
         <Input label="City or town" iconLeft="map-pin" value={form.city} onChange={set('city')} />
         <Select label="Province" placeholder="Select your province" options={PROVINCES} value={form.province} onChange={set('province')} />
+        {user.role === 'ORGANIZATION' && user.websiteUrl ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Website</span>
+            <a href={user.websiteUrl} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--text-body-sm)', overflowWrap: 'anywhere' }}>
+              {user.websiteUrl}
+            </a>
+            <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+              Checked by an administrator when you registered. Contact an administrator to change it.
+            </span>
+          </div>
+        ) : null}
       </section>
 
       {isDiver ? (
@@ -188,8 +241,8 @@ export default function Profile() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
             <Icon name="badge-check" size="sm" color="var(--accent)" />
             {user.averageMark != null
-              ? `Rated ${user.averageMark} / 5 by organisers across ${plural(user.markedCleanups, 'cleanup')}`
-              : 'No organiser ratings yet — they appear after your first completed cleanup.'}
+              ? `Rated ${user.averageMark} / 5 by project owners across ${plural(user.markedCleanups, 'cleanup')}`
+              : 'No ratings yet — project owners rate you after your first completed cleanup.'}
           </div>
         </section>
       ) : null}

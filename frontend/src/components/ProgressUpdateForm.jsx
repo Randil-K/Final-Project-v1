@@ -43,7 +43,7 @@ export default function ProgressUpdateForm({ projectId, onUpdated }) {
         <div>
           <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Record progress</span>
           <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
-            Reaching 100% closes the cleanup and tells the person who reported the site.
+            Reaching 100% closes the project, marks the site cleaned, and tells everyone who joined.
           </p>
         </div>
         {error ? <Alert tone="danger" title="That didn't post">{error}</Alert> : null}

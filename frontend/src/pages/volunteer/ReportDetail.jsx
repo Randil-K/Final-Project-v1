@@ -1,14 +1,18 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Icon, IconButton, StatusBadge, Badge, Button, ProgressBar, Avatar, Textarea, Alert, Card, Input } from '../../design-system';
-import Modal from '../../components/Modal.jsx';
+import { Icon, IconButton, Badge, Button, Avatar, Textarea, Alert } from '../../design-system';
 import MapLink from '../../components/MapLink.jsx';
 import PhotoPlaceholder from '../../components/PhotoPlaceholder.jsx';
+import ReportStatusBadge from '../../components/ReportStatusBadge.jsx';
+import CommunityVerificationCard from '../../components/CommunityVerificationCard.jsx';
+import ReviewStatusCard from '../../components/ReviewStatusCard.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, formatDate, locationLine, statusKey } from '../../lib/format.js';
+import { CLOSED_REPORT_STATUSES, formatDate, locationLine } from '../../lib/format.js';
+
+const projectHref = (projectId) => `/app/cleanups/${projectId}`;
 
 export default function ReportDetail() {
   const { id } = useParams();
@@ -17,18 +21,11 @@ export default function ReportDetail() {
 
   const reportState = useApi(() => api.reports.get(id), [id]);
   const commentsState = useApi(() => (user ? api.reports.comments(id) : Promise.resolve([])), [id, user?.id]);
-  const cleanupState = useApi(() => api.projects.list({ reportId: id }), [id]);
 
   const [comment, setComment] = React.useState('');
   const [actionError, setActionError] = React.useState(null);
   const [voting, setVoting] = React.useState(false);
   const [posting, setPosting] = React.useState(false);
-
-  const [startOpen, setStartOpen] = React.useState(false);
-  const [cleanupTitle, setCleanupTitle] = React.useState('');
-  const [cleanupPlan, setCleanupPlan] = React.useState('');
-  const [starting, setStarting] = React.useState(false);
-  const [startError, setStartError] = React.useState(null);
 
   async function vote(confirmed) {
     setActionError(null);
@@ -56,101 +53,32 @@ export default function ReportDetail() {
     }
   }
 
-  async function startCleanup(report) {
-    setStarting(true);
-    setStartError(null);
-    try {
-      const project = await api.projects.create({
-        title: cleanupTitle,
-        description: cleanupPlan.trim() || null,
-        reportId: report.id,
-        locationName: report.locationName,
-        province: report.province,
-      });
-      navigate(`/app/cleanups/${project.id}`);
-    } catch (error) {
-      setStartError(error.message);
-      setStarting(false);
-    }
-  }
-
-  function cleanupSection(report) {
-    if (cleanupState.loading) return null;
-
-    const existing = cleanupState.data?.[0];
-    if (existing) {
-      return (
-        <Card padding="md" interactive onClick={() => navigate(`/app/cleanups/${existing.id}`)} style={{ cursor: 'pointer' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-              <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{existing.title}</span>
-              <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                {existing.completionPercentage}% done · led by {existing.owner?.fullName}
-              </span>
-            </div>
-            <Badge tone={PROJECT_STATUS_TONE[existing.status]}>{PROJECT_STATUS_LABEL[existing.status]}</Badge>
-          </div>
-        </Card>
-      );
-    }
-
-    if (report.status === 'ESCALATED' && report.authorityApproved !== true) {
-      return (
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
-          Waiting for the authority's decision before a cleanup can start.
-        </p>
-      );
-    }
-
-    const ready = report.status === 'VERIFIED' || (report.status === 'ESCALATED' && report.authorityApproved === true);
-    if (!ready) {
-      return (
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
-          A cleanup can start once the community has verified this report.
-        </p>
-      );
-    }
-
-    if (!user) {
-      return (
-        <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
-          <Link to="/login" state={{ from: `/app/report/${id}` }}>Sign in</Link> to organise a cleanup for this site.
-        </p>
-      );
-    }
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <Button
-          iconLeft="hand-heart"
-          onClick={() => {
-            setCleanupTitle(`Cleanup at ${report.locationName}`);
-            setStartOpen(true);
-          }}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          Start a cleanup
-        </Button>
-        <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-          You'll lead it. Volunteers within 5 km are alerted and the reporter is told.
-        </span>
-      </div>
-    );
-  }
-
   return (
     <Async state={reportState}>
       {(report) => {
-        const total = report.confirmVotes + report.disputeVotes;
-        const passed = report.trustPercentage >= report.thresholdPercent;
+        const votingClosed = CLOSED_REPORT_STATUSES.includes(report.status);
+        const isReporter = user?.id === report.reporter?.id;
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <IconButton icon="chevron-left" label="Back" onClick={() => navigate(-1)} />
               <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{report.reference}</span>
-              <StatusBadge status={statusKey(report.status)} size="sm" style={{ marginLeft: 'auto' }} />
+              <ReportStatusBadge status={report.status} size="sm" style={{ marginLeft: 'auto' }} />
             </div>
+
+            {report.projectId ? (
+              <Alert tone="success" title={`This report is now project ${report.projectReference}`}>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+                  {isReporter
+                    ? 'The government authority approved it and you are the project owner.'
+                    : `The government authority approved it. ${report.reporter?.fullName} owns the project — join the cleanup if you can help.`}
+                  <Button size="sm" iconRight="arrow-right" onClick={() => navigate(projectHref(report.projectId))}>
+                    Go to the project
+                  </Button>
+                </span>
+              </Alert>
+            ) : null}
 
             <PhotoPlaceholder ratio="4/3" count={report.photoUrls?.length} style={{ borderRadius: 'var(--radius-lg)' }} />
 
@@ -174,16 +102,10 @@ export default function ReportDetail() {
 
             {actionError ? <Alert tone="danger" title="That didn't work">{actionError}</Alert> : null}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', padding: 'var(--space-5)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
-              <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Community verification</span>
-              <ProgressBar value={report.trustPercentage} tone={passed ? 'verified' : 'warning'} />
-              <Badge tone={passed ? 'success' : 'warning'} style={{ whiteSpace: 'normal', height: 'auto', padding: '6px 10px', alignSelf: 'flex-start' }}>
-                {total === 0
-                  ? `No votes yet — threshold ${report.thresholdPercent}%`
-                  : `${report.trustPercentage}% of ${total} voter${total === 1 ? '' : 's'} confirmed — threshold ${report.thresholdPercent}%`}
-              </Badge>
-
-              {user ? (
+            <CommunityVerificationCard report={report}>
+              {votingClosed ? (
+                <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>Voting has closed for this report.</p>
+              ) : user ? (
                 <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 4 }}>
                   <Button variant="secondary" iconLeft="thumbs-up" fullWidth disabled={voting} onClick={() => vote(true)}>
                     Confirm ({report.confirmVotes})
@@ -197,16 +119,15 @@ export default function ReportDetail() {
                   <Link to="/login" state={{ from: `/app/report/${id}` }}>Sign in</Link> to confirm or dispute this report.
                 </p>
               )}
-            </div>
+            </CommunityVerificationCard>
 
-            {report.authorityComment ? (
-              <Alert tone="info" title="Authority comment">{report.authorityComment}</Alert>
+            <ReviewStatusCard report={report} projectHref={projectHref} />
+
+            {isReporter && (report.adminDecision === 'MORE_INFO_REQUESTED' || report.authorityDecision === 'MORE_INFO_REQUESTED') ? (
+              <Alert tone="info" title="Reviewers asked you for more detail">
+                Their question is in the discussion below. Reply there so they can see your answer.
+              </Alert>
             ) : null}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Cleanup</span>
-              {cleanupSection(report)}
-            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Discussion</span>
@@ -245,34 +166,6 @@ export default function ReportDetail() {
                 </>
               ) : null}
             </div>
-
-            <Modal
-              open={startOpen}
-              title="Start a cleanup"
-              description={`You'll lead this cleanup for ${report.reference}. Volunteers within 5 km are alerted, and the person who reported the site is told.`}
-              onClose={() => setStartOpen(false)}
-              footer={
-                <>
-                  <Button variant="secondary" onClick={() => setStartOpen(false)}>Cancel</Button>
-                  <Button disabled={starting || !cleanupTitle.trim()} onClick={() => startCleanup(report)}>
-                    {starting ? 'Starting…' : 'Start cleanup'}
-                  </Button>
-                </>
-              }
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {startError ? <Alert tone="danger" title="Could not start the cleanup">{startError}</Alert> : null}
-                <Input label="Name" required value={cleanupTitle} onChange={(e) => setCleanupTitle(e.target.value)} />
-                <Textarea
-                  label="Plan"
-                  rows={3}
-                  maxLength={400}
-                  placeholder="Meeting point, time, what to bring…"
-                  value={cleanupPlan}
-                  onChange={(e) => setCleanupPlan(e.target.value)}
-                />
-              </div>
-            </Modal>
           </div>
         );
       }}

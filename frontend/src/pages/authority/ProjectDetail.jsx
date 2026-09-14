@@ -36,7 +36,7 @@ export default function ProjectDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 4 }}>
                 <Icon name="map-pin" size="sm" />
                 {locationLine(project)}
-                {project.owner ? ` · led by ${project.owner.fullName}` : ''}
+                {project.owner ? ` · project owner ${project.owner.fullName}` : ''}
               </div>
               {project.description ? (
                 <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 8 }}>{project.description}</p>
