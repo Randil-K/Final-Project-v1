@@ -53,10 +53,9 @@ tideline:
   verification:
     threshold-percent: 75
     minimum-confirmations: 8
-  # Location-based alerting starts local and widens when nobody responds.
+  # New reports alert available users within this distance.
   alerts:
     initial-radius-km: 5
-    escalation-radii-km: 25,100,500
   security:
     jwt-secret: ${TIDELINE_JWT_SECRET:dev-only-secret-change-me-in-production-0123456789abcdef}
     jwt-expiry-minutes: 720

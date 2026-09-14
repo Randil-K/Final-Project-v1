@@ -11,8 +11,6 @@ import { formatDate, reviewStage } from '../../lib/format.js';
 
 const FILTERS = [
   { value: 'all', label: 'All reports' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'VERIFYING', label: 'Verifying' },
   { value: 'VERIFIED', label: 'Verified' },
   { value: 'ESCALATED', label: 'With authority' },
   { value: 'REJECTED', label: 'Rejected' },
@@ -25,14 +23,14 @@ export default function Queue() {
   const { user } = useAuth();
   // Officers mostly work on what administrators have sent them.
   const [filter, setFilter] = React.useState(user?.role === 'AUTHORITY' ? 'ESCALATED' : 'all');
-  const state = useApi(() => api.reports.list({ status: filter, size: 50 }), [filter]);
+  const state = useApi(() => api.reports.list({ status: filter, reviewQueue: true, size: 50 }), [filter]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       <div>
         <h1 style={{ font: 'var(--text-h2)', color: 'var(--text-strong)' }}>Review queue</h1>
         <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Administrators approve reports for the government authority; once the authority approves, the report becomes a project and moves to Projects.
+          Reports arrive here once at least 8 people confirm them with 75% trust. Administrators approve them for the government authority; once the authority approves, the report becomes a project and moves to Projects.
         </p>
       </div>
 

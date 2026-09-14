@@ -1,6 +1,5 @@
 package lk.tideline.cleanup.service;
 
-import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.dto.AlertDtos.AlertResponse;
 import lk.tideline.cleanup.model.Alert;
 import lk.tideline.cleanup.model.AlertType;
@@ -21,14 +20,10 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
-    private final TidelineProperties properties;
 
-    public AlertService(AlertRepository alertRepository,
-                        UserRepository userRepository,
-                        TidelineProperties properties) {
+    public AlertService(AlertRepository alertRepository, UserRepository userRepository) {
         this.alertRepository = alertRepository;
         this.userRepository = userRepository;
-        this.properties = properties;
     }
 
     @Transactional(readOnly = true)
@@ -118,29 +113,6 @@ public class AlertService {
             sent++;
         }
         return sent;
-    }
-
-    /**
-     * Widens the alert radius one step, as the SRS requires when nobody responds to the
-     * initial local alert. Returns the new radius.
-     */
-    @Transactional
-    public double escalateRadius(PollutionReport report) {
-        double current = report.getAlertRadiusKm();
-        List<Double> steps = properties.getAlerts().getEscalationRadiiKm();
-
-        double next = steps.stream()
-                .filter(step -> step > current)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("This alert is already at the widest radius."));
-
-        report.setAlertRadiusKm(next);
-        notifyNearby(report, next,
-                AlertType.ALERT_ESCALATED,
-                "Volunteers still needed near " + report.getLocationName(),
-                "No one has responded yet, so this alert now covers " + (long) next + " km. Report "
-                        + report.getReference() + " is waiting for a cleanup team.");
-        return next;
     }
 
     private List<User> usersWithin(double latitude, double longitude, double radiusKm) {

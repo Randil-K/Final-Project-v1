@@ -1,5 +1,6 @@
 package lk.tideline.cleanup.model;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,6 +20,9 @@ public enum ReportStatus {
 
     /** Once approved by the authority a report lives on as a project and is no longer listed as a report. */
     public static final Set<ReportStatus> BECAME_PROJECT = Set.of(APPROVED, CLEANED);
+
+    /** What the administrators' review queue lists: verified by the community, with the authority, or rejected. */
+    public static final List<ReportStatus> REVIEW_QUEUE = List.of(VERIFIED, ESCALATED, REJECTED);
 
     public boolean becameProject() {
         return BECAME_PROJECT.contains(this);

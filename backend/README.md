@@ -76,7 +76,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/auth/login` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | PUT | `/api/users/me/diver-profile` | 1 | diver |
-| GET | `/api/reports` (open reports only — approved ones are projects) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
+| GET | `/api/reports` (open reports only — approved ones are projects; `reviewQueue=true` for the admin queue) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
 | POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |
 | GET | `/api/reports/evidence/{file}` (uploaded evidence, supports range requests) | 2 | public |
 | POST | `/api/reports/{id}/votes` | 3 | authenticated |
@@ -87,7 +87,6 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/reports/{id}/info-requests` | 4 | admin, authority, the reporter |
 | POST | `/api/reports/{id}/info-requests/{requestId}/response` (multipart: `data` + `photos`) | 4 | the reporter |
 | GET | `/api/reports/info-attachments/{file}` | 4 | admin, authority, the reporter |
-| POST | `/api/reports/{id}/alert-escalation` | 6 | admin, authority |
 | GET | `/api/alerts` · POST `/api/alerts/{id}/read` | 6 | authenticated |
 | GET | `/api/alerts/unread-count` · POST `/api/alerts/read-all` | 6 | authenticated |
 | GET | `/api/projects` (`?reportId=` to find a report's project) | 7 | public |
@@ -109,9 +108,9 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   8 confirmations and 75% trust (`tideline.verification.minimum-confirmations` and
   `threshold-percent`). Reporters can't vote on their own report. Verification alerts the
   administrators, who can then approve or ask for more information; they can reject at any time.
-- **Alert escalation.** A new report alerts available users within 5 km (Haversine distance).
-  `POST /api/reports/{id}/alert-escalation` widens that to the next step — 25 km, 100 km,
-  then 500 km — as the SRS requires when nobody responds.
+- **Nearby alerts.** A new report alerts available users within 5 km (Haversine distance).
+- **Review queue.** `GET /api/reports?reviewQueue=true` lists only reports the community has
+  verified, plus those with the authority or rejected; unverified reports never reach it.
 - **Account verification.** Citizens can sign in straight away. Volunteer divers must attach at
   least one certificate (PDF, JPG or PNG, 5 MB each, up to 5 — checked by file content, not
   extension) and organisations must give a website link. Both start as `PENDING_REVIEW`, get no

@@ -80,9 +80,23 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public Page<ReportResponse> search(ReportStatus status, Severity severity, String province, Pageable pageable) {
+        return search(status, severity, province, false, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReportResponse> search(ReportStatus status, Severity severity, String province, boolean reviewQueue,
+                                       Pageable pageable) {
         // Approved reports are projects now; they're found through the projects API instead.
         if (status != null && status.becameProject()) {
             return Page.empty(pageable);
+        }
+        if (reviewQueue) {
+            // Reports reach the administrators only once the community has verified them.
+            if (status != null && !ReportStatus.REVIEW_QUEUE.contains(status)) {
+                return Page.empty(pageable);
+            }
+            return reportRepository.searchIn(status == null ? ReportStatus.REVIEW_QUEUE : List.of(status),
+                    severity, province, pageable).map(this::toResponse);
         }
         return reportRepository.search(status, ReportStatus.BECAME_PROJECT, severity, province, pageable)
                 .map(this::toResponse);
@@ -413,11 +427,6 @@ public class ReportService {
         }
 
         return toResponse(report);
-    }
-
-    @Transactional
-    public double escalateAlertRadius(Long reportId) {
-        return alertService.escalateRadius(get(reportId));
     }
 
     private static String trimmed(String value) {

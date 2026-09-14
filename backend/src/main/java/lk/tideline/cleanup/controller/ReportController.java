@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -72,9 +71,11 @@ public class ReportController {
     public Page<ReportResponse> list(@RequestParam(required = false) ReportStatus status,
                                      @RequestParam(required = false) Severity severity,
                                      @RequestParam(required = false) String province,
+                                     @RequestParam(defaultValue = "false") boolean reviewQueue,
                                      @RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "20") int size) {
-        return reportService.search(status, severity, province, PageRequest.of(page, size));
+        // reviewQueue=true lists only reports the community has verified: the administrators' queue.
+        return reportService.search(status, severity, province, reviewQueue, PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")
@@ -143,12 +144,5 @@ public class ReportController {
     @PreAuthorize("hasRole('AUTHORITY')")
     public ReportResponse decide(@PathVariable Long id, @Valid @RequestBody AuthorityDecisionRequest request) {
         return reportService.decideAsAuthority(id, request, currentUser.require());
-    }
-
-    /** Module 6 — widen the alert radius when nobody has responded. */
-    @PostMapping("/{id}/alert-escalation")
-    @PreAuthorize("hasAnyRole('ADMIN','AUTHORITY')")
-    public Map<String, Object> widenAlert(@PathVariable Long id) {
-        return Map.of("reportId", id, "alertRadiusKm", reportService.escalateAlertRadius(id));
     }
 }

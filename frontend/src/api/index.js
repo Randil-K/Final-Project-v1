@@ -60,7 +60,6 @@ export const api = {
     /** decision: APPROVED (creates the project), REJECTED or MORE_INFO_REQUESTED. */
     authorityDecision: (id, decision, comment) =>
       request(`/api/reports/${id}/authority-decision`, { method: 'POST', body: { decision, comment } }),
-    widenAlert: (id) => request(`/api/reports/${id}/alert-escalation`, { method: 'POST' }),
   },
 
   projects: {

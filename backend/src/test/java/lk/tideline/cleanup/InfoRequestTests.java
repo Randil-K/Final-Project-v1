@@ -12,6 +12,7 @@ import lk.tideline.cleanup.service.ReportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.TestPropertySource;
@@ -58,6 +59,23 @@ class InfoRequestTests {
         response = reportService.vote(id, user(Role.CITIZEN), true);
         assertThat(response.status()).isEqualTo(ReportStatus.VERIFIED);
         assertThat(titles(admin)).contains("Report ready for your review");
+    }
+
+    @Test
+    void onlyVerifiedReportsReachTheReviewQueue() {
+        Long unverified = report(user(Role.CITIZEN));
+        reportService.vote(unverified, user(Role.CITIZEN), true);
+        Long verified = verifiedReport(user(Role.CITIZEN));
+        PageRequest page = PageRequest.of(0, 500);
+
+        assertThat(reportService.search(null, null, null, true, page).getContent())
+                .extracting(ReportResponse::id)
+                .contains(verified)
+                .doesNotContain(unverified);
+        assertThat(reportService.search(ReportStatus.VERIFYING, null, null, true, page).getContent()).isEmpty();
+        assertThat(reportService.search(null, null, null, false, page).getContent())
+                .extracting(ReportResponse::id)
+                .contains(unverified, verified);
     }
 
     @Test

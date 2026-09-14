@@ -36,7 +36,6 @@ public class TidelineProperties {
     @Setter
     public static class Alerts {
         private double initialRadiusKm = 5;
-        private List<Double> escalationRadiiKm = List.of(25.0, 100.0, 500.0);
     }
 
     @Getter

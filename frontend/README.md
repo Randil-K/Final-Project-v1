@@ -49,8 +49,8 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Opportunities — diver | `GET /api/opportunities` · `POST /{id}/applications` · `GET /applications/mine` (shows accepted / not selected) |
 | Opportunities — organisation | `POST /api/opportunities` · `GET /{id}/applications` · `POST /applications/{id}/decision` |
 | Profile | `GET`/`PUT /api/users/me` (account status, project owner badge and owned projects) (incl. browser geolocation for alerts) · `PUT /api/users/me/diver-profile` (incl. regions) |
-| Review queue | `GET /api/reports` |
-| Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · widen alert radius · Additional information tab (`GET /info-requests`, photos via authenticated blob) |
+| Review queue | `GET /api/reports?reviewQueue=true` (verified, with authority, rejected) |
+| Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · Additional information tab (`GET /info-requests`, photos via authenticated blob) |
 | Additional information (reporter) | `GET /api/reports/{id}/info-requests` · `POST /info-requests/{rid}/response` (multipart) |
 | Projects | `GET /api/projects` · `GET /{id}` · `POST /{id}/updates` |
 | Analytics | `GET /api/analytics/summary` |
@@ -58,7 +58,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Users (admin) | `GET /api/admin/users?query=` · `POST /api/admin/users/{id}/suspension` |
 
 The review screen shows different actions per role: an administrator gets approve (send to the
-authority) / request more info / reject / widen-alert, while an authority officer gets approve
+authority) / request more info / reject, while an authority officer gets approve
 (create the project) / request more info / reject on a report sent to them — mirroring the backend's permissions rather than guessing at them.
 
 ## Deviations from the vendored design system

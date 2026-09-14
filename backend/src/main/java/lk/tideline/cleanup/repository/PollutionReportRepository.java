@@ -27,6 +27,18 @@ public interface PollutionReportRepository extends JpaRepository<PollutionReport
                                  @Param("province") String province,
                                  Pageable pageable);
 
+    @Query("""
+            select r from PollutionReport r
+            where r.status in :statuses
+              and (:severity is null or r.severity = :severity)
+              and (:province is null or lower(r.province) = lower(:province))
+            order by r.createdAt desc
+            """)
+    Page<PollutionReport> searchIn(@Param("statuses") Collection<ReportStatus> statuses,
+                                   @Param("severity") Severity severity,
+                                   @Param("province") String province,
+                                   Pageable pageable);
+
     List<PollutionReport> findByStatus(ReportStatus status);
 
     long countByStatus(ReportStatus status);

@@ -72,7 +72,6 @@ export default function ReportReview() {
         const requests = infoState.data || [];
         const answered = requests.filter((r) => r.status === 'ANSWERED').length;
         const canDecide = isAuthority && report.status === 'ESCALATED';
-        const canWiden = isAdmin && ['PENDING', 'VERIFYING', 'VERIFIED', 'ESCALATED'].includes(report.status);
         const hasComment = Boolean(comment.trim());
         if (report.projectId) return <Navigate to={projectHref(report.projectId)} replace />;
 
@@ -238,17 +237,6 @@ export default function ReportReview() {
               </div>
             ) : null}
 
-            {canWiden ? (
-              <Button
-                variant="ghost"
-                iconLeft="bell"
-                disabled={busy}
-                onClick={() => run(async () => { await api.reports.widenAlert(id); return api.reports.get(id); }, 'Alert radius widened.')}
-                style={{ alignSelf: 'flex-start' }}
-              >
-                Widen alert radius
-              </Button>
-            ) : null}
             </>
             )}
 
