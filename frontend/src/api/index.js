@@ -34,7 +34,8 @@ export const api = {
 
   reports: {
     list: (params) => request(`/api/reports${query(params)}`, { auth: false }),
-    get: (id) => request(`/api/reports/${id}`, { auth: false }),
+    // Sent with the session when there is one, so the response includes the viewer's vote.
+    get: (id) => request(`/api/reports/${id}`),
     create: (payload, evidence = []) => {
       const form = new FormData();
       form.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));

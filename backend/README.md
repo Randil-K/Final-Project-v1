@@ -80,7 +80,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/reports` (open reports only — approved ones are projects; `reviewQueue=true` for the admin queue) · `/api/reports/{id}` | 2 | public (read-only for non-registered users) |
 | POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |
 | GET | `/api/reports/evidence/{file}` (uploaded evidence, supports range requests) | 2 | public |
-| POST | `/api/reports/{id}/votes` | 3 | authenticated |
+| POST | `/api/reports/{id}/votes` (same choice again removes the vote) | 3 | authenticated |
 | GET/POST | `/api/reports/{id}/comments` (`parentId` to reply) | 3 | authenticated |
 | POST | `/api/reports/{id}/comments/{commentId}/reactions` (`LIKE` / `HEART`, toggles) | 3 | authenticated |
 | POST | `/api/reports/{id}/moderation` (`APPROVED` / `MORE_INFO_REQUESTED` / `REJECTED`) | 4 | admin |

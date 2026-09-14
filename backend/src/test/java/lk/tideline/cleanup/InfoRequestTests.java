@@ -93,6 +93,42 @@ class InfoRequestTests {
     }
 
     @Test
+    void votingTheSameWayAgainRemovesTheVote() {
+        Long id = report(user(Role.CITIZEN));
+        User voter = user(Role.CITIZEN);
+
+        ReportResponse confirmed = reportService.vote(id, voter, true);
+        assertThat(confirmed.confirmVotes()).isEqualTo(1);
+        assertThat(confirmed.myVote()).isTrue();
+
+        ReportResponse switched = reportService.vote(id, voter, false);
+        assertThat(switched.confirmVotes()).isZero();
+        assertThat(switched.disputeVotes()).isEqualTo(1);
+        assertThat(switched.myVote()).isFalse();
+
+        ReportResponse removed = reportService.vote(id, voter, false);
+        assertThat(removed.disputeVotes()).isZero();
+        assertThat(removed.myVote()).isNull();
+        assertThat(removed.status()).isEqualTo(ReportStatus.PENDING);
+        assertThat(reportService.view(id, voter).myVote()).isNull();
+    }
+
+    @Test
+    void withdrawingAConfirmationTakesAnUnreviewedReportBackBelowTheThreshold() {
+        Long id = report(user(Role.CITIZEN));
+        User last = null;
+        for (int i = 0; i < 8; i++) {
+            last = user(Role.CITIZEN);
+            reportService.vote(id, last, true);
+        }
+        assertThat(reportService.view(id).status()).isEqualTo(ReportStatus.VERIFIED);
+
+        ReportResponse withdrawn = reportService.vote(id, last, true);
+        assertThat(withdrawn.confirmVotes()).isEqualTo(7);
+        assertThat(withdrawn.status()).isEqualTo(ReportStatus.VERIFYING);
+    }
+
+    @Test
     void reportersCannotVoteOnTheirOwnReport() {
         User reporter = user(Role.CITIZEN);
         Long id = report(reporter);

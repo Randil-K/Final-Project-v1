@@ -80,7 +80,7 @@ public class ReportController {
 
     @GetMapping("/{id}")
     public ReportResponse get(@PathVariable Long id) {
-        return reportService.view(id);
+        return reportService.view(id, currentUser.find().orElse(null));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -108,7 +108,7 @@ public class ReportController {
                 .body(new FileSystemResource(path));
     }
 
-    /** Module 3 — community verification vote. */
+    /** Module 3 — community verification vote. Sending the same choice again removes the vote. */
     @PostMapping("/{id}/votes")
     public ReportResponse vote(@PathVariable Long id, @Valid @RequestBody VoteRequest request) {
         return reportService.vote(id, currentUser.require(), request.confirmed());

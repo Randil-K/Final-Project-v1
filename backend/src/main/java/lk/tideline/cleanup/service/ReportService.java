@@ -73,9 +73,17 @@ public class ReportService {
     }
 
     private ReportResponse toResponse(PollutionReport report) {
+        return toResponse(report, null);
+    }
+
+    /** With a viewer, includes how they voted so the page can show their choice. */
+    private ReportResponse toResponse(PollutionReport report, User viewer) {
         CleanupProject project = projectRepository.findFirstByReportId(report.getId()).orElse(null);
+        Boolean myVote = viewer == null ? null : voteRepository.findByReportAndVoter(report, viewer)
+                .map(VerificationVote::isConfirmed)
+                .orElse(null);
         return ReportResponse.from(report, thresholdPercent(), minimumConfirmations(), project,
-                infoRequests.latestStatus(report));
+                infoRequests.latestStatus(report), myVote);
     }
 
     @Transactional(readOnly = true)
@@ -105,6 +113,11 @@ public class ReportService {
     @Transactional(readOnly = true)
     public ReportResponse view(Long id) {
         return toResponse(get(id));
+    }
+
+    @Transactional(readOnly = true)
+    public ReportResponse view(Long id, User viewer) {
+        return toResponse(get(id), viewer);
     }
 
     private PollutionReport get(Long id) {
@@ -181,17 +194,20 @@ public class ReportService {
             throw new IllegalStateException("You can't vote on your own report.");
         }
 
-        VerificationVote vote = voteRepository.findByReportAndVoter(report, voter)
-                .orElseGet(() -> {
-                    VerificationVote fresh = new VerificationVote();
-                    fresh.setReport(report);
-                    fresh.setVoter(voter);
-                    return fresh;
-                });
-        vote.setConfirmed(confirmed);
-        voteRepository.saveAndFlush(vote);
+        VerificationVote existing = voteRepository.findByReportAndVoter(report, voter).orElse(null);
+        if (existing != null && existing.isConfirmed() == confirmed) {
+            // Choosing the same option again takes the vote back.
+            voteRepository.delete(existing);
+            voteRepository.flush();
+        } else {
+            VerificationVote vote = existing != null ? existing : new VerificationVote();
+            vote.setReport(report);
+            vote.setVoter(voter);
+            vote.setConfirmed(confirmed);
+            voteRepository.saveAndFlush(vote);
+        }
 
-        return toResponse(recalculateTrust(report));
+        return toResponse(recalculateTrust(report), voter);
     }
 
     private PollutionReport recalculateTrust(PollutionReport report) {
@@ -210,6 +226,15 @@ public class ReportService {
         }
 
         boolean threshold = percentage >= thresholdPercent() && confirm >= minimumConfirmations();
+
+        // A withdrawn vote can take a report back below the threshold, as long as no administrator has acted on it.
+        if (report.getStatus() == ReportStatus.VERIFIED && !threshold && report.getAdminDecision() == ReviewDecision.PENDING) {
+            report.setStatus(ReportStatus.VERIFYING);
+            report.setVerifiedAt(null);
+        }
+        if (report.getStatus() == ReportStatus.VERIFYING && total == 0) {
+            report.setStatus(ReportStatus.PENDING);
+        }
 
         if (report.getStatus() == ReportStatus.VERIFYING && threshold) {
             report.setStatus(ReportStatus.VERIFIED);

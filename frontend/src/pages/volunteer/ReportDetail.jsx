@@ -21,7 +21,7 @@ export default function ReportDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const reportState = useApi(() => api.reports.get(id), [id]);
+  const reportState = useApi(() => api.reports.get(id), [id, user?.id]);
   const [actionError, setActionError] = React.useState(null);
   const [voting, setVoting] = React.useState(false);
 
@@ -80,11 +80,25 @@ export default function ReportDetail() {
                 <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>Voting has closed for this report.</p>
               ) : user ? (
                 <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 4 }}>
-                  <Button variant="secondary" iconLeft="thumbs-up" fullWidth disabled={voting} onClick={() => vote(true)}>
-                    Confirm ({report.confirmVotes})
+                  <Button
+                    variant={report.myVote === true ? 'primary' : 'secondary'}
+                    iconLeft="thumbs-up"
+                    fullWidth
+                    aria-pressed={report.myVote === true}
+                    disabled={voting}
+                    onClick={() => vote(true)}
+                  >
+                    {report.myVote === true ? 'Confirmed' : 'Confirm'} ({report.confirmVotes})
                   </Button>
-                  <Button variant="secondary" iconLeft="thumbs-down" fullWidth disabled={voting} onClick={() => vote(false)}>
-                    Dispute ({report.disputeVotes})
+                  <Button
+                    variant={report.myVote === false ? 'danger' : 'secondary'}
+                    iconLeft="thumbs-down"
+                    fullWidth
+                    aria-pressed={report.myVote === false}
+                    disabled={voting}
+                    onClick={() => vote(false)}
+                  >
+                    {report.myVote === false ? 'Disputed' : 'Dispute'} ({report.disputeVotes})
                   </Button>
                 </div>
               ) : (

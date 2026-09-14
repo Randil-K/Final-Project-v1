@@ -69,10 +69,12 @@ public final class ReportDtos {
             String projectReference,
             Instant createdAt,
             Instant verifiedAt,
-            Instant escalatedAt
+            Instant escalatedAt,
+            /** The signed-in viewer's vote: true confirmed, false disputed, null none. */
+            Boolean myVote
     ) {
         public static ReportResponse from(PollutionReport report, int thresholdPercent, int minimumConfirmations,
-                                          CleanupProject project, InfoRequestStatus infoRequestStatus) {
+                                          CleanupProject project, InfoRequestStatus infoRequestStatus, Boolean myVote) {
             return new ReportResponse(
                     report.getId(),
                     report.getReference(),
@@ -106,7 +108,8 @@ public final class ReportDtos {
                     project == null ? null : project.getReference(),
                     report.getCreatedAt(),
                     report.getVerifiedAt(),
-                    report.getEscalatedAt());
+                    report.getEscalatedAt(),
+                    myVote);
         }
     }
 
