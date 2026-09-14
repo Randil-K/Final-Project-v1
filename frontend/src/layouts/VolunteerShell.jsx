@@ -41,6 +41,12 @@ export default function VolunteerShell() {
         </button>
 
         {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+          {user.role === 'ADMIN' || user.role === 'AUTHORITY' ? (
+            <Button variant="inverse" size="sm" iconLeft="shield-check" onClick={() => navigate('/console')}>
+              Console
+            </Button>
+          ) : null}
           <button onClick={() => navigate('/app/profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minWidth: 0 }}>
             <span
               style={{
@@ -55,6 +61,7 @@ export default function VolunteerShell() {
             </span>
             <Avatar name={user.fullName} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
           </button>
+          </div>
         ) : (
           <Button variant="inverse" size="sm" onClick={() => navigate('/login')}>
             Sign in

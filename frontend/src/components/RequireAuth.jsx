@@ -1,19 +1,18 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { Loading } from './AsyncState.jsx';
 import { Alert } from '../design-system';
 
 export default function RequireAuth({ roles, children }) {
   const { user, ready } = useAuth();
-  const location = useLocation();
 
   if (!ready) {
     return <Loading label="Checking your session…" />;
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace />;
   }
 
   if (roles && !roles.includes(user.role)) {

@@ -19,12 +19,9 @@ export default function Login() {
     setBusy(true);
     setError(null);
     try {
-      const user = await login(email, password);
-      const home = user.role === 'ADMIN' || user.role === 'AUTHORITY'
-        ? '/console'
-        : user.role === 'ORGANIZATION' ? '/app/opportunities' : '/app';
-      const target = location.state?.from || home;
-      navigate(target, { replace: true });
+      await login(email, password);
+      // Everyone starts on the feed, unless they came from a "Sign in to…" prompt on a report or cleanup.
+      navigate(location.state?.from || '/app', { replace: true });
     } catch (err) {
       setError(err);
     } finally {

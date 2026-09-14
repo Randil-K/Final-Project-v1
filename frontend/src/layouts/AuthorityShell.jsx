@@ -20,8 +20,9 @@ export default function AuthorityShell() {
   const unread = useUnreadAlerts();
 
   function signOut() {
-    logout();
-    navigate('/');
+    // Leave the protected page before clearing the session.
+    navigate('/', { replace: true });
+    setTimeout(logout, 0);
   }
 
   return (
