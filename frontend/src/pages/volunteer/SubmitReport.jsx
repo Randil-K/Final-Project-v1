@@ -140,11 +140,10 @@ export default function SubmitReport() {
         onChange={set('description')}
       />
 
-      {coords ? (
-        <Alert tone="info" title="Nearby volunteers will be alerted">
-          Once submitted, this report goes to the community for verification. Volunteers and divers within 5 km are notified first.
-        </Alert>
-      ) : null}
+      <Alert tone="info" title="What happens next">
+        People nearby who have alerts turned on are asked to confirm what you saw. An administrator and then the
+        government authority review the report, and if it's approved it becomes a cleanup project that you own.
+      </Alert>
 
       <Button type="submit" size="lg" fullWidth iconLeft="flag" loading={busy} disabled={busy}>
         {busy ? 'Submitting…' : 'Submit report'}

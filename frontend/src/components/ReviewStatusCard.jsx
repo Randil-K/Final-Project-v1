@@ -42,9 +42,6 @@ export default function ReviewStatusCard({ report }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-5)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
       <div>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Official review</span>
-        <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
-          An administrator reviews the report, then the government authority decides. Approval turns it into a cleanup project.
-        </p>
       </div>
 
       <Step
