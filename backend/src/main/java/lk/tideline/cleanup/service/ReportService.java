@@ -4,6 +4,7 @@ import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.dto.ReportDtos.*;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.CleanupProjectRepository;
+import lk.tideline.cleanup.repository.CommentReactionRepository;
 import lk.tideline.cleanup.repository.PollutionReportRepository;
 import lk.tideline.cleanup.repository.ReportCommentRepository;
 import lk.tideline.cleanup.repository.UserRepository;
@@ -16,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 /**
@@ -28,6 +31,7 @@ public class ReportService {
     private final PollutionReportRepository reportRepository;
     private final VerificationVoteRepository voteRepository;
     private final ReportCommentRepository commentRepository;
+    private final CommentReactionRepository reactionRepository;
     private final UserRepository userRepository;
     private final CleanupProjectRepository projectRepository;
     private final ProjectService projectService;
@@ -38,6 +42,7 @@ public class ReportService {
     public ReportService(PollutionReportRepository reportRepository,
                          VerificationVoteRepository voteRepository,
                          ReportCommentRepository commentRepository,
+                         CommentReactionRepository reactionRepository,
                          UserRepository userRepository,
                          CleanupProjectRepository projectRepository,
                          ProjectService projectService,
@@ -47,6 +52,7 @@ public class ReportService {
         this.reportRepository = reportRepository;
         this.voteRepository = voteRepository;
         this.commentRepository = commentRepository;
+        this.reactionRepository = reactionRepository;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.projectService = projectService;
@@ -195,9 +201,12 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> comments(Long reportId) {
-        return commentRepository.findByReportOrderByCreatedAtAsc(get(reportId)).stream()
-                .map(CommentResponse::from)
+    public List<CommentResponse> comments(Long reportId, User viewer) {
+        PollutionReport report = get(reportId);
+        Map<Long, List<CommentReaction>> reactions = reactionRepository.findByReport(report).stream()
+                .collect(Collectors.groupingBy(reaction -> reaction.getComment().getId()));
+        return commentRepository.findByReportOrderByCreatedAtAsc(report).stream()
+                .map(comment -> CommentResponse.from(comment, reactions.getOrDefault(comment.getId(), List.of()), viewer))
                 .toList();
     }
 
@@ -207,9 +216,56 @@ public class ReportService {
         ReportComment comment = new ReportComment();
         comment.setReport(report);
         comment.setAuthor(author);
-        comment.setBody(request.body());
+        comment.setBody(request.body().trim());
         comment.setOfficial(author.getRole() == Role.ADMIN || author.getRole() == Role.AUTHORITY);
-        return CommentResponse.from(commentRepository.save(comment));
+
+        if (request.parentId() != null) {
+            ReportComment parent = comment(report, request.parentId());
+            // Keep threads one level deep, like replies on a social post.
+            comment.setParent(parent.getParent() != null ? parent.getParent() : parent);
+            notifyReply(parent, author, report);
+        }
+        return CommentResponse.from(commentRepository.save(comment), List.of(), author);
+    }
+
+    /** Toggles a reaction: the same type again removes it, a different type replaces it. */
+    @Transactional
+    public CommentResponse react(Long reportId, Long commentId, ReactionType type, User user) {
+        ReportComment comment = comment(get(reportId), commentId);
+        reactionRepository.findByCommentAndUser(comment, user).ifPresentOrElse(existing -> {
+            if (existing.getType() == type) {
+                reactionRepository.delete(existing);
+            } else {
+                existing.setType(type);
+            }
+        }, () -> {
+            CommentReaction reaction = new CommentReaction();
+            reaction.setComment(comment);
+            reaction.setUser(user);
+            reaction.setType(type);
+            reactionRepository.save(reaction);
+        });
+        reactionRepository.flush();
+        return CommentResponse.from(comment, reactionRepository.findByComment(comment), user);
+    }
+
+    private ReportComment comment(PollutionReport report, Long commentId) {
+        return commentRepository.findById(commentId)
+                .filter(found -> found.getReport().getId().equals(report.getId()))
+                .orElseThrow(() -> new NotFoundException("That comment was not found."));
+    }
+
+    private void notifyReply(ReportComment parent, User author, PollutionReport report) {
+        User recipient = parent.getAuthor();
+        if (recipient.getId().equals(author.getId())) {
+            return;
+        }
+        String body = parent.getBody();
+        String preview = body.length() > 80 ? body.substring(0, 77) + "..." : body;
+        alertService.send(recipient, AlertType.COMMENT_REPLY,
+                author.getFullName() + " replied to your comment",
+                "On " + report.getReference() + ": \"" + preview + "\"",
+                report.getId(), null, null);
     }
 
     /**

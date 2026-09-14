@@ -1,11 +1,12 @@
 import React from 'react';
 import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
-import { Icon, IconButton, Badge, Button, Avatar, Textarea, Alert } from '../../design-system';
+import { Icon, IconButton, Button, Avatar, Alert } from '../../design-system';
 import MapLink from '../../components/MapLink.jsx';
 import EvidenceGallery from '../../components/EvidenceGallery.jsx';
 import ReportStatusBadge from '../../components/ReportStatusBadge.jsx';
 import CommunityVerificationCard from '../../components/CommunityVerificationCard.jsx';
 import ReviewStatusCard from '../../components/ReviewStatusCard.jsx';
+import Discussion from '../../components/Discussion.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -20,12 +21,8 @@ export default function ReportDetail() {
   const { user } = useAuth();
 
   const reportState = useApi(() => api.reports.get(id), [id]);
-  const commentsState = useApi(() => (user ? api.reports.comments(id) : Promise.resolve([])), [id, user?.id]);
-
-  const [comment, setComment] = React.useState('');
   const [actionError, setActionError] = React.useState(null);
   const [voting, setVoting] = React.useState(false);
-  const [posting, setPosting] = React.useState(false);
 
   async function vote(confirmed) {
     setActionError(null);
@@ -36,20 +33,6 @@ export default function ReportDetail() {
       setActionError(error.message);
     } finally {
       setVoting(false);
-    }
-  }
-
-  async function postComment() {
-    setActionError(null);
-    setPosting(true);
-    try {
-      await api.reports.comment(id, comment);
-      setComment('');
-      commentsState.reload();
-    } catch (error) {
-      setActionError(error.message);
-    } finally {
-      setPosting(false);
     }
   }
 
@@ -68,7 +51,6 @@ export default function ReportDetail() {
               <span style={{ font: '600 13px/1.5 var(--font-mono)', color: 'var(--text-muted)' }}>{report.reference}</span>
               <ReportStatusBadge status={report.status} size="sm" style={{ marginLeft: 'auto' }} />
             </div>
-
 
             <EvidenceGallery report={report} />
 
@@ -121,40 +103,7 @@ export default function ReportDetail() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Discussion</span>
-
-              {!user ? (
-                <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
-                  <Link to="/login" state={{ from: `/app/report/${id}` }}>Sign in</Link> to read and join the discussion.
-                </p>
-              ) : (
-                <Async state={commentsState} isEmpty={(list) => !list?.length} empty="No comments yet — be the first to add context." emptyIcon="message-square">
-                  {(comments) => (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                      {comments.map((c) => (
-                        <div key={c.id} style={{ display: 'flex', gap: 10 }}>
-                          <Avatar name={c.author?.fullName || ''} size="sm" role={c.official ? 'authority' : undefined} />
-                          <div>
-                            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>
-                              {user?.id === c.author?.id ? 'You' : c.author?.fullName}
-                              {c.official ? <Badge tone="info" size="sm" style={{ marginLeft: 8 }}>Official</Badge> : null}
-                            </span>
-                            <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>{c.body}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Async>
-              )}
-
-              {user ? (
-                <>
-                  <Textarea placeholder="Add what you know about this site…" rows={2} value={comment} onChange={(e) => setComment(e.target.value)} />
-                  <Button variant="secondary" style={{ alignSelf: 'flex-end' }} disabled={!comment.trim() || posting} onClick={postComment}>
-                    {posting ? 'Posting…' : 'Post comment'}
-                  </Button>
-                </>
-              ) : null}
+              <Discussion reportId={id} user={user} loginFrom={`/app/report/${id}`} />
             </div>
           </div>
         );

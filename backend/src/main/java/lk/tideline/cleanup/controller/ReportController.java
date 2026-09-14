@@ -86,7 +86,13 @@ public class ReportController {
 
     @GetMapping("/{id}/comments")
     public List<CommentResponse> comments(@PathVariable Long id) {
-        return reportService.comments(id);
+        return reportService.comments(id, currentUser.find().orElse(null));
+    }
+
+    @PostMapping("/{id}/comments/{commentId}/reactions")
+    public CommentResponse react(@PathVariable Long id, @PathVariable Long commentId,
+                                 @Valid @RequestBody ReactionRequest request) {
+        return reportService.react(id, commentId, request.type(), currentUser.require());
     }
 
     @PostMapping("/{id}/comments")

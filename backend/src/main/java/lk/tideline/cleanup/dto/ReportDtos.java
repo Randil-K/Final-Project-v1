@@ -4,11 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.CleanupProject;
+import lk.tideline.cleanup.model.CommentReaction;
 import lk.tideline.cleanup.model.PollutionReport;
+import lk.tideline.cleanup.model.ReactionType;
 import lk.tideline.cleanup.model.ReportComment;
 import lk.tideline.cleanup.model.ReportStatus;
 import lk.tideline.cleanup.model.ReviewDecision;
 import lk.tideline.cleanup.model.Severity;
+import lk.tideline.cleanup.model.User;
 
 import java.time.Instant;
 import java.util.List;
@@ -106,23 +109,42 @@ public final class ReportDtos {
     public record VoteRequest(@NotNull Boolean confirmed) {
     }
 
-    public record CommentRequest(@NotBlank @Size(max = 1000) String body) {
+    /** A comment, or a reply when {@code parentId} is set. */
+    public record CommentRequest(@NotBlank @Size(max = 1000) String body, Long parentId) {
+    }
+
+    /** Toggles the viewer's reaction: the same type again removes it, a different type replaces it. */
+    public record ReactionRequest(@NotNull ReactionType type) {
     }
 
     public record CommentResponse(
             Long id,
+            /** Null for top-level comments; replies point at the comment they belong under. */
+            Long parentId,
             UserDtos.UserSummary author,
             String body,
             boolean official,
-            Instant createdAt
+            Instant createdAt,
+            long likeCount,
+            long heartCount,
+            /** The signed-in viewer's reaction, or null. */
+            ReactionType myReaction
     ) {
-        public static CommentResponse from(ReportComment comment) {
+        public static CommentResponse from(ReportComment comment, List<CommentReaction> reactions, User viewer) {
             return new CommentResponse(
                     comment.getId(),
+                    comment.getParent() == null ? null : comment.getParent().getId(),
                     UserDtos.UserSummary.from(comment.getAuthor()),
                     comment.getBody(),
                     comment.isOfficial(),
-                    comment.getCreatedAt());
+                    comment.getCreatedAt(),
+                    reactions.stream().filter(r -> r.getType() == ReactionType.LIKE).count(),
+                    reactions.stream().filter(r -> r.getType() == ReactionType.HEART).count(),
+                    viewer == null ? null : reactions.stream()
+                            .filter(r -> r.getUser().getId().equals(viewer.getId()))
+                            .map(CommentReaction::getType)
+                            .findFirst()
+                            .orElse(null));
         }
     }
 

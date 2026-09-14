@@ -24,6 +24,11 @@ public class ReportComment {
     @JoinColumn(name = "author_id")
     private User author;
 
+    /** The comment this one replies to. Replies are one level deep: a reply to a reply joins the same thread. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private ReportComment parent;
+
     @Column(nullable = false, length = 1000)
     private String body;
 

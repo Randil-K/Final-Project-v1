@@ -42,7 +42,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Landing | `GET /api/analytics/summary` (public) |
 | Login / Register | `POST /api/auth/login` · `/register` (multipart, with certificates for divers and a website for organisations; divers and organisations see a pending-verification screen) |
 | Feed | `GET /api/reports?status=` |
-| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` · `GET /api/projects?reportId=` (shows review progress; once approved, report links redirect to the project) |
+| Report detail | `GET /api/reports/{id}` · `POST /votes` · `GET`/`POST /comments` (replies) · `POST /comments/{cid}/reactions` · `GET /api/projects?reportId=` (shows review progress; once approved, report links redirect to the project) |
 | Cleanups | `GET /api/projects` · `GET /{id}` · `POST /{id}/participants` · `POST /{id}/updates` (project owner) · `POST /{id}/participants/{pid}/mark` (project owner, once complete) |
 | Submit report | `POST /api/reports` (multipart, with photo and video evidence) and browser geolocation |
 | Alerts (both apps) | `GET /api/alerts` · `POST /{id}/read` · `POST /read-all` · `GET /unread-count` (nav badge) |
@@ -71,6 +71,9 @@ unchanged. Worth folding back upstream.
 scrolled page that is the top of the document, off-screen. App code opens dialogs through
 `src/components/Modal.jsx`, which supplies a fixed, viewport-sized container. Also worth raising
 upstream.
+
+`public/assets/icons/heart.svg` is added for comment reactions — the vendored icon set has no
+plain heart. It uses the same 24px stroke format as the other icons.
 
 ## Not built yet
 

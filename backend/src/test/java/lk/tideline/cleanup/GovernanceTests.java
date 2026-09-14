@@ -192,7 +192,7 @@ class GovernanceTests {
         assertThat(response.adminDecision()).isEqualTo(ReviewDecision.MORE_INFO_REQUESTED);
         assertThat(response.status()).isEqualTo(ReportStatus.PENDING);
         assertThat(titlesFor(reporter)).contains("More detail needed on your report");
-        assertThat(reportService.comments(report.getId())).anySatisfy(comment -> {
+        assertThat(reportService.comments(report.getId(), null)).anySatisfy(comment -> {
             assertThat(comment.official()).isTrue();
             assertThat(comment.body()).isEqualTo("Which end of the beach is this?");
         });

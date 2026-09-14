@@ -43,8 +43,10 @@ export const api = {
     vote: (id, confirmed) =>
       request(`/api/reports/${id}/votes`, { method: 'POST', body: { confirmed } }),
     comments: (id) => request(`/api/reports/${id}/comments`),
-    comment: (id, bodyText) =>
-      request(`/api/reports/${id}/comments`, { method: 'POST', body: { body: bodyText } }),
+    comment: (id, bodyText, parentId = null) =>
+      request(`/api/reports/${id}/comments`, { method: 'POST', body: { body: bodyText, parentId } }),
+    react: (id, commentId, type) =>
+      request(`/api/reports/${id}/comments/${commentId}/reactions`, { method: 'POST', body: { type } }),
     /** decision: APPROVED (sends it to the authority), REJECTED or MORE_INFO_REQUESTED. */
     moderate: (id, decision, comment) =>
       request(`/api/reports/${id}/moderation`, { method: 'POST', body: { decision, comment } }),

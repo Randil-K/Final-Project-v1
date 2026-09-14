@@ -75,7 +75,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | POST | `/api/reports` (JSON, or multipart: `data` JSON + `evidence` photos/videos) | 2 | authenticated |
 | GET | `/api/reports/evidence/{file}` (uploaded evidence, supports range requests) | 2 | public |
 | POST | `/api/reports/{id}/votes` | 3 | authenticated |
-| GET/POST | `/api/reports/{id}/comments` | 3 | authenticated |
+| GET/POST | `/api/reports/{id}/comments` (`parentId` to reply) | 3 | authenticated |
+| POST | `/api/reports/{id}/comments/{commentId}/reactions` (`LIKE` / `HEART`, toggles) | 3 | authenticated |
 | POST | `/api/reports/{id}/moderation` (`APPROVED` / `MORE_INFO_REQUESTED` / `REJECTED`) | 4 | admin |
 | POST | `/api/reports/{id}/authority-decision` (same decisions; approval creates the project) | 5 | authority |
 | POST | `/api/reports/{id}/alert-escalation` | 6 | admin, authority |
