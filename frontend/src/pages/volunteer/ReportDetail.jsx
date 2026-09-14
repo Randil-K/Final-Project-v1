@@ -85,7 +85,7 @@ export default function ReportDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
                 <Avatar name={report.reporter?.fullName || ''} size="sm" />
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                  Reported by {report.reporter?.fullName} · {formatDate(report.createdAt)}
+                  {isReporter ? 'Reported by you' : `Reported by ${report.reporter?.fullName}`} · {formatDate(report.createdAt)}
                 </span>
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function ReportDetail() {
                           <Avatar name={c.author?.fullName || ''} size="sm" role={c.official ? 'authority' : undefined} />
                           <div>
                             <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>
-                              {c.author?.fullName}
+                              {user?.id === c.author?.id ? 'You' : c.author?.fullName}
                               {c.official ? <Badge tone="info" size="sm" style={{ marginLeft: 8 }}>Official</Badge> : null}
                             </span>
                             <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>{c.body}</p>

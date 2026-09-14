@@ -89,7 +89,7 @@ export default function ReportReview() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <Avatar name={report.reporter?.fullName || ''} size="sm" />
                 <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginRight: 'auto' }}>
-                  Reported by {report.reporter?.fullName} · {formatDate(report.createdAt)}
+                  {user?.id === report.reporter?.id ? 'Reported by you' : `Reported by ${report.reporter?.fullName}`} · {formatDate(report.createdAt)}
                 </span>
                 <MapLink latitude={report.latitude} longitude={report.longitude} />
               </div>

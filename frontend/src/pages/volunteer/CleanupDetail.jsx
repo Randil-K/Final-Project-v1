@@ -90,7 +90,7 @@ export default function CleanupDetail() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
                 <Icon name="map-pin" size="sm" />
                 {locationLine(project)}
-                {project.owner ? ` · project owner ${project.owner.fullName}` : ''}
+                {project.owner ? (isOwner ? ' · you are the project owner' : ` · project owner ${project.owner.fullName}`) : ''}
               </div>
               {project.description ? (
                 <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 4 }}>{project.description}</p>

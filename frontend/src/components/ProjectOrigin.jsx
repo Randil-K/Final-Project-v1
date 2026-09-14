@@ -3,6 +3,7 @@ import { Avatar, Icon } from '../design-system';
 import EvidenceGallery from './EvidenceGallery.jsx';
 import { api } from '../api/index.js';
 import { useApi } from '../hooks/useApi.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 import { SEVERITY_LABEL, SEVERITY_VAR, formatDate, plural } from '../lib/format.js';
 
 function Row({ icon, children }) {
@@ -19,6 +20,7 @@ function Row({ icon, children }) {
  * so this is where the original photos, community check and official sign-off stay visible.
  */
 export default function ProjectOrigin({ project }) {
+  const { user } = useAuth();
   const state = useApi(() => (project.reportId ? api.reports.get(project.reportId) : Promise.resolve(null)), [project.reportId]);
   const origin = state.data;
   if (!origin) return null;
@@ -30,7 +32,9 @@ export default function ProjectOrigin({ project }) {
       <div>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>How this project started</span>
         <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
-          Spotted by a member of the community, checked by others, and approved by the government authority.
+          {user?.id === origin.reporter?.id
+            ? 'You reported it, the community checked it, and the government authority approved it.'
+            : 'Spotted by a member of the community, checked by others, and approved by the government authority.'}
         </p>
       </div>
 
@@ -39,7 +43,11 @@ export default function ProjectOrigin({ project }) {
       <Row icon="user">
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Avatar name={origin.reporter?.fullName || ''} size="xs" />
-          Pollution spotted by <strong style={{ color: 'var(--text-heading)' }}>{origin.reporter?.fullName}</strong> on {formatDate(origin.createdAt)}
+          {user?.id === origin.reporter?.id ? (
+            <>You spotted this pollution on {formatDate(origin.createdAt)}</>
+          ) : (
+            <>Pollution spotted by <strong style={{ color: 'var(--text-heading)' }}>{origin.reporter?.fullName}</strong> on {formatDate(origin.createdAt)}</>
+          )}
         </span>
       </Row>
 
