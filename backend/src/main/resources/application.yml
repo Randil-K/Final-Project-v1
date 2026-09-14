@@ -16,6 +16,8 @@ spring:
     open-in-view: false
     properties:
       hibernate.format_sql: true
+      # Enums are stored as text without CHECK lists, so new statuses don't break a saved database.
+      hibernate.dialect: lk.tideline.cleanup.config.dialect.TidelineH2Dialect
 
   h2:
     console:

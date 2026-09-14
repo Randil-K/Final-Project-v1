@@ -21,6 +21,9 @@ target/
 # Uploaded account documents (certificates) written by the dev server
 backend/uploads/
 
+# Local H2 database file (application-local.yml)
+backend/data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

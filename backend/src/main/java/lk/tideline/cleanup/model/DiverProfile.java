@@ -3,6 +3,8 @@ package lk.tideline.cleanup.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,7 @@ public class DiverProfile {
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private CertificationLevel certificationLevel;
 
     private Integer experienceYears;

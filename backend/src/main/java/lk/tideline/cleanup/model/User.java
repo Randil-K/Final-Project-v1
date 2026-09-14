@@ -3,6 +3,8 @@ package lk.tideline.cleanup.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ public class User {
     private String phone;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
     private Role role = Role.CITIZEN;
 
@@ -51,6 +54,7 @@ public class User {
     private String suspensionReason;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
     private AccountStatus accountStatus = AccountStatus.APPROVED;
 
@@ -61,6 +65,7 @@ public class User {
     private String organizationName;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private OrganizationType organizationType;
 
     /** Organisations give their website so an administrator can check they are genuine. */

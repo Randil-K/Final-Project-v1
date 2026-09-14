@@ -8,9 +8,14 @@ Spring Boot 3.3 · Java 21 · Spring Data JPA · Spring Security (JWT) · H2 (de
 ./mvnw spring-boot:run
 ```
 
-Starts on `http://localhost:8080` with an in-memory H2 database, seeded with the same demo
-content the frontend shows. H2 console: `http://localhost:8080/h2-console`
-(JDBC URL `jdbc:h2:mem:tideline`, user `sa`, no password).
+Starts on `http://localhost:8080` with the `local` profile: an H2 database kept in
+`backend/data/`, so accounts, reports and comments survive restarts. The first start seeds the
+same demo content the frontend shows. To start again from the demo data, stop the server and
+delete `backend/data/` (and `backend/uploads/` for uploaded files).
+
+H2 console: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:file:./data/tideline;AUTO_SERVER=TRUE`,
+user `sa`, no password). Tests and a plain `java -jar` run without a profile use an in-memory
+database instead.
 
 ### Against MySQL
 
@@ -123,9 +128,11 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 
 - **Closing the loop for reporters.** The reporter is alerted at each review decision, when their
   report becomes a project, and when the site is cleaned.
-- **Enum columns.** Hibernate 6 can map enum fields to native `enum(...)` columns on MySQL, and
-  `ddl-auto: update` won't alter them. Check the column type before adding a constant (say, a new
-  `AlertType`) against an existing database — you may need a manual `ALTER TABLE`.
+- **Enum columns.** Enum fields are stored as plain text (`@JdbcTypeCode(SqlTypes.VARCHAR)`), and
+  the `TidelineH2Dialect` / `TidelineMySQLDialect` skip Hibernate's `CHECK (... IN (...))` lists, so
+  adding a status or alert type doesn't break a database `ddl-auto: update` already created. A MySQL
+  database created before this change still has native `enum` columns and needs a one-off
+  `ALTER TABLE ... MODIFY ... VARCHAR(255)` for each.
 
 - **Officials hear about their work.** Administrators are alerted about new accounts to verify
   and about authority decisions; authority officers when a report is sent to them.

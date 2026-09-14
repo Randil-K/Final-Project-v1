@@ -3,6 +3,8 @@ package lk.tideline.cleanup.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,10 +31,12 @@ public class PollutionReport {
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
     private Severity severity = Severity.MEDIUM;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
     private ReportStatus status = ReportStatus.PENDING;
 
@@ -75,6 +79,7 @@ public class PollutionReport {
     private double alertRadiusKm = 0;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
     private ReviewDecision adminDecision = ReviewDecision.PENDING;
 
@@ -85,6 +90,7 @@ public class PollutionReport {
 
     /** Null until an administrator approves the report and sends it to the authority. */
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private ReviewDecision authorityDecision;
 
     @Column(length = 1000)
