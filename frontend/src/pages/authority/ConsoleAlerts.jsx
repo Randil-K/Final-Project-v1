@@ -1,11 +1,6 @@
 import React from 'react';
 import AlertList from '../../components/AlertList.jsx';
-
-const linkFor = (alert) => {
-  if (alert.type === 'ACCOUNT_REVIEW') return '/console/verifications';
-  if (alert.projectId) return `/console/projects/${alert.projectId}`;
-  return alert.reportId ? `/console/reports/${alert.reportId}` : null;
-};
+import { consoleAlertLink } from '../../lib/alertLinks.js';
 
 export default function ConsoleAlerts() {
   return (
@@ -16,7 +11,7 @@ export default function ConsoleAlerts() {
           Reports waiting for a decision, review outcomes, and new accounts to verify.
         </p>
       </div>
-      <AlertList linkFor={linkFor} empty="Nothing needs your attention right now." />
+      <AlertList linkFor={consoleAlertLink} empty="Nothing needs your attention right now." />
     </div>
   );
 }

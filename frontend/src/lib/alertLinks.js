@@ -1,0 +1,15 @@
+/** Where an alert opens in the console (administrators and authority officers). */
+export function consoleAlertLink(alert) {
+  if (alert.type === 'ACCOUNT_REVIEW') return '/console/verifications';
+  if (alert.projectId) return `/console/projects/${alert.projectId}`;
+  return alert.reportId ? `/console/reports/${alert.reportId}` : null;
+}
+
+/** Where an alert opens in the volunteer app. */
+export function volunteerAlertLink(alert) {
+  if (alert.type === 'ACCOUNT_REVIEW') return '/app/profile';
+  if (alert.projectId) return `/app/cleanups/${alert.projectId}`;
+  return alert.reportId ? `/app/report/${alert.reportId}` : null;
+}
+
+export const isConsoleRole = (user) => user?.role === 'ADMIN' || user?.role === 'AUTHORITY';
