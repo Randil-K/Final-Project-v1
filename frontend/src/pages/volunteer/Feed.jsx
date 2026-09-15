@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button } from '../../design-system';
+import { Button } from '../../design-system';
 import ChipButton from '../../components/ChipButton.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -36,17 +36,6 @@ export default function Feed() {
           Report pollution
         </Button>
       </div>
-
-      {user && user.latitude == null ? (
-        <Alert tone="info" title="Add your location to hear about pollution near you">
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
-            New reports and cleanups alert people within 5 km.
-            <Button variant="secondary" size="sm" iconLeft="map-pin" onClick={() => navigate('/app/profile')}>
-              Add my location
-            </Button>
-          </span>
-        </Alert>
-      ) : null}
 
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
         {STATUS_FILTERS.map((f) => (
