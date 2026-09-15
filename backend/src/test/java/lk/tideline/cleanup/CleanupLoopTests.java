@@ -15,6 +15,7 @@ import lk.tideline.cleanup.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
@@ -82,6 +83,20 @@ class CleanupLoopTests {
 
         assertThat(reports.findById(project.reportId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
         assertThat(titlesFor(volunteer)).contains("Cleanup complete");
+    }
+
+    @Test
+    void onlyTheProjectOwnerCanRecordProgress() {
+        User reporter = user(Role.CITIZEN);
+        ProjectResponse project = approve(reporter);
+        ProjectUpdateRequest update = new ProjectUpdateRequest(UpdateStage.DURING, "Half done.", null, 50, 3.0);
+
+        for (Role official : List.of(Role.AUTHORITY, Role.ADMIN, Role.CITIZEN)) {
+            assertThatThrownBy(() -> projects.addUpdate(project.id(), update, user(official)))
+                    .as(official + " cannot post progress")
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+        assertThat(projects.addUpdate(project.id(), update, reporter).completionPercentage()).isEqualTo(50);
     }
 
     @Test

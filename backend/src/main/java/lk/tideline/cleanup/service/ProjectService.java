@@ -7,6 +7,7 @@ import lk.tideline.cleanup.dto.ProjectDtos.ProjectUpdateRequest;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.CleanupProjectRepository;
 import lk.tideline.cleanup.repository.ProjectParticipantRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -180,10 +181,9 @@ public class ProjectService {
     public ProjectResponse addUpdate(Long projectId, ProjectUpdateRequest request, User author) {
         CleanupProject project = get(projectId);
 
-        if (!Objects.equals(project.getOwner().getId(), author.getId())
-                && author.getRole() != Role.ADMIN
-                && author.getRole() != Role.AUTHORITY) {
-            throw new IllegalStateException("Only the project owner can post progress updates.");
+        // Progress is the project owner's responsibility; administrators and officers only follow it.
+        if (!Objects.equals(project.getOwner().getId(), author.getId())) {
+            throw new AccessDeniedException("Only the project owner can post progress updates.");
         }
 
         ProjectUpdate update = new ProjectUpdate();

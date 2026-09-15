@@ -53,7 +53,7 @@ Sign in with any seeded account — the login screen lists them, and all use `pa
 | Review queue | `GET /api/reports?reviewQueue=true` (verified, with authority, rejected) |
 | Report review | `POST /moderation` and `POST /authority-decision` — approve, request more info, reject · Additional information tab (`GET /info-requests`, photos via authenticated blob) |
 | Additional information (reporter) | `GET /api/reports/{id}/info-requests` · `POST /info-requests/{rid}/response` (multipart) |
-| Projects | `GET /api/projects` · `GET /{id}` · `POST /{id}/updates` |
+| Projects | `GET /api/projects` · `GET /{id}` (read-only for officials) |
 | Analytics | `GET /api/analytics/summary` |
 | Verifications (admin) | `GET /api/admin/verifications?status=` · `POST /api/admin/verifications/{id}` · `GET /api/admin/documents/{id}` |
 | Users (admin) | `GET /api/admin/users?query=` · `POST /api/admin/users/{id}/suspension` |

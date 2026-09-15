@@ -25,8 +25,8 @@ export default function ProjectDetail() {
   return (
     <Async state={state}>
       {(project) => {
-        const canPost = project.status !== 'COMPLETED'
-          && (user?.role === 'ADMIN' || user?.role === 'AUTHORITY' || user?.id === project.owner?.id);
+        // Only the project owner records progress; officials follow it here.
+        const canPost = project.status !== 'COMPLETED' && user?.id === project.owner?.id;
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', maxWidth: 820 }}>

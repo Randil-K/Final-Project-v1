@@ -95,7 +95,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/alerts/unread-count` · POST `/api/alerts/read-all` | 6 | authenticated |
 | GET | `/api/projects` (`?reportId=` to find a report's project) | 7 | public |
 | POST | `/api/projects/{id}/participants` | 7 | authenticated |
-| POST | `/api/projects/{id}/updates` | 7 | project owner, admin, authority |
+| POST | `/api/projects/{id}/updates` | 7 | project owner only |
 | POST | `/api/projects/{id}/participants/{participantId}/mark` | 8 | project owner, once complete |
 | GET/POST | `/api/opportunities` | 8 | read authenticated, post organisation |
 | POST | `/api/opportunities/{id}/applications` · GET `/applications/mine` | 8 | diver |
