@@ -45,12 +45,34 @@ public class DemoDataSeeder {
             User officer = user(users, encoder, "D. Bandara", "officer@mepa.gov.lk",
                     Role.AUTHORITY, "Western Province", "Colombo", 6.9271, 79.8612);
 
-            User sanduni = user(users, encoder, "Sanduni Perera", "sanduni@example.lk",
+            User hiruna = user(users, encoder, "Hiruna Perera", "hiruna@example.lk",
                     Role.DIVER, "Western Province", "Negombo", 7.2083, 79.8358);
-            diverProfile(sanduni, CertificationLevel.ADVANCED_OPEN_WATER, 4, "Own BCD, regulator, wetsuit",
+            diverProfile(hiruna, CertificationLevel.ADVANCED_OPEN_WATER, 4, "Own BCD, regulator, wetsuit",
                     List.of("Western Province", "North Western Province"));
-            attachCertificate(storage, sanduni, "PADI-Advanced-Open-Water.pdf", "PADI Advanced Open Water - Sanduni Perera");
-            users.save(sanduni);
+            attachCertificate(storage, hiruna, "PADI-Advanced-Open-Water.pdf", "PADI Advanced Open Water - Hiruna Perera");
+            users.save(hiruna);
+
+            // More verified volunteer divers for demos.
+            User kavindu = user(users, encoder, "Kavindu Fernando", "kavindu@example.lk",
+                    Role.DIVER, "Southern Province", "Hikkaduwa", 6.1395, 80.1063);
+            diverProfile(kavindu, CertificationLevel.RESCUE_DIVER, 7, "Full kit, dive computer, lift bags",
+                    List.of("Southern Province"));
+            attachCertificate(storage, kavindu, "PADI-Rescue-Diver.pdf", "PADI Rescue Diver - Kavindu Fernando");
+            users.save(kavindu);
+
+            User tharushi = user(users, encoder, "Tharushi Silva", "tharushi@example.lk",
+                    Role.DIVER, "Eastern Province", "Trincomalee", 8.5711, 81.2335);
+            diverProfile(tharushi, CertificationLevel.OPEN_WATER, 2, "Mask, fins, wetsuit",
+                    List.of("Eastern Province", "Northern Province"));
+            attachCertificate(storage, tharushi, "PADI-Open-Water.pdf", "PADI Open Water - Tharushi Silva");
+            users.save(tharushi);
+
+            User dinuka = user(users, encoder, "Dinuka Rajapaksha", "dinuka@example.lk",
+                    Role.DIVER, "North Western Province", "Kalpitiya", 8.2300, 79.7600);
+            diverProfile(dinuka, CertificationLevel.DIVEMASTER, 9, "Full kit, underwater cutting tools",
+                    List.of("North Western Province", "Western Province"));
+            attachCertificate(storage, dinuka, "PADI-Divemaster.pdf", "PADI Divemaster - Dinuka Rajapaksha");
+            users.save(dinuka);
 
             User kasun = user(users, encoder, "Kasun Silva", "kasun@example.lk",
                     Role.CITIZEN, "Western Province", "Negombo", 7.2100, 79.8400);
@@ -108,7 +130,7 @@ public class DemoDataSeeder {
                             + "along a 40m stretch of shoreline.",
                     Severity.CRITICAL, "Trincomalee", "Eastern Province", 8.5874, 81.2152, 5);
 
-            PollutionReport kalpitiya = report(reports, sanduni,
+            PollutionReport kalpitiya = report(reports, hiruna,
                     "Discarded fishing nets tangled on the reef edge",
                     "Ghost nets caught on the reef edge, roughly 15m from the dive site mooring. "
                             + "Needs diver support to remove safely.",
@@ -119,8 +141,8 @@ public class DemoDataSeeder {
                     "Small pile of household waste bags left behind the dune grass, likely dumped overnight.",
                     Severity.LOW, "Mount Lavinia", "Western Province", 6.8389, 79.8653, 2);
 
-            castVotes(votes, reports, negombo, with(community, sanduni, achini, ishara, ngo), List.of());
-            castVotes(votes, reports, trinco, with(community, sanduni, kasun, ishara), List.of(ngo));
+            castVotes(votes, reports, negombo, with(community, hiruna, achini, ishara, ngo), List.of());
+            castVotes(votes, reports, trinco, with(community, hiruna, kasun, ishara), List.of(ngo));
             castVotes(votes, reports, kalpitiya, with(community, kasun, achini, ishara), List.of());
 
             // Kalpitiya is verified by the community and waits for the administrator (the default).
@@ -182,7 +204,7 @@ public class DemoDataSeeder {
 
             CleanupProject savedProject = projects.save(project);
 
-            participant(participants, savedProject, sanduni, ParticipantRole.DIVER);
+            participant(participants, savedProject, hiruna, ParticipantRole.DIVER);
             participant(participants, savedProject, ishara, ParticipantRole.VOLUNTEER);
             participant(participants, savedProject, achini, ParticipantRole.VOLUNTEER);
 

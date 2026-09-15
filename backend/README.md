@@ -60,7 +60,8 @@ All seeded accounts use the password `password123`.
 | --- | --- |
 | `admin@tideline.lk` | ADMIN |
 | `officer@mepa.gov.lk` | AUTHORITY |
-| `sanduni@example.lk` | DIVER (verified) |
+| `hiruna@example.lk` | DIVER (verified) |
+| `kavindu@example.lk` · `tharushi@example.lk` · `dinuka@example.lk` | DIVER (verified) |
 | `kasun@example.lk` | CITIZEN — owns project CP-118 |
 | `hello@blueresurgence.lk` | ORGANIZATION (verified) |
 | `tharindu@example.lk` | DIVER — pending verification, can't sign in yet |

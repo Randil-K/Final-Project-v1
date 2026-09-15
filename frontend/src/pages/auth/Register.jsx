@@ -178,7 +178,7 @@ export default function Register() {
             </Alert>
           ) : null}
 
-          <Input label="Full name" placeholder="e.g. Sanduni Perera" required value={form.fullName} onChange={set('fullName')} />
+          <Input label="Full name" placeholder="e.g. Hiruna Perera" required value={form.fullName} onChange={set('fullName')} />
           <Input label="Email" type="email" placeholder="you@example.lk" required value={form.email} onChange={set('email')} />
           <Input label="Phone" type="tel" placeholder="+94 7X XXX XXXX" value={form.phone} onChange={set('phone')} />
           <Select label="Province" placeholder="Select your province" options={PROVINCES} value={form.province} onChange={set('province')} />
