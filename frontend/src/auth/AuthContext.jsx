@@ -25,9 +25,9 @@ export function AuthProvider({ children }) {
       user,
       ready,
       isAuthenticated: Boolean(user),
-      async login(email, password) {
-        const result = await api.auth.login(email, password);
-        setToken(result.token);
+      async login(email, password, remember = false) {
+        const result = await api.auth.login(email, password, remember);
+        setToken(result.token, remember);
         setUser(result.user);
         return result.user;
       },

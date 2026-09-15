@@ -18,6 +18,7 @@ public class JwtService {
 
     private final SecretKey key;
     private final long expiryMinutes;
+    private final long rememberMeMinutes;
 
     public JwtService(TidelineProperties properties) {
         String secret = properties.getSecurity().getJwtSecret();
@@ -27,16 +28,23 @@ public class JwtService {
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiryMinutes = properties.getSecurity().getJwtExpiryMinutes();
+        this.rememberMeMinutes = properties.getSecurity().getRememberMeDays() * 24 * 60;
     }
 
     public String issueToken(User user) {
+        return issueToken(user, false);
+    }
+
+    /** "Remember me" gets a long-lived session; otherwise the usual working-day length. */
+    public String issueToken(User user, boolean rememberMe) {
+        long minutes = rememberMe ? rememberMeMinutes : expiryMinutes;
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
                 .claim("role", user.getRole().name())
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(expiryMinutes, ChronoUnit.MINUTES)))
+                .expiration(Date.from(now.plus(minutes, ChronoUnit.MINUTES)))
                 .signWith(key)
                 .compact();
     }
@@ -47,6 +55,10 @@ public class JwtService {
 
     public long expirySeconds() {
         return expiryMinutes * 60;
+    }
+
+    public long expirySeconds(boolean rememberMe) {
+        return (rememberMe ? rememberMeMinutes : expiryMinutes) * 60;
     }
 
     private Claims parse(String token) {

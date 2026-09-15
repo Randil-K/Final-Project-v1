@@ -135,7 +135,8 @@ public class AuthService {
                     "Your account application wasn't approved" + (note == null ? "." : ": " + note));
         }
 
-        return new AuthResponse(jwtService.issueToken(user), jwtService.expirySeconds(), userService.view(user.getId()));
+        return new AuthResponse(jwtService.issueToken(user, request.remember()),
+                jwtService.expirySeconds(request.remember()), userService.view(user.getId()));
     }
 
     private void notifyAdministrators(User applicant, int certificateCount) {

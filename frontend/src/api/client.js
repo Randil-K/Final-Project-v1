@@ -17,15 +17,17 @@ export class ApiError extends Error {
 
 export function getToken() {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
 }
 
-export function setToken(token) {
+/** "Remember me" keeps the session after the browser closes; otherwise it ends with the browser session. */
+export function setToken(token, remember = true) {
   try {
-    localStorage.setItem(TOKEN_KEY, token);
+    clearToken();
+    (remember ? localStorage : sessionStorage).setItem(TOKEN_KEY, token);
   } catch {
     /* a blocked store just means the session ends when the tab closes */
   }
@@ -34,6 +36,7 @@ export function setToken(token) {
 export function clearToken() {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
   } catch {
     /* nothing to clear */
   }

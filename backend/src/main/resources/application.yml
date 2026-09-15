@@ -59,6 +59,12 @@ tideline:
   security:
     jwt-secret: ${TIDELINE_JWT_SECRET:dev-only-secret-change-me-in-production-0123456789abcdef}
     jwt-expiry-minutes: 720
+    remember-me-days: 30
+  # Links in emails point here. Password reset emails need spring.mail.host (SPRING_MAIL_HOST) to be set;
+  # without it the reset link is written to the server log.
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    from: ${MAIL_FROM:Tideline <no-reply@tideline.lk>}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
   uploads:

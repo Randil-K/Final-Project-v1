@@ -7,6 +7,8 @@ import RequireAuth from './components/RequireAuth.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
+import ForgotPassword from './pages/auth/ForgotPassword.jsx';
+import ResetPassword from './pages/auth/ResetPassword.jsx';
 
 import VolunteerShell from './layouts/VolunteerShell.jsx';
 import Feed from './pages/volunteer/Feed.jsx';
@@ -40,6 +42,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/app" element={<VolunteerShell />}>
             <Route index element={<Feed />} />

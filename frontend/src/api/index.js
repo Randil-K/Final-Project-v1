@@ -13,8 +13,12 @@ function query(params) {
 
 export const api = {
   auth: {
-    login: (email, password) =>
-      request('/api/auth/login', { method: 'POST', body: { email, password }, auth: false }),
+    login: (email, password, rememberMe = false) =>
+      request('/api/auth/login', { method: 'POST', body: { email, password, rememberMe }, auth: false }),
+    forgotPassword: (email) =>
+      request('/api/auth/forgot-password', { method: 'POST', body: { email }, auth: false }),
+    resetPassword: (token, password) =>
+      request('/api/auth/reset-password', { method: 'POST', body: { token, password }, auth: false }),
     /** Multipart: the account details as a JSON "data" part, plus any certificate files. */
     register: (data, certificates = []) => {
       const form = new FormData();

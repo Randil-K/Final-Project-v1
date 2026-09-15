@@ -73,7 +73,8 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | Method | Path | Module | Access |
 | --- | --- | --- | --- |
 | POST | `/api/auth/register` (multipart: `data` JSON + `certificates` files) | 1 | public (citizen / diver / organisation only) |
-| POST | `/api/auth/login` | 1 | public |
+| POST | `/api/auth/login` (`rememberMe`: 30-day session instead of 12 hours) | 1 | public |
+| POST | `/api/auth/forgot-password` · `/api/auth/reset-password` | 1 | public |
 | GET | `/api/users/me` · PUT `/api/users/me` | 1 | authenticated |
 | GET | `/api/users/{id}` (public profile: no email, phone or location; unverified accounts hidden) | 1 | authenticated |
 | PUT / DELETE | `/api/users/me/avatar` (multipart `photo`: JPG, PNG or WebP up to 5 MB) | 1 | authenticated |
@@ -114,6 +115,10 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 - **Nearby alerts.** A new report alerts available users within 5 km (Haversine distance).
 - **Review queue.** `GET /api/reports?reviewQueue=true` lists only reports the community has
   verified, plus those with the authority or rejected; unverified reports never reach it.
+- **Forgot password.** `forgot-password` always answers the same way, so it can't reveal who has an
+  account. For a real account it stores a hash of a random one-time token (valid 30 minutes; only the
+  newest works) and emails `FRONTEND_URL/reset-password?token=…`. With no `SPRING_MAIL_HOST` configured
+  (local development) the link is written to the server log instead.
 - **Account verification.** Citizens can sign in straight away. Volunteer divers must attach at
   least one certificate (PDF, JPG or PNG, 5 MB each, up to 5 — checked by file content, not
   extension) and organisations must give a website link. Both start as `PENDING_REVIEW`, get no

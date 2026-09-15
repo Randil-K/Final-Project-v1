@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Icon, Card, Button, Input, Alert } from '../../design-system';
+import { Icon, Card, Button, Checkbox, Input, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
@@ -11,6 +11,7 @@ export default function Login() {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [remember, setRemember] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -19,7 +20,7 @@ export default function Login() {
     setBusy(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(email, password, remember);
       // Everyone starts on the feed, unless they came from a "Sign in to…" prompt on a report or cleanup.
       navigate(location.state?.from || '/app', { replace: true });
     } catch (err) {
@@ -70,6 +71,11 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
 
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <Checkbox label="Remember me" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              <Link to="/forgot-password" style={{ font: 'var(--text-body-sm)' }}>Forgot password?</Link>
+            </div>
+
             <Button type="submit" fullWidth size="lg" loading={busy} disabled={busy}>
               {busy ? 'Signing in…' : 'Sign in'}
             </Button>
@@ -88,7 +94,6 @@ export default function Login() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
             {[
               ['sanduni@example.lk', 'volunteer diver'],
-              ['kasun@example.lk', 'project owner'],
               ['admin@tideline.lk', 'administrator'],
               ['officer@mepa.gov.lk', 'authority officer'],
             ].map(([demoEmail, role]) => (

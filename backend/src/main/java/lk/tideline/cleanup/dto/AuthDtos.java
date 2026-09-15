@@ -31,7 +31,21 @@ public final class AuthDtos {
 
     public record LoginRequest(
             @NotBlank @Email String email,
-            @NotBlank String password
+            @NotBlank String password,
+            /** Keeps the session for 30 days instead of 12 hours. */
+            Boolean rememberMe
+    ) {
+        public boolean remember() {
+            return Boolean.TRUE.equals(rememberMe);
+        }
+    }
+
+    public record ForgotPasswordRequest(@NotBlank @Email String email) {
+    }
+
+    public record ResetPasswordRequest(
+            @NotBlank String token,
+            @NotBlank @Size(min = 8, message = "must be at least 8 characters") String password
     ) {
     }
 

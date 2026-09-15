@@ -73,12 +73,12 @@ class GovernanceTests {
                     assertThat(account.documents()).hasSize(1);
                 });
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
+        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123", null)))
                 .isInstanceOf(AccountReviewException.class)
                 .extracting("code").isEqualTo("ACCOUNT_PENDING");
 
         userService.reviewAccount(registered.user().id(), new AccountReviewRequest(true, null));
-        assertThat(authService.login(new LoginRequest(email, "password123")).token()).isNotBlank();
+        assertThat(authService.login(new LoginRequest(email, "password123", null)).token()).isNotBlank();
         assertThat(titlesFor(users.findByEmailIgnoreCase(email).orElseThrow())).contains("Your account has been verified");
     }
 
@@ -92,7 +92,7 @@ class GovernanceTests {
                 .isInstanceOf(IllegalArgumentException.class);
 
         userService.reviewAccount(registered.user().id(), new AccountReviewRequest(false, "Certificate has expired."));
-        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
+        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123", null)))
                 .isInstanceOf(AccountReviewException.class)
                 .hasMessageContaining("Certificate has expired.");
         assertThat(titlesFor(users.findByEmailIgnoreCase(email).orElseThrow())).contains("Your registration wasn't approved");
@@ -147,11 +147,11 @@ class GovernanceTests {
         AuthResponse registered = authService.register(registration(email, Role.CITIZEN, null, null), List.of());
 
         userService.setSuspension(registered.user().id(), new SuspensionRequest(true, "Repeated false reports."));
-        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123")))
+        assertThatThrownBy(() -> authService.login(new LoginRequest(email, "password123", null)))
                 .isInstanceOf(DisabledException.class);
 
         userService.setSuspension(registered.user().id(), new SuspensionRequest(false, null));
-        assertThat(authService.login(new LoginRequest(email, "password123")).token()).isNotBlank();
+        assertThat(authService.login(new LoginRequest(email, "password123", null)).token()).isNotBlank();
     }
 
     @Test
