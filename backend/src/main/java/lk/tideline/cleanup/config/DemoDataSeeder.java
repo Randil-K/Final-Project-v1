@@ -157,6 +157,13 @@ public class DemoDataSeeder {
             project.setLatitude(7.2083);
             project.setLongitude(79.8358);
             project.setStartedAt(daysAgo(2));
+            project.setVolunteersNeeded(15);
+            project.setDiversNeeded(2);
+            project.getEquipment().add(new EquipmentItem("Heavy-duty gloves", 30));
+            project.getEquipment().add(new EquipmentItem("Refuse sacks", 60));
+            project.getEquipment().add(new EquipmentItem("Litter pickers", 15));
+            project.setResourcesFinalizedAt(daysAgo(3));
+            project.setResourcesFinalizedBy(admin);
 
             ProjectUpdate before = new ProjectUpdate();
             before.setProject(project);

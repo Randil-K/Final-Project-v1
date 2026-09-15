@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Card, Badge, ProgressBar } from '../design-system';
 import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, locationLine, plural } from '../lib/format.js';
+import ProjectStatusBar from './ProjectStatusBar.jsx';
 
 export default function ProjectCard({ project, to }) {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function ProjectCard({ project, to }) {
           <Icon name="map-pin" size="xs" />
           {locationLine(project)}
         </span>
+        <ProjectStatusBar project={project} compact />
         <ProgressBar
           value={project.completionPercentage}
           valueLabel={`${project.completionPercentage}%`}
@@ -25,11 +27,15 @@ export default function ProjectCard({ project, to }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, font: 'var(--text-caption)', color: 'var(--text-body-color)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <Icon name="users" size="xs" />
-            {plural(project.volunteerCount, 'volunteer')}
+            {project.resources?.volunteersNeeded
+              ? `${project.volunteerCount} of ${project.resources.volunteersNeeded} volunteers`
+              : plural(project.volunteerCount, 'volunteer')}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <Icon name="anchor" size="xs" />
-            {plural(project.diverCount, 'diver')}
+            {project.resources?.diversNeeded
+              ? `${project.diverCount} of ${project.resources.diversNeeded} divers`
+              : plural(project.diverCount, 'diver')}
           </span>
           {project.joined ? (
             <Badge tone="success" size="sm" icon="check" style={{ marginLeft: 'auto' }}>Joined</Badge>

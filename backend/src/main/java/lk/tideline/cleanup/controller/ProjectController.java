@@ -5,6 +5,7 @@ import lk.tideline.cleanup.dto.ProjectDtos.*;
 import lk.tideline.cleanup.model.ProjectStatus;
 import lk.tideline.cleanup.service.CurrentUserService;
 import lk.tideline.cleanup.service.ProjectService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +44,13 @@ public class ProjectController {
     public ProjectResponse mark(@PathVariable Long id, @PathVariable Long participantId,
                                 @Valid @RequestBody MarkRequest request) {
         return projectService.mark(id, participantId, request.mark(), currentUser.require());
+    }
+
+    /** Administrators assign the volunteers, divers and equipment a project needs. */
+    @PutMapping("/{id}/resources")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProjectResponse updateResources(@PathVariable Long id, @Valid @RequestBody ResourcesRequest request) {
+        return projectService.updateResources(id, request, currentUser.require());
     }
 
     /** Module 7 — before / during / after progress evidence. */

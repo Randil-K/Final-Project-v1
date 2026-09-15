@@ -74,7 +74,12 @@ public class AlertService {
 
     @Transactional
     public Alert sendCritical(User recipient, AlertType type, String title, String body, Long reportId) {
-        Alert alert = send(recipient, type, title, body, reportId, null, null);
+        return sendCritical(recipient, type, title, body, reportId, null);
+    }
+
+    @Transactional
+    public Alert sendCritical(User recipient, AlertType type, String title, String body, Long reportId, Long projectId) {
+        Alert alert = send(recipient, type, title, body, reportId, projectId, null);
         alert.setCritical(true);
         return alert;
     }

@@ -63,6 +63,23 @@ public class CleanupProject {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectParticipant> participants = new ArrayList<>();
 
+    /** Resources an administrator assigns after approval, based on the government officer's comment. */
+    private Integer volunteersNeeded;
+
+    private Integer diversNeeded;
+
+    @ElementCollection
+    @CollectionTable(name = "project_equipment", joinColumns = @JoinColumn(name = "project_id"))
+    @OrderColumn(name = "position")
+    private List<EquipmentItem> equipment = new ArrayList<>();
+
+    /** Null while the resource plan is a draft only administrators and officers can see. */
+    private Instant resourcesFinalizedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resources_finalized_by_id")
+    private User resourcesFinalizedBy;
+
     private Instant startedAt;
     private Instant completedAt;
 

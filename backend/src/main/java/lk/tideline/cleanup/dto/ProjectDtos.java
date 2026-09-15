@@ -1,5 +1,6 @@
 package lk.tideline.cleanup.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -43,10 +44,16 @@ public final class ProjectDtos {
             /** Whether the signed-in viewer has joined; null for anonymous viewers. */
             Boolean joined,
             /** Only for the organiser, administrators and authority officers; null for everyone else. */
-            List<ParticipantResponse> participants
+            List<ParticipantResponse> participants,
+            /** The assigned resources: everyone once finalized, administrators and officers while a draft. */
+            ResourcesResponse resources,
+            /** The government officer's approval note, for administrators and officers only. */
+            ApprovalNote approval
     ) {
         public static ProjectResponse from(CleanupProject project, long volunteers, long divers, Boolean joined,
-                                           List<ParticipantResponse> participants) {
+                                           List<ParticipantResponse> participants, boolean official) {
+            var report = project.getReport();
+            boolean finalized = project.getResourcesFinalizedAt() != null;
             return new ProjectResponse(
                     project.getId(),
                     project.getReference(),
@@ -71,8 +78,47 @@ public final class ProjectDtos {
                     project.getCompletedAt(),
                     project.getCreatedAt(),
                     joined,
-                    participants);
+                    participants,
+                    finalized || official ? ResourcesResponse.from(project) : null,
+                    official && report != null && report.getAuthorityComment() != null
+                            ? new ApprovalNote(UserDtos.UserSummary.from(report.getAuthorityOfficer()),
+                                    report.getAuthorityComment(), report.getDecidedAt())
+                            : null);
         }
+    }
+
+    public record ApprovalNote(UserDtos.UserSummary officer, String comment, Instant decidedAt) {
+    }
+
+    public record EquipmentLine(@NotBlank @Size(max = 100) String name, @Min(1) @Max(1000) int quantity) {
+    }
+
+    public record ResourcesResponse(
+            Integer volunteersNeeded,
+            Integer diversNeeded,
+            List<EquipmentLine> equipment,
+            boolean finalized,
+            Instant finalizedAt,
+            UserDtos.UserSummary finalizedBy
+    ) {
+        static ResourcesResponse from(CleanupProject project) {
+            return new ResourcesResponse(
+                    project.getVolunteersNeeded(),
+                    project.getDiversNeeded(),
+                    project.getEquipment().stream().map(item -> new EquipmentLine(item.getName(), item.getQuantity())).toList(),
+                    project.getResourcesFinalizedAt() != null,
+                    project.getResourcesFinalizedAt(),
+                    UserDtos.UserSummary.from(project.getResourcesFinalizedBy()));
+        }
+    }
+
+    /** An administrator's resource plan; {@code publish} finalizes and publishes it on the project. */
+    public record ResourcesRequest(
+            @Min(0) @Max(1000) Integer volunteersNeeded,
+            @Min(0) @Max(1000) Integer diversNeeded,
+            @Size(max = 30) List<@Valid EquipmentLine> equipment,
+            boolean publish
+    ) {
     }
 
     public record ProjectUpdateRequest(

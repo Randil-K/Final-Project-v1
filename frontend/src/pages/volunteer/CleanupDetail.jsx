@@ -8,6 +8,8 @@ import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
 import ProjectOrigin from '../../components/ProjectOrigin.jsx';
+import ProjectStatusBar from '../../components/ProjectStatusBar.jsx';
+import ProjectResources from '../../components/ProjectResources.jsx';
 import UserLink from '../../components/UserLink.jsx';
 import { api } from '../../api/index.js';
 import { useApi } from '../../hooks/useApi.js';
@@ -100,6 +102,10 @@ export default function CleanupDetail() {
                 <MapLink latitude={project.latitude} longitude={project.longitude} label="Meeting point on the map" />
               </div>
             </div>
+
+            <ProjectStatusBar project={project} />
+
+            <ProjectResources project={project} />
 
             <ProjectProgress project={project} />
 

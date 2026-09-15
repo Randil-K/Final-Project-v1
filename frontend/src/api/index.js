@@ -78,6 +78,7 @@ export const api = {
     // Public, but sending the token lets the API report whether the viewer has joined.
     list: (params) => request(`/api/projects${query(params)}`),
     get: (id) => request(`/api/projects/${id}`),
+    updateResources: (id, payload) => request(`/api/projects/${id}/resources`, { method: 'PUT', body: payload }),
     join: (id, participantRole) =>
       request(`/api/projects/${id}/participants`, { method: 'POST', body: { participantRole } }),
     addUpdate: (id, payload) =>

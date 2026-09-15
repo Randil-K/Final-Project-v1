@@ -6,6 +6,9 @@ import ProjectProgress from '../../components/ProjectProgress.jsx';
 import ProjectTimeline from '../../components/ProjectTimeline.jsx';
 import ProgressUpdateForm from '../../components/ProgressUpdateForm.jsx';
 import ProjectOrigin from '../../components/ProjectOrigin.jsx';
+import ProjectStatusBar from '../../components/ProjectStatusBar.jsx';
+import ProjectResources from '../../components/ProjectResources.jsx';
+import ResourcePlanner from '../../components/ResourcePlanner.jsx';
 import UserLink from '../../components/UserLink.jsx';
 import { Async } from '../../components/AsyncState.jsx';
 import { api } from '../../api/index.js';
@@ -49,6 +52,24 @@ export default function ProjectDetail() {
                 <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)', marginTop: 8 }}>{project.description}</p>
               ) : null}
             </div>
+
+            <ProjectStatusBar project={project} />
+
+            {user?.role === 'ADMIN' && project.status !== 'COMPLETED' ? (
+              <ResourcePlanner key={project.resources?.finalizedAt || 'draft'} project={project} onSaved={state.setData} />
+            ) : (
+              <>
+                {project.approval ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 'var(--space-4) var(--space-5)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
+                    <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+                      Official comment · {project.approval.officer?.fullName}
+                    </span>
+                    <span style={{ font: 'var(--text-body)', color: 'var(--text-heading)', whiteSpace: 'pre-wrap' }}>{project.approval.comment}</span>
+                  </div>
+                ) : null}
+                <ProjectResources project={project} />
+              </>
+            )}
 
             <ProjectProgress project={project} />
 

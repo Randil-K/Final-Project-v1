@@ -178,7 +178,7 @@ class GovernanceTests {
 
         reportService.decideAsAuthority(report.getId(),
                 new AuthorityDecisionRequest(ReviewDecision.APPROVED, "Approved with conditions."), officer);
-        assertThat(titlesFor(admin)).contains("Authority approved " + report.getReference());
+        assertThat(titlesFor(admin)).anyMatch(title -> title.startsWith("Assign resources for CP-"));
     }
 
     @Test

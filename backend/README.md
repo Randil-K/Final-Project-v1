@@ -96,6 +96,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 | GET | `/api/projects` (`?reportId=` to find a report's project) | 7 | public |
 | POST | `/api/projects/{id}/participants` | 7 | authenticated |
 | POST | `/api/projects/{id}/updates` | 7 | project owner only |
+| PUT | `/api/projects/{id}/resources` (volunteers, divers, equipment; `publish` finalizes) | 7 | admin |
 | POST | `/api/projects/{id}/participants/{participantId}/mark` | 8 | project owner, once complete |
 | GET/POST | `/api/opportunities` | 8 | read authenticated, post organisation |
 | POST | `/api/opportunities/{id}/applications` · GET `/applications/mine` | 8 | diver |
@@ -135,6 +136,11 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   with a description and up to six photos; the answer is stored privately (photos under
   `UPLOADS_DIR/info/`, never publicly served) and appears to reviewers under the report's
   Additional information tab. One request can be open at a time.
+- **Resources.** When the authority approves, its official comment goes only to administrators, as a
+  critical "Assign resources" alert; the project owner is told the project was approved, without the
+  comment. An administrator records the volunteers, divers and equipment the project needs, saves a
+  draft if needed, and finalizes it, which shows it on the project and alerts the owner. Projects show
+  a status bar: Approved, Resources assigned, In progress, Completed.
 - **Reports become projects.** When the authority approves, the report's status becomes `APPROVED`
   and a cleanup project is created automatically, owned by the person who reported the site. The
   owner gets a "Project owner" badge and the project listed on their profile. From then on it is

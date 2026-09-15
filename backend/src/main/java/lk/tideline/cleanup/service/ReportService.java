@@ -82,8 +82,11 @@ public class ReportService {
         Boolean myVote = viewer == null ? null : voteRepository.findByReportAndVoter(report, viewer)
                 .map(VerificationVote::isConfirmed)
                 .orElse(null);
+        // The officer's approval note is for administrators and officers only.
+        boolean reviewer = viewer != null && (viewer.getRole() == Role.ADMIN || viewer.getRole() == Role.AUTHORITY);
+        boolean hideNote = !reviewer && report.getAuthorityDecision() == ReviewDecision.APPROVED;
         return ReportResponse.from(report, thresholdPercent(), minimumConfirmations(), project,
-                infoRequests.latestStatus(report), myVote);
+                infoRequests.latestStatus(report), myVote, hideNote);
     }
 
     @Transactional(readOnly = true)
@@ -425,12 +428,19 @@ public class ReportService {
             case APPROVED -> {
                 report.setStatus(ReportStatus.APPROVED);
                 CleanupProject project = projectService.createFromApprovedReport(report);
+                // The officer's note is guidance for the administrators planning resources, not for the owner.
                 alertService.send(report.getReporter(), AlertType.PROJECT_PLANNED,
                         "Your report is now a project",
-                        officer.getFullName() + " approved " + reference + ", so it is now project "
-                                + project.getReference() + " and you are its project owner. Their note: " + comment,
+                        "The government authority approved " + reference + ". It is now project "
+                                + project.getReference() + " and you are its project owner.",
                         report.getId(), project.getId(), null);
-                adminTitle = "Authority approved " + reference;
+                for (User admin : userRepository.findByRole(Role.ADMIN)) {
+                    alertService.sendCritical(admin, AlertType.RESOURCES_NEEDED,
+                            "Assign resources for " + project.getReference(),
+                            officer.getFullName() + " approved " + reference + ": " + comment,
+                            report.getId(), project.getId());
+                }
+                adminTitle = null;
             }
             case REJECTED -> {
                 report.setStatus(ReportStatus.REJECTED);
@@ -445,8 +455,8 @@ public class ReportService {
             }
         }
 
-        // Module 5 — "notify admin about approval status".
-        for (User admin : userRepository.findByRole(Role.ADMIN)) {
+        // Module 5 — "notify admin about approval status" (approval already sent its own high-priority alert).
+        for (User admin : adminTitle == null ? List.<User>of() : userRepository.findByRole(Role.ADMIN)) {
             alertService.send(admin, AlertType.AUTHORITY_DECISION, adminTitle,
                     officer.getFullName() + ": " + comment, report.getId(), null, null);
         }

@@ -4,6 +4,7 @@ import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.dto.ProjectDtos.ParticipantResponse;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectResponse;
 import lk.tideline.cleanup.dto.ProjectDtos.ProjectUpdateRequest;
+import lk.tideline.cleanup.dto.ProjectDtos.ResourcesRequest;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.CleanupProjectRepository;
 import lk.tideline.cleanup.repository.ProjectParticipantRepository;
@@ -74,11 +75,66 @@ public class ProjectService {
                         .toList()
                 : null;
 
+        boolean official = viewer != null && (viewer.getRole() == Role.ADMIN || viewer.getRole() == Role.AUTHORITY);
         return ProjectResponse.from(project,
                 participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.VOLUNTEER),
                 participantRepository.countByProjectAndParticipantRole(project, ParticipantRole.DIVER),
                 joined,
-                participants);
+                participants,
+                official);
+    }
+
+    /**
+     * An administrator assigns volunteers, divers and equipment, guided by the government officer's
+     * approval note. Saving without {@code publish} keeps a draft; finalizing publishes it on the project.
+     */
+    @Transactional
+    public ProjectResponse updateResources(Long projectId, ResourcesRequest request, User admin) {
+        if (admin.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Only administrators assign project resources.");
+        }
+        CleanupProject project = get(projectId);
+        if (project.getStatus() == ProjectStatus.COMPLETED) {
+            throw new IllegalStateException("This project is already complete.");
+        }
+
+        List<EquipmentItem> equipment = request.equipment() == null ? List.of() : request.equipment().stream()
+                .map(line -> new EquipmentItem(line.name().trim(), line.quantity()))
+                .toList();
+        int volunteers = request.volunteersNeeded() == null ? 0 : request.volunteersNeeded();
+        int divers = request.diversNeeded() == null ? 0 : request.diversNeeded();
+        if (request.publish() && volunteers == 0 && divers == 0 && equipment.isEmpty()) {
+            throw new IllegalArgumentException("Add the volunteers, divers or equipment this project needs before finalizing.");
+        }
+
+        project.setVolunteersNeeded(volunteers);
+        project.setDiversNeeded(divers);
+        project.getEquipment().clear();
+        project.getEquipment().addAll(equipment);
+
+        boolean firstFinalize = request.publish() && project.getResourcesFinalizedAt() == null;
+        if (request.publish()) {
+            project.setResourcesFinalizedAt(Instant.now());
+            project.setResourcesFinalizedBy(admin);
+        }
+        projectRepository.save(project);
+
+        if (firstFinalize) {
+            alertService.send(project.getOwner(), AlertType.RESOURCES_ASSIGNED,
+                    "Resources assigned to " + project.getReference(),
+                    "An administrator set out what " + project.getReference() + " needs: "
+                            + describe(volunteers, divers, equipment.size()) + ".",
+                    null, project.getId(), null);
+        }
+        return toResponse(project, admin);
+    }
+
+    private static String describe(int volunteers, int divers, int equipmentLines) {
+        List<String> parts = new java.util.ArrayList<>();
+        if (volunteers > 0) parts.add(volunteers + (volunteers == 1 ? " volunteer" : " volunteers"));
+        if (divers > 0) parts.add(divers + (divers == 1 ? " diver" : " divers"));
+        if (equipmentLines > 0) parts.add(equipmentLines + (equipmentLines == 1 ? " type of equipment" : " types of equipment"));
+        return String.join(", ", parts);
     }
 
     /**

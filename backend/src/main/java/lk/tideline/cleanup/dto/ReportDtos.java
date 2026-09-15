@@ -74,7 +74,8 @@ public final class ReportDtos {
             Boolean myVote
     ) {
         public static ReportResponse from(PollutionReport report, int thresholdPercent, int minimumConfirmations,
-                                          CleanupProject project, InfoRequestStatus infoRequestStatus, Boolean myVote) {
+                                          CleanupProject project, InfoRequestStatus infoRequestStatus, Boolean myVote,
+                                          boolean hideAuthorityComment) {
             return new ReportResponse(
                     report.getId(),
                     report.getReference(),
@@ -101,7 +102,7 @@ public final class ReportDtos {
                     report.getModerationComment(),
                     report.getAdminReviewedAt(),
                     report.getAuthorityDecision(),
-                    report.getAuthorityComment(),
+                    hideAuthorityComment ? null : report.getAuthorityComment(),
                     UserDtos.UserSummary.from(report.getAuthorityOfficer()),
                     report.getDecidedAt(),
                     project == null ? null : project.getId(),

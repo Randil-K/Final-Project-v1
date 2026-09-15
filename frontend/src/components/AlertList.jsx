@@ -19,6 +19,8 @@ const KIND = {
   COMMENT_REPLY: { icon: 'message-square', color: 'var(--tide-600)' },
   INFO_REQUESTED: { icon: 'triangle-alert', color: 'var(--danger)' },
   INFO_RESPONSE: { icon: 'message-square', color: 'var(--sea-600)' },
+  RESOURCES_NEEDED: { icon: 'triangle-alert', color: 'var(--danger)' },
+  RESOURCES_ASSIGNED: { icon: 'users', color: 'var(--status-verified)' },
 };
 
 /** Shared by the volunteer app and the console; `linkFor` maps an alert to the screen it opens. */
