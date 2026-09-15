@@ -99,6 +99,43 @@ class GovernanceTests {
     }
 
     @Test
+    void governmentOfficersAndAdministratorsWaitForAnExistingAdministrator() {
+        User admin = user(Role.ADMIN);
+        String officerEmail = UUID.randomUUID() + "@test.lk";
+        String adminEmail = UUID.randomUUID() + "@test.lk";
+
+        AuthResponse officer = authService.register(
+                registration(officerEmail, Role.AUTHORITY, "Marine Environment Protection Authority", null), List.of(pdf("staff-id.pdf")));
+        AuthResponse newAdmin = authService.register(
+                registration(adminEmail, Role.ADMIN, "Tideline operations", null), List.of(pdf("appointment.pdf")));
+
+        assertThat(officer.token()).isNull();
+        assertThat(newAdmin.token()).isNull();
+        assertThat(officer.user().accountStatus()).isEqualTo(AccountStatus.PENDING_REVIEW);
+        assertThat(titlesFor(admin)).contains("New government officer to verify", "New administrator to verify");
+        assertThat(userService.verifications(AccountStatus.PENDING_REVIEW))
+                .extracting(account -> account.email())
+                .contains(officerEmail, adminEmail);
+        assertThatThrownBy(() -> authService.login(new LoginRequest(officerEmail, "password123", null)))
+                .isInstanceOf(AccountReviewException.class);
+
+        userService.reviewAccount(officer.user().id(), new AccountReviewRequest(true, null));
+        assertThat(authService.login(new LoginRequest(officerEmail, "password123", null)).user().role()).isEqualTo(Role.AUTHORITY);
+    }
+
+    @Test
+    void officialsMustGiveTheirDepartmentAndProofOfAppointment() {
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.AUTHORITY, "MEPA", null), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("proof of your appointment");
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.ADMIN, null, null), List.of(pdf("id.pdf"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("department");
+    }
+
+    @Test
     void aDiverMustAttachACertificate() {
         assertThatThrownBy(() -> authService.register(
                 registration(UUID.randomUUID() + "@test.lk", Role.DIVER, null, null), List.of()))

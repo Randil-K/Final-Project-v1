@@ -48,8 +48,9 @@ public class AuthService {
     }
 
     /**
-     * Community members can sign in straight away. Volunteer divers (with certificates) and
-     * organisations (with a website) wait for an administrator, so they get no token.
+     * Community members can sign in straight away. Volunteer divers (with certificates), organisations
+     * (with a website), and administrators and government officers (with their department and proof of
+     * appointment) wait for an existing administrator to approve them, so they get no token.
      */
     @Transactional
     public AuthResponse register(RegisterRequest request, List<MultipartFile> certificates) {
@@ -58,17 +59,20 @@ public class AuthService {
         }
 
         Role role = request.role() == null ? Role.CITIZEN : request.role();
-        if (role == Role.ADMIN || role == Role.AUTHORITY) {
-            // Government officers and administrators are provisioned internally, never self-registered.
-            throw new IllegalArgumentException("That role cannot be self-registered. Contact an administrator.");
-        }
+        boolean official = role == Role.ADMIN || role == Role.AUTHORITY;
 
         List<CheckedFile> files = storage.check(certificates);
         if (role == Role.DIVER && files.isEmpty()) {
             throw new IllegalArgumentException("Attach at least one diving certificate so an administrator can verify you.");
         }
-        if (role != Role.DIVER && !files.isEmpty()) {
-            throw new IllegalArgumentException("Only volunteer divers attach certificates.");
+        if (official && files.isEmpty()) {
+            throw new IllegalArgumentException("Attach proof of your appointment, such as a staff ID or appointment letter.");
+        }
+        if (role != Role.DIVER && !official && !files.isEmpty()) {
+            throw new IllegalArgumentException("Only volunteer divers, administrators and government officers attach documents.");
+        }
+        if (official && (request.organizationName() == null || request.organizationName().isBlank())) {
+            throw new IllegalArgumentException("Add the department or agency you work for.");
         }
 
         String website = null;
@@ -90,7 +94,7 @@ public class AuthService {
         user.setLatitude(request.latitude());
         user.setLongitude(request.longitude());
         user.setOrganizationName(request.organizationName());
-        user.setOrganizationType(request.organizationType());
+        user.setOrganizationType(role == Role.ORGANIZATION ? request.organizationType() : null);
         user.setWebsiteUrl(website);
         user.setAccountStatus(role == Role.CITIZEN ? AccountStatus.APPROVED : AccountStatus.PENDING_REVIEW);
 
@@ -139,12 +143,29 @@ public class AuthService {
                 jwtService.expirySeconds(request.remember()), userService.view(user.getId()));
     }
 
-    private void notifyAdministrators(User applicant, int certificateCount) {
-        String title = applicant.getRole() == Role.DIVER ? "New volunteer diver to verify" : "New organisation to verify";
-        String body = applicant.getRole() == Role.DIVER
-                ? applicant.getFullName() + " registered with " + certificateCount
-                        + (certificateCount == 1 ? " certificate." : " certificates.")
-                : applicant.getOrganizationName() + " registered. Check " + applicant.getWebsiteUrl() + " before approving.";
+    private void notifyAdministrators(User applicant, int documentCount) {
+        String documents = documentCount + (documentCount == 1 ? " document." : " documents.");
+        String title;
+        String body;
+        switch (applicant.getRole()) {
+            case DIVER -> {
+                title = "New volunteer diver to verify";
+                body = applicant.getFullName() + " registered with " + documentCount
+                        + (documentCount == 1 ? " certificate." : " certificates.");
+            }
+            case ADMIN -> {
+                title = "New administrator to verify";
+                body = applicant.getFullName() + " (" + applicant.getOrganizationName() + ") asked for administrator access with " + documents;
+            }
+            case AUTHORITY -> {
+                title = "New government officer to verify";
+                body = applicant.getFullName() + " (" + applicant.getOrganizationName() + ") registered as a government officer with " + documents;
+            }
+            default -> {
+                title = "New organisation to verify";
+                body = applicant.getOrganizationName() + " registered. Check " + applicant.getWebsiteUrl() + " before approving.";
+            }
+        }
         for (User admin : userRepository.findByRole(Role.ADMIN)) {
             alertService.send(admin, AlertType.ACCOUNT_REVIEW, title, body, null, null, null);
         }

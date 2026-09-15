@@ -10,7 +10,12 @@ const ROLES = [
   { value: 'CITIZEN', label: 'Community member', icon: 'user' },
   { value: 'DIVER', label: 'Volunteer diver', icon: 'anchor' },
   { value: 'ORGANIZATION', label: 'Organisation', icon: 'building-2' },
+  { value: 'AUTHORITY', label: 'Government officer', icon: 'shield-check' },
+  { value: 'ADMIN', label: 'Administrator', icon: 'settings' },
 ];
+
+const OFFICIAL_ROLES = ['AUTHORITY', 'ADMIN'];
+const NEEDS_DOCUMENTS = ['DIVER', ...OFFICIAL_ROLES];
 
 const ORGANIZATION_TYPES = [
   { value: 'NGO', label: 'NGO' },
@@ -37,6 +42,7 @@ function Shell({ children, width = 460 }) {
 function PendingConfirmation({ account }) {
   const navigate = useNavigate();
   const isDiver = account.role === 'DIVER';
+  const isOfficial = OFFICIAL_ROLES.includes(account.role);
   return (
     <Shell width={440}>
       <Card padding="lg">
@@ -49,7 +55,9 @@ function PendingConfirmation({ account }) {
           <p style={{ font: 'var(--text-body)', color: 'var(--text-body-color)' }}>
             {isDiver
               ? 'An administrator will check your certificates before you can sign in.'
-              : "An administrator will check your organisation's website before you can sign in and post opportunities."}
+              : isOfficial
+                ? 'An existing administrator will confirm your appointment before you can sign in.'
+                : "An administrator will check your organisation's website before you can sign in and post opportunities."}
           </p>
           <p style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>
             Try signing in with {account.email} once you've been verified. If your application isn't approved, you'll see the reason there.
@@ -95,6 +103,14 @@ export default function Register() {
       setError('Attach at least one diving certificate so an administrator can verify you.');
       return;
     }
+    if (OFFICIAL_ROLES.includes(role) && !form.organizationName.trim()) {
+      setError('Add the department or agency you work for.');
+      return;
+    }
+    if (OFFICIAL_ROLES.includes(role) && !certificates.length) {
+      setError('Attach proof of your appointment, such as a staff ID or appointment letter.');
+      return;
+    }
     if (role === 'ORGANIZATION' && !form.websiteUrl.trim()) {
       setError("Add your organisation's website so an administrator can check it.");
       return;
@@ -111,11 +127,11 @@ export default function Register() {
           role,
           province: form.province || null,
           certificationLevel: role === 'DIVER' ? form.certificationLevel || null : null,
-          organizationName: role === 'ORGANIZATION' ? form.organizationName || null : null,
+          organizationName: role === 'ORGANIZATION' || OFFICIAL_ROLES.includes(role) ? form.organizationName.trim() || null : null,
           organizationType: role === 'ORGANIZATION' ? form.organizationType || null : null,
           websiteUrl: role === 'ORGANIZATION' ? withScheme(form.websiteUrl.trim()) : null,
         },
-        role === 'DIVER' ? certificates : [],
+        NEEDS_DOCUMENTS.includes(role) ? certificates : [],
       );
       if (result.token) {
         navigate('/app', { replace: true });
@@ -156,7 +172,9 @@ export default function Register() {
             <Alert tone="info" title="Accounts are verified by an administrator">
               {role === 'DIVER'
                 ? 'Attach your diving certificates. You can sign in once an administrator has checked them.'
-                : "Add your organisation's website. You can sign in once an administrator has checked it."}
+                : OFFICIAL_ROLES.includes(role)
+                  ? 'Attach proof of your appointment. You can sign in once an existing administrator has approved you.'
+                  : "Add your organisation's website. You can sign in once an administrator has checked it."}
             </Alert>
           ) : null}
 
@@ -178,6 +196,26 @@ export default function Register() {
                 label="Certificates"
                 required
                 hint="Your diving certification card or logbook page."
+                files={certificates}
+                onChange={setCertificates}
+              />
+            </>
+          ) : null}
+
+          {OFFICIAL_ROLES.includes(role) ? (
+            <>
+              <Input
+                label="Department or agency"
+                required
+                placeholder={role === 'AUTHORITY' ? 'e.g. Marine Environment Protection Authority' : 'e.g. Tideline operations team'}
+                value={form.organizationName}
+                onChange={set('organizationName')}
+              />
+              <DocumentPicker
+                label="Proof of appointment"
+                actionLabel="Add proof of appointment"
+                required
+                hint="Staff ID card or appointment letter."
                 files={certificates}
                 onChange={setCertificates}
               />

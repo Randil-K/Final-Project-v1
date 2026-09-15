@@ -31,7 +31,8 @@ import java.util.List;
 @Service
 public class UserService {
 
-    private static final List<Role> VERIFIED_ROLES = List.of(Role.DIVER, Role.ORGANIZATION);
+    /** Roles an existing administrator must approve before the account can sign in. */
+    private static final List<Role> VERIFIED_ROLES = List.of(Role.DIVER, Role.ORGANIZATION, Role.AUTHORITY, Role.ADMIN);
 
     private final UserRepository userRepository;
     private final ProjectParticipantRepository participantRepository;
@@ -233,7 +234,7 @@ public class UserService {
         User user = get(userId);
 
         if (!VERIFIED_ROLES.contains(user.getRole())) {
-            throw new IllegalStateException("Only volunteer divers and organisations need verification.");
+            throw new IllegalStateException("Community members don't need verification.");
         }
         if (user.getAccountStatus() == AccountStatus.APPROVED) {
             throw new IllegalStateException("This account is already verified.");
@@ -244,9 +245,12 @@ public class UserService {
             user.setAccountReviewNote(null);
             alertService.send(user, AlertType.ACCOUNT_REVIEW,
                     "Your account has been verified",
-                    user.getRole() == Role.DIVER
-                            ? "An administrator checked your certificates. You can now join cleanups and apply for diving work."
-                            : "An administrator checked your organisation. You can now post opportunities for divers.",
+                    switch (user.getRole()) {
+                        case DIVER -> "An administrator checked your certificates. You can now join cleanups and apply for diving work.";
+                        case ADMIN -> "An administrator confirmed your appointment. You now have access to the administration console.";
+                        case AUTHORITY -> "An administrator confirmed your appointment. You can now review reports in the authority console.";
+                        default -> "An administrator checked your organisation. You can now post opportunities for divers.";
+                    },
                     null, null, null);
         } else {
             if (request.reason() == null || request.reason().isBlank()) {
@@ -257,7 +261,11 @@ public class UserService {
             // Kept in their alerts too, so the decision is still on record if they are approved later.
             alertService.send(user, AlertType.ACCOUNT_REVIEW,
                     "Your registration wasn't approved",
-                    "An administrator reviewed your " + (user.getRole() == Role.DIVER ? "certificates" : "organisation")
+                    "An administrator reviewed your " + (switch (user.getRole()) {
+                        case DIVER -> "certificates";
+                        case ADMIN, AUTHORITY -> "appointment";
+                        default -> "organisation";
+                    })
                             + " and couldn't approve it: " + request.reason().trim(),
                     null, null, null);
         }

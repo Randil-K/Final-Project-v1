@@ -15,7 +15,7 @@ export default function AccountReviewPopup() {
   const { user } = useAuth();
   const [alert, setAlert] = React.useState(null);
   const userId = user?.id;
-  const needsReview = ['DIVER', 'ORGANIZATION'].includes(user?.role);
+  const needsReview = ['DIVER', 'ORGANIZATION', 'ADMIN', 'AUTHORITY'].includes(user?.role);
 
   React.useEffect(() => {
     if (!userId || !needsReview) return undefined;
@@ -56,7 +56,11 @@ export default function AccountReviewPopup() {
       footer={
         <>
           <Button variant="secondary" onClick={() => close('/app/alerts')}>View alerts</Button>
-          <Button onClick={() => close(verified && user?.role === 'ORGANIZATION' ? '/app/opportunities' : null)}>
+          <Button
+            onClick={() => close(!verified ? null
+              : user?.role === 'ORGANIZATION' ? '/app/opportunities'
+                : user?.role === 'ADMIN' || user?.role === 'AUTHORITY' ? '/console' : null)}
+          >
             {verified ? 'Get started' : 'Got it'}
           </Button>
         </>

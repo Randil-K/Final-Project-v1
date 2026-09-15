@@ -106,6 +106,8 @@ export default function Verifications() {
             {accounts.map((account) => {
               const status = ACCOUNT_STATUS[account.accountStatus];
               const isDiver = account.role === 'DIVER';
+              const isOfficial = account.role === 'ADMIN' || account.role === 'AUTHORITY';
+              const hasDocuments = isDiver || isOfficial;
               return (
                 <Card key={account.id} padding="lg">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -114,10 +116,10 @@ export default function Verifications() {
                         <Avatar name={account.organizationName || account.fullName} size="md" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                           <span style={{ font: 'var(--text-h4)', color: 'var(--text-strong)' }}>
-                            {isDiver ? account.fullName : account.organizationName || account.fullName}
+                            {isDiver || isOfficial ? account.fullName : account.organizationName || account.fullName}
                           </span>
                           <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
-                            {isDiver ? account.email : `${account.fullName} · ${account.email}`}
+                            {isDiver || isOfficial ? account.email : `${account.fullName} · ${account.email}`}
                             {` · applied ${formatDate(account.createdAt, false)}`}
                           </span>
                         </div>
@@ -129,7 +131,9 @@ export default function Verifications() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 'var(--space-3)' }}>
-                      {isDiver ? (
+                      {isOfficial ? (
+                        <Detail label="Department or agency">{account.organizationName || 'Not given'}</Detail>
+                      ) : isDiver ? (
                         <>
                           <Detail label="Certification">{CERTIFICATION_LABEL[account.certificationLevel] || 'Not given'}</Detail>
                           <Detail label="Experience">{account.experienceYears != null ? plural(account.experienceYears, 'year') : 'Not given'}</Detail>
@@ -158,9 +162,9 @@ export default function Verifications() {
                       <Detail label="Location">{[account.city, account.province].filter(Boolean).join(', ') || 'Not given'}</Detail>
                     </div>
 
-                    {isDiver ? (
+                    {hasDocuments ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Certificates and files</span>
+                        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{isOfficial ? 'Proof of appointment' : 'Certificates and files'}</span>
                         {account.documents?.length ? (
                           account.documents.map((doc) => (
                             <div

@@ -9,7 +9,7 @@ const MAX_FILES = 5;
 
 // The design system's FileDrop is worded for photo evidence and has no working file input,
 // so certificate uploads use this picker with the same visual treatment.
-export default function DocumentPicker({ label, hint, required, files, onChange }) {
+export default function DocumentPicker({ label, hint, required, files, onChange, actionLabel = 'Add certificate files' }) {
   const inputRef = React.useRef(null);
   const [over, setOver] = React.useState(false);
   const [problem, setProblem] = React.useState(null);
@@ -69,7 +69,7 @@ export default function DocumentPicker({ label, hint, required, files, onChange 
         }}
       >
         <Icon name="upload" size="lg" color="var(--sea-600)" />
-        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Add certificate files</span>
+        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{actionLabel}</span>
         <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
           PDF, JPG or PNG · up to 5 MB each · drag them here or choose files
         </span>
