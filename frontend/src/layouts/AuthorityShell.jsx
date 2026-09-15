@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Badge } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
@@ -19,7 +19,6 @@ export default function AuthorityShell() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const unread = useUnreadAlerts();
-  const { pathname } = useLocation();
 
   function signOut() {
     // Leave the protected page before clearing the session.
@@ -33,14 +32,10 @@ export default function AuthorityShell() {
         style={{
           width: 'var(--sidebar-width)',
           flex: '0 0 auto',
-          background: 'linear-gradient(180deg, #06202b 0%, #03121a 100%)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'var(--surface-brand)',
           color: 'var(--text-inverse)',
           display: 'flex',
           flexDirection: 'column',
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
           padding: 'var(--space-5) var(--space-4)',
           gap: 'var(--space-8)',
         }}
@@ -63,8 +58,7 @@ export default function AuthorityShell() {
                 height: 40,
                 padding: '0 var(--space-3)',
                 borderRadius: 'var(--radius-md)',
-                background: isActive ? 'rgba(53, 194, 183, 0.16)' : 'transparent',
-                boxShadow: isActive ? 'inset 3px 0 0 var(--tide-400)' : 'none',
+                background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
                 color: isActive ? 'var(--white)' : 'var(--text-inverse-muted)',
                 font: 'var(--text-label)',
               })}
@@ -100,24 +94,21 @@ export default function AuthorityShell() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <header
-          className="tl-glass"
           style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
             height: 'var(--appbar-height)',
             flex: '0 0 auto',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 var(--space-6)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--surface-card)',
+            borderBottom: '1px solid var(--border-subtle)',
           }}
         >
           <span style={{ font: 'var(--text-h3)', color: 'var(--text-strong)' }}>Authority console</span>
           <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>Marine Environment Protection Authority</span>
         </header>
-        <main key={pathname} className="tl-page-enter" style={{ flex: 1, padding: 'var(--space-6)', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
+        <main style={{ flex: 1, padding: 'var(--space-6)', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
           <Outlet />
         </main>
       </div>

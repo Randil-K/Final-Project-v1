@@ -97,6 +97,30 @@
   to { transform: scaleX(1); }
 }
 
+/* Layered waves drift at different speeds for depth. */
+.tl-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 180px;
+  z-index: 1;
+  pointer-events: none;
+}
+.tl-waves svg {
+  position: absolute;
+  bottom: 0;
+  width: 200%;
+  height: 100%;
+}
+.tl-wave-1 { animation: tl-drift 22s linear infinite; opacity: 0.35; }
+.tl-wave-2 { animation: tl-drift 15s linear infinite reverse; opacity: 0.55; }
+.tl-wave-3 { animation: tl-drift 30s linear infinite; }
+@keyframes tl-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 /* Phone mock floats gently. */
 .tl-phone {
   animation: tl-float 7s var(--ease-standard) infinite;
@@ -326,7 +350,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tl-slide, .tl-phone { animation: none; }
+  .tl-slide, .tl-wave-1, .tl-wave-2, .tl-wave-3, .tl-phone { animation: none; }
   .tl-dots button[aria-current="true"]::after { animation: none; transform: scaleX(1); }
   .tl-reveal { opacity: 1; transform: none; transition: none; }
   .tl-tile, .tl-news-card, .tl-news-card .tl-news-media, .tl-step { transition: none; }

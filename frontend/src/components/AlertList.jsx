@@ -8,15 +8,15 @@ import { Async } from './AsyncState.jsx';
 import { plural, timeAgo } from '../lib/format.js';
 
 const KIND = {
-  NEW_REPORT_NEARBY: { icon: 'map-pin', color: 'var(--tide-400)' },
+  NEW_REPORT_NEARBY: { icon: 'map-pin', color: 'var(--tide-600)' },
   REPORT_VERIFIED: { icon: 'badge-check', color: 'var(--status-verified)' },
   ALERT_ESCALATED: { icon: 'flag', color: 'var(--status-escalated)' },
-  PROJECT_PLANNED: { icon: 'hand-heart', color: 'var(--tide-400)' },
+  PROJECT_PLANNED: { icon: 'hand-heart', color: 'var(--tide-600)' },
   PROJECT_UPDATE: { icon: 'check-check', color: 'var(--status-verified)' },
   AUTHORITY_DECISION: { icon: 'shield-check', color: 'var(--sea-600)' },
   OPPORTUNITY: { icon: 'anchor', color: 'var(--buoy-600)' },
   ACCOUNT_REVIEW: { icon: 'user', color: 'var(--buoy-600)' },
-  COMMENT_REPLY: { icon: 'message-square', color: 'var(--tide-400)' },
+  COMMENT_REPLY: { icon: 'message-square', color: 'var(--tide-600)' },
   INFO_REQUESTED: { icon: 'triangle-alert', color: 'var(--danger)' },
   INFO_RESPONSE: { icon: 'message-square', color: 'var(--sea-600)' },
   RESOURCES_NEEDED: { icon: 'triangle-alert', color: 'var(--danger)' },

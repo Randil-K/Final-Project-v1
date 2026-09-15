@@ -8,7 +8,7 @@ export default function PhotoPlaceholder({ ratio = '16/9', count, style }) {
         position: 'relative',
         width: '100%',
         aspectRatio: ratio,
-        background: 'linear-gradient(135deg, var(--sea-800), var(--sea-700))',
+        background: 'linear-gradient(135deg, var(--sea-100), var(--sea-200))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -17,8 +17,8 @@ export default function PhotoPlaceholder({ ratio = '16/9', count, style }) {
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <Icon name="image" size="lg" color="var(--sea-300)" />
-        <span style={{ font: 'var(--text-caption)', color: 'var(--sea-300)' }}>photo placeholder</span>
+        <Icon name="image" size="lg" color="var(--sea-500)" />
+        <span style={{ font: 'var(--text-caption)', color: 'var(--sea-700)' }}>photo placeholder</span>
       </div>
       {count ? (
         <span

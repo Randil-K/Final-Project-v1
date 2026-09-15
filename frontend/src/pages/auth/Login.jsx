@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Checkbox, Input, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import Waves from '../../components/Waves.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,11 +35,10 @@ export default function Login() {
   const rejected = reviewError?.code === 'ACCOUNT_REJECTED';
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-6) var(--space-6) 160px' }}>
-      <Waves />
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 400 }}>
+    <div style={{ minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-page-warm)', padding: 'var(--space-6)' }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-          <Icon name="waves-horizontal" size="lg" color="var(--tide-400)" />
+          <Icon name="waves-horizontal" size="lg" color="var(--tide-600)" />
           <span style={{ font: '700 20px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--text-strong)' }}>Tideline</span>
         </div>
 

@@ -1,5 +1,4 @@
 @import './design-system/styles.css';
-@import './theme-ocean.css';
 
 * {
   box-sizing: border-box;
@@ -43,4 +42,6 @@ select {
   font-family: inherit;
 }
 
-
+::selection {
+  background: var(--tide-200);
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
@@ -18,12 +18,10 @@ export default function VolunteerShell() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const unread = useUnreadAlerts();
-  const { pathname } = useLocation();
 
   return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface-page)' }}>
       <header
-        className="tl-glass"
         style={{
           position: 'sticky',
           top: 0,
@@ -34,7 +32,7 @@ export default function VolunteerShell() {
           justifyContent: 'space-between',
           gap: 12,
           padding: '0 var(--space-5)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'var(--surface-brand)',
           color: 'var(--text-inverse)',
         }}
       >
@@ -72,20 +70,20 @@ export default function VolunteerShell() {
         )}
       </header>
 
-      <main key={pathname} className="tl-page-enter" style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
+      <main style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
         <Outlet />
       </main>
       <AccountReviewPopup />
 
       <nav
-        className="tl-glass"
         style={{
           position: 'sticky',
           bottom: 0,
           zIndex: 20,
           height: 'var(--tabbar-height)',
           display: 'flex',
-          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'var(--surface-card)',
+          borderTop: '1px solid var(--border-subtle)',
         }}
       >
         {TABS.map((t) => (
