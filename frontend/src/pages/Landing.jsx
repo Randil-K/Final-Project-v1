@@ -643,7 +643,7 @@ export default function Landing() {
             </div>
           </div>
           <div style={{ marginTop: 'var(--space-10, 40px)', paddingTop: 'var(--space-5)', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', font: 'var(--text-caption)', color: 'rgba(255,255,255,0.45)' }}>
-            <span>© {new Date().getFullYear()} Tideline · Group 8, Institute of Technology, University of Moratuwa</span>
+            <span>© {new Date().getFullYear()} Tideline</span>
             <span>Marine Environment Protection Authority partners</span>
           </div>
         </div>
