@@ -5,131 +5,113 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import AccountReviewPopup from '../components/AccountReviewPopup.jsx';
 import { mediaUrl } from '../api/client.js';
+import { ROLE_LABEL } from '../lib/format.js';
+import './volunteer-shell.css';
 
 const TABS = [
-  { to: '/app', label: 'Feed', icon: 'waves-horizontal', end: true },
-  { to: '/app/cleanups', label: 'Cleanups', icon: 'users' },
+  { to: '/app', label: 'Feed', icon: 'map', end: true },
+  { to: '/app/cleanups', label: 'Cleanups', icon: 'hand-heart' },
   { to: '/app/alerts', label: 'Alerts', icon: 'bell', showUnread: true },
-  { to: '/app/opportunities', label: 'Opportunities', icon: 'hand-heart' },
+  { to: '/app/opportunities', label: 'Opportunities', icon: 'anchor' },
   { to: '/app/profile', label: 'Profile', icon: 'user' },
 ];
+
+function TabIcon({ tab, unread }) {
+  return (
+    <span className="vs-icon">
+      <Icon name={tab.icon} size="md" />
+      {tab.showUnread && unread ? <span className="vs-badge">{unread > 9 ? '9+' : unread}</span> : null}
+    </span>
+  );
+}
 
 export default function VolunteerShell() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const unread = useUnreadAlerts();
+  const isOfficial = user?.role === 'ADMIN' || user?.role === 'AUTHORITY';
+  const label = (tab) => (tab.showUnread && unread ? `${tab.label}, ${unread} unread` : undefined);
+
+  const logo = (
+    <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '0 var(--space-2)' }}>
+      <Icon name="waves-horizontal" size="md" color="var(--tide-300)" />
+      <span style={{ font: '700 18px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--white)' }}>Tideline</span>
+    </button>
+  );
 
   return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface-page)' }}>
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 20,
-          height: 'var(--appbar-height)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '0 var(--space-5)',
-          background: 'var(--surface-brand)',
-          color: 'var(--text-inverse)',
-        }}
-      >
-        <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-          <Icon name="waves-horizontal" size="md" color="var(--tide-300)" />
-          <span style={{ font: '700 18px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--white)' }}>Tideline</span>
-        </button>
+    <div className="vs-root">
+      <aside className="vs-sidebar">
+        {logo}
 
-        {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          {user.role === 'ADMIN' || user.role === 'AUTHORITY' ? (
-            <Button variant="inverse" size="sm" iconLeft="shield-check" onClick={() => navigate('/console')}>
+        <nav aria-label="Main" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {TABS.map((tab) => (
+            <NavLink key={tab.to} to={tab.to} end={tab.end} className="vs-side-link" aria-label={label(tab)}>
+              <TabIcon tab={tab} unread={unread} />
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {isOfficial ? (
+            <Button variant="inverse" size="sm" iconLeft="shield-check" fullWidth onClick={() => navigate('/console')}>
               Console
             </Button>
           ) : null}
-          <button onClick={() => navigate('/app/profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', minWidth: 0 }}>
-            <span
-              style={{
-                font: 'var(--text-body-sm)',
-                color: 'var(--text-inverse-muted)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {[user.city, user.province].filter(Boolean).join(' · ')}
-            </span>
-            <Avatar name={user.fullName} src={mediaUrl(user.avatarUrl)} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
-          </button>
-          </div>
-        ) : (
-          <Button variant="inverse" size="sm" onClick={() => navigate('/login')}>
-            Sign in
-          </Button>
-        )}
-      </header>
-
-      <main style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
-        <Outlet />
-      </main>
-      <AccountReviewPopup />
-
-      <nav
-        style={{
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 20,
-          height: 'var(--tabbar-height)',
-          display: 'flex',
-          background: 'var(--surface-card)',
-          borderTop: '1px solid var(--border-subtle)',
-        }}
-      >
-        {TABS.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            end={t.end}
-            aria-label={t.showUnread && unread ? `${t.label}, ${unread} unread` : undefined}
-            style={({ isActive }) => ({
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 3,
-              color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-            })}
-          >
-            <span style={{ position: 'relative', display: 'inline-flex' }}>
-              <Icon name={t.icon} size="md" />
-              {t.showUnread && unread ? (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: -6,
-                    right: -10,
-                    minWidth: 17,
-                    height: 17,
-                    padding: '0 4px',
-                    boxSizing: 'border-box',
-                    borderRadius: 'var(--radius-pill)',
-                    background: 'var(--accent)',
-                    color: 'var(--white)',
-                    font: '700 10px/17px var(--font-body)',
-                    textAlign: 'center',
-                    boxShadow: '0 0 0 2px var(--surface-card)',
-                  }}
-                >
-                  {unread > 9 ? '9+' : unread}
+          {user ? (
+            <button type="button" className="vs-user" onClick={() => navigate('/app/profile')}>
+              <Avatar name={user.fullName} src={mediaUrl(user.avatarUrl)} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                <span style={{ font: 'var(--text-label)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.fullName}</span>
+                <span style={{ font: 'var(--text-caption)', color: 'var(--text-inverse-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {[user.city, user.province].filter(Boolean).join(' · ') || ROLE_LABEL[user.role]}
                 </span>
+              </span>
+            </button>
+          ) : (
+            <Button variant="inverse" fullWidth onClick={() => navigate('/login')}>
+              Sign in
+            </Button>
+          )}
+        </div>
+      </aside>
+
+      <div className="vs-body">
+        <header className="vs-topbar">
+          {logo}
+          {user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              {isOfficial ? (
+                <Button variant="inverse" size="sm" iconLeft="shield-check" onClick={() => navigate('/console')}>
+                  Console
+                </Button>
               ) : null}
-            </span>
-            <span style={{ font: '600 11px/1 var(--font-body)', letterSpacing: 'var(--tracking-micro)' }}>{t.label}</span>
-          </NavLink>
-        ))}
-      </nav>
+              <button type="button" onClick={() => navigate('/app/profile')} style={{ display: 'flex', cursor: 'pointer' }} aria-label="Your profile">
+                <Avatar name={user.fullName} src={mediaUrl(user.avatarUrl)} role={user.role === 'DIVER' ? 'diver' : undefined} size="sm" />
+              </button>
+            </div>
+          ) : (
+            <Button variant="inverse" size="sm" onClick={() => navigate('/login')}>
+              Sign in
+            </Button>
+          )}
+        </header>
+
+        <main className="vs-main">
+          <Outlet />
+        </main>
+        <AccountReviewPopup />
+
+        <nav className="vs-tabbar" aria-label="Main">
+          {TABS.map((tab) => (
+            <NavLink key={tab.to} to={tab.to} end={tab.end} className="vs-tab" aria-label={label(tab)}>
+              <TabIcon tab={tab} unread={unread} />
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 }
