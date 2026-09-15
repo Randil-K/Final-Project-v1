@@ -6,6 +6,7 @@ import { mediaUrl } from '../api/client.js';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { SEVERITY_LABEL, formatDate, locationLine } from '../lib/format.js';
+import Waves from '../components/Waves.jsx';
 import './landing.css';
 
 const SLIDE_MS = 6000;
@@ -121,24 +122,6 @@ function CountUp({ value }) {
   }, [value]);
 
   return <span ref={ref}>{value == null ? '—' : shown}</span>;
-}
-
-function Waves() {
-  const wave = (fill, d) => (
-    <svg viewBox="0 0 2880 180" preserveAspectRatio="none" aria-hidden>
-      <path fill={fill} d={d} />
-    </svg>
-  );
-  const path = 'M0 90 C 240 30 480 150 720 90 C 960 30 1200 150 1440 90 C 1680 30 1920 150 2160 90 C 2400 30 2640 150 2880 90 L2880 180 L0 180 Z';
-  const path2 = 'M0 110 C 300 60 420 160 720 110 C 1020 60 1140 160 1440 110 C 1740 60 1860 160 2160 110 C 2460 60 2580 160 2880 110 L2880 180 L0 180 Z';
-  const path3 = 'M0 130 C 360 100 360 170 720 130 C 1080 100 1080 170 1440 130 C 1800 100 1800 170 2160 130 C 2520 100 2520 170 2880 130 L2880 180 L0 180 Z';
-  return (
-    <div className="tl-waves">
-      <div className="tl-wave-1" style={{ position: 'absolute', inset: 0 }}>{wave('#2483a8', path)}</div>
-      <div className="tl-wave-2" style={{ position: 'absolute', inset: 0 }}>{wave('#068b85', path2)}</div>
-      <div className="tl-wave-3" style={{ position: 'absolute', inset: 0 }}>{wave('#05171f', path3)}</div>
-    </div>
-  );
 }
 
 /** A small phone showing the latest real report, like the app itself. */

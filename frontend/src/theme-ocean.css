@@ -1,0 +1,144 @@
+/*
+ * Tideline "deep sea" theme — the landing page's look applied across the whole app.
+ * It redefines the design system's semantic tokens (and the few grey primitives some
+ * components use directly), so every component follows without being edited.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Text */
+  --text-strong: #ffffff;
+  --text-heading: #e7f3f6;
+  --text-body-color: #c3d4da;
+  --text-muted: #8aa3ad;
+  --text-link: var(--tide-300);
+  --text-link-hover: #a9ebe4;
+
+  /* Surfaces */
+  --surface-page: var(--sea-950);
+  --surface-page-warm: var(--sea-950);
+  --surface-card: #0b2431;
+  --surface-sunken: #0f2e3d;
+  --surface-brand: #041219;
+  --surface-accent-soft: rgba(53, 194, 183, 0.14);
+  --surface-overlay: rgba(2, 10, 14, 0.72);
+  --surface-glass: rgba(8, 30, 41, 0.72);
+
+  /* Borders */
+  --border-subtle: #16394a;
+  --border-default: #214b5d;
+  --border-strong: #3d6d80;
+  --border-inverse: rgba(255, 255, 255, 0.12);
+
+  /* Accent */
+  --accent: var(--tide-500);
+  --accent-hover: var(--tide-400);
+  --accent-press: var(--tide-600);
+  --accent-soft: rgba(53, 194, 183, 0.14);
+  --accent-on-soft: var(--tide-300);
+
+  /* Report lifecycle */
+  --status-pending: var(--buoy-400);
+  --status-pending-bg: rgba(245, 196, 91, 0.14);
+  --status-verifying: var(--sea-300);
+  --status-verifying-bg: rgba(71, 166, 199, 0.16);
+  --status-verified: #7cc96a;
+  --status-verified-bg: rgba(82, 160, 61, 0.18);
+  --status-escalated: var(--coral-400);
+  --status-escalated-bg: rgba(226, 78, 50, 0.18);
+  --status-rejected: #a7b5bc;
+  --status-rejected-bg: rgba(255, 255, 255, 0.08);
+
+  /* Feedback */
+  --success: #6fbf5c;
+  --success-bg: rgba(82, 160, 61, 0.16);
+  --warning: var(--buoy-400);
+  --warning-bg: rgba(245, 196, 91, 0.13);
+  --danger: var(--coral-500);
+  --danger-bg: rgba(226, 78, 50, 0.16);
+  --info: var(--sea-300);
+  --info-bg: rgba(71, 166, 199, 0.14);
+
+  /* Grey primitives used directly by a few design-system components (hover fills, tracks, neutral badges) */
+  --gray-50: #102f3e;
+  --gray-100: #133646;
+  --gray-200: #1b4253;
+  --gray-300: #2a5566;
+  --gray-700: #c3d4da;
+  --sand-200: #16394a;
+
+  /* Shadows need to be darker to read on a dark page */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 28px 64px rgba(0, 0, 0, 0.55);
+}
+
+/* The same soft light as the landing hero, fixed behind every page. */
+body {
+  background:
+    radial-gradient(1000px 520px at 85% -10%, rgba(15, 168, 159, 0.16), transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, rgba(36, 131, 168, 0.18), transparent 60%),
+    var(--sea-950);
+  background-attachment: fixed;
+}
+
+::placeholder {
+  color: #6f8b96;
+  opacity: 1;
+}
+
+::selection {
+  background: rgba(53, 194, 183, 0.35);
+  color: #ffffff;
+}
+
+* {
+  scrollbar-color: #214b5d transparent;
+}
+
+/* Glass surfaces shared by the app shells. */
+.tl-glass {
+  background: rgba(5, 23, 31, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Drifting waves, used on the landing hero and the sign-in pages. */
+.tl-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 180px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.tl-waves svg {
+  position: absolute;
+  bottom: 0;
+  width: 200%;
+  height: 100%;
+}
+.tl-wave-1 { animation: tl-drift 22s linear infinite; opacity: 0.35; }
+.tl-wave-2 { animation: tl-drift 15s linear infinite reverse; opacity: 0.55; }
+.tl-wave-3 { animation: tl-drift 30s linear infinite; }
+@keyframes tl-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Pages ease in, like the landing sections. */
+.tl-page-enter {
+  animation: tl-page-in 420ms var(--ease-out) both;
+}
+@keyframes tl-page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-wave-1, .tl-wave-2, .tl-wave-3, .tl-page-enter { animation: none; }
+}

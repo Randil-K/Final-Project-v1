@@ -9,7 +9,7 @@ import UserLink from './UserLink.jsx';
 import { mediaUrl } from '../api/client.js';
 
 const REACTIONS = [
-  { type: 'LIKE', label: 'Like', icon: 'thumbs-up', color: 'var(--tide-600)', countKey: 'likeCount' },
+  { type: 'LIKE', label: 'Like', icon: 'thumbs-up', color: 'var(--tide-400)', countKey: 'likeCount' },
   { type: 'HEART', label: 'Love', icon: 'heart', color: 'var(--danger)', countKey: 'heartCount' },
 ];
 

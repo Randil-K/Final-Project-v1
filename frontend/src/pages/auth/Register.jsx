@@ -5,6 +5,7 @@ import ChipButton from '../../components/ChipButton.jsx';
 import DocumentPicker from '../../components/DocumentPicker.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { CERTIFICATION_OPTIONS, PROVINCES } from '../../lib/format.js';
+import Waves from '../../components/Waves.jsx';
 
 const ROLES = [
   { value: 'CITIZEN', label: 'Community member', icon: 'user' },
@@ -22,10 +23,11 @@ const withScheme = (value) => (/^https?:\/\//i.test(value) ? value : `https://${
 
 function Shell({ children, width = 460 }) {
   return (
-    <div style={{ minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-page-warm)', padding: 'var(--space-6)' }}>
-      <div style={{ width: '100%', maxWidth: width }}>
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-6) var(--space-6) 160px' }}>
+      <Waves />
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: width }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', marginBottom: 'var(--space-8)' }}>
-          <Icon name="waves-horizontal" size="lg" color="var(--tide-600)" />
+          <Icon name="waves-horizontal" size="lg" color="var(--tide-400)" />
           <span style={{ font: '700 20px/1 var(--font-display)', letterSpacing: '-0.03em', color: 'var(--text-strong)' }}>Tideline</span>
         </div>
         {children}

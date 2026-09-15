@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon, Avatar, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
@@ -18,10 +18,12 @@ export default function VolunteerShell() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const unread = useUnreadAlerts();
+  const { pathname } = useLocation();
 
   return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', background: 'var(--surface-page)' }}>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <header
+        className="tl-glass"
         style={{
           position: 'sticky',
           top: 0,
@@ -32,7 +34,7 @@ export default function VolunteerShell() {
           justifyContent: 'space-between',
           gap: 12,
           padding: '0 var(--space-5)',
-          background: 'var(--surface-brand)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
           color: 'var(--text-inverse)',
         }}
       >
@@ -70,20 +72,20 @@ export default function VolunteerShell() {
         )}
       </header>
 
-      <main style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
+      <main key={pathname} className="tl-page-enter" style={{ flex: 1, maxWidth: 640, width: '100%', margin: '0 auto', padding: 'var(--space-5) var(--space-4) var(--space-16)' }}>
         <Outlet />
       </main>
       <AccountReviewPopup />
 
       <nav
+        className="tl-glass"
         style={{
           position: 'sticky',
           bottom: 0,
           zIndex: 20,
           height: 'var(--tabbar-height)',
           display: 'flex',
-          background: 'var(--surface-card)',
-          borderTop: '1px solid var(--border-subtle)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
         }}
       >
         {TABS.map((t) => (

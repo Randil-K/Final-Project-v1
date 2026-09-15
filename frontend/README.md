@@ -77,6 +77,11 @@ upstream.
 `public/assets/icons/heart.svg` is added for comment reactions — the vendored icon set has no
 plain heart. It uses the same 24px stroke format as the other icons.
 
+`src/theme-ocean.css` switches the whole app to the dark "deep sea" look of the landing page by
+redefining the design system's semantic tokens (plus the few grey primitives some components use
+directly), so the vendored components are unchanged. Remove its import from `src/index.css` to get
+the original light theme back.
+
 ## Not built yet
 
 - An embedded map. Reports and cleanups link out to OpenStreetMap instead.
