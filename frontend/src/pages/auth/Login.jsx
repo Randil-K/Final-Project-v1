@@ -80,7 +80,10 @@ export default function Login() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
             {[
-              ['sanduni@example.lk', 'volunteer diver'],
+              ['hiruna@example.lk', 'volunteer diver'],
+              ['kavindu@example.lk', 'volunteer diver'],
+              ['tharushi@example.lk', 'volunteer diver'],
+              ['dinuka@example.lk', 'volunteer diver'],
               ['admin@tideline.lk', 'administrator'],
               ['officer@mepa.gov.lk', 'authority officer'],
             ].map(([demoEmail, role]) => (

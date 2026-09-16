@@ -178,7 +178,7 @@ export default function Register() {
         </Field>
 
         <div className="tl-auth-row">
-          <Input label="First name" placeholder="e.g. Sanduni" required value={form.firstName} onChange={set('firstName')} />
+          <Input label="First name" placeholder="e.g. Hiruna" required value={form.firstName} onChange={set('firstName')} />
           <Input label="Last name" placeholder="e.g. Perera" required value={form.lastName} onChange={set('lastName')} />
         </div>
 
