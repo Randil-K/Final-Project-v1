@@ -1,0 +1,189 @@
+/* Sign-in and registration frame: form on one side, coastal scene on the other, both inside one
+   bordered panel that is centred with breathing room left around it. Colours come from the same
+   tokens the landing page uses. */
+
+.tl-auth-page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-page-warm);
+  /* The blank space around the panel — generous on a large screen, tight on a phone. */
+  padding: clamp(var(--space-5), 5vh, var(--space-10)) var(--space-5);
+}
+
+.tl-auth-frame {
+  width: 100%;
+  max-width: 1060px;
+  /* Flex and grid children default to min-width: auto, which stops them shrinking below their
+     content. Clearing it keeps the panel inside the viewport on very narrow screens. */
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  background: var(--surface-card);
+  border: 1px solid var(--sand-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+/* Sign-in has far fewer fields, so its panel is narrower and the proportions stay comfortable. */
+.tl-auth-frame.is-narrow {
+  max-width: 940px;
+}
+
+/* ---------------------------------------------------------------- form side */
+.tl-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: clamp(var(--space-6), 3.4vw, var(--space-8));
+  min-width: 0;
+}
+
+.tl-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tl-auth-brand span {
+  font: 700 20px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--text-strong);
+}
+
+.tl-auth-heading h1 {
+  font: var(--text-h2);
+  color: var(--text-strong);
+}
+.tl-auth-heading p {
+  font: var(--text-body-sm);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.tl-auth-footer {
+  font: var(--text-caption);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Two fields sharing a row, e.g. first and last name. Stacks on a narrow screen. */
+.tl-auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+/* ---------------------------------------------------------------- picture side */
+.tl-auth-aside {
+  position: relative;
+  min-width: 0;
+  background: var(--sea-900);
+  border-left: 1px solid var(--sand-200);
+}
+
+/* Sticky so a long registration form scrolls past artwork that keeps its proportions —
+   without this the panel stretches to the form's height and the scene zooms in badly. */
+.tl-auth-aside-sticky {
+  position: sticky;
+  top: 0;
+  height: min(100vh, 780px);
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.tl-auth-aside-body {
+  position: relative;
+  z-index: 1;
+  padding: clamp(var(--space-5), 3vw, var(--space-7));
+  min-width: 0;
+  color: var(--white);
+  /* Keeps the text legible over the lighter sand at the bottom of the scene. */
+  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.3) 24%, rgba(5, 23, 31, 0.82) 52%, rgba(5, 23, 31, 0.95) 100%);
+  width: 100%;
+  padding-top: clamp(var(--space-8), 12vh, 120px);
+}
+
+.tl-auth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font: var(--text-caption);
+  color: var(--white);
+}
+
+.tl-auth-aside-body h2 {
+  margin-top: var(--space-4);
+  overflow-wrap: break-word;
+  font: 700 clamp(22px, 2.2vw, 28px) / 1.15 var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+.tl-auth-aside-body p {
+  margin-top: var(--space-3);
+  font: var(--text-body-sm);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.tl-auth-points {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+}
+.tl-auth-points li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font: var(--text-body-sm);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ---------------------------------------------------------------- responsive */
+@media (max-width: 900px) {
+  .tl-auth-frame,
+  .tl-auth-frame.is-narrow {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+  }
+  /* The artwork moves above the form and becomes a banner rather than a column. */
+  .tl-auth-aside {
+    order: -1;
+    border-left: none;
+    border-bottom: 1px solid var(--sand-200);
+  }
+  .tl-auth-aside-sticky {
+    position: static;
+    height: 230px;
+    min-height: 0;
+  }
+  .tl-auth-points {
+    display: none;
+  }
+  .tl-auth-aside-body h2 {
+    font-size: 20px;
+  }
+  .tl-auth-aside-body p {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .tl-auth-page {
+    padding: var(--space-4) var(--space-3);
+  }
+  .tl-auth-row {
+    grid-template-columns: 1fr;
+  }
+}
