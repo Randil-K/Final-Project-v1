@@ -3,6 +3,8 @@ package lk.tideline.cleanup.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.AccountDocument;
+import lk.tideline.cleanup.model.SanctionType;
+import lk.tideline.cleanup.model.UserSanction;
 import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.CertificationLevel;
 import lk.tideline.cleanup.model.CleanupProject;
@@ -274,5 +276,25 @@ public final class UserDtos {
     }
 
     public record DocumentDownload(String name, String contentType, byte[] bytes) {
+    }
+
+    /** REQ-26, REQ-27 - one entry from an account warning and restriction history. */
+    public record SanctionResponse(
+            Long id,
+            SanctionType type,
+            String reason,
+            UserSummary issuedBy,
+            Long relatedReportId,
+            Instant createdAt
+    ) {
+        public static SanctionResponse from(UserSanction sanction) {
+            return new SanctionResponse(
+                    sanction.getId(),
+                    sanction.getType(),
+                    sanction.getReason(),
+                    UserSummary.from(sanction.getIssuedBy()),
+                    sanction.getRelatedReport() == null ? null : sanction.getRelatedReport().getId(),
+                    sanction.getCreatedAt());
+        }
     }
 }

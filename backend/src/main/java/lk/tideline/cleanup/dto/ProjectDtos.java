@@ -48,7 +48,11 @@ public final class ProjectDtos {
             /** The assigned resources: everyone once finalized, administrators and officers while a draft. */
             ResourcesResponse resources,
             /** The government officer's approval note, for administrators and officers only. */
-            ApprovalNote approval
+            ApprovalNote approval,
+            /** REQ-41 — the turnout this cleanup needs before the alert radius stops widening. */
+            Integer minimumParticipants,
+            /** NF-11 — true while the linked report is hazardous and has no safety guidance yet. */
+            boolean joinBlockedByHazard
     ) {
         public static ProjectResponse from(CleanupProject project, long volunteers, long divers, Boolean joined,
                                            List<ParticipantResponse> participants, boolean official) {
@@ -83,7 +87,9 @@ public final class ProjectDtos {
                     official && report != null && report.getAuthorityComment() != null
                             ? new ApprovalNote(UserDtos.UserSummary.from(report.getAuthorityOfficer()),
                                     report.getAuthorityComment(), report.getDecidedAt())
-                            : null);
+                            : null,
+                    project.getMinimumParticipants(),
+                    report != null && report.isHazardous() && report.getSafetyNote() == null);
         }
     }
 
@@ -117,7 +123,9 @@ public final class ProjectDtos {
             @Min(0) @Max(1000) Integer volunteersNeeded,
             @Min(0) @Max(1000) Integer diversNeeded,
             @Size(max = 30) List<@Valid EquipmentLine> equipment,
-            boolean publish
+            boolean publish,
+            /** REQ-41 — optional turnout target; alerts widen until it is met. */
+            @Min(0) @Max(1000) Integer minimumParticipants
     ) {
     }
 
@@ -126,7 +134,9 @@ public final class ProjectDtos {
             @NotBlank @Size(max = 1000) String note,
             String imageUrl,
             @Min(0) @Max(100) Integer completionPercentage,
-            Double debrisRemovedKg
+            Double debrisRemovedKg,
+            /** REQ-45 — several photos for this stage; imageUrl above stays for a single one. */
+            @Size(max = 10) List<@NotBlank String> imageUrls
     ) {
     }
 
@@ -137,7 +147,9 @@ public final class ProjectDtos {
             String imageUrl,
             Integer completionPercentage,
             UserDtos.UserSummary author,
-            Instant createdAt
+            Instant createdAt,
+            /** REQ-45 — every photo on this update, including imageUrl when it is set. */
+            List<String> imageUrls
     ) {
         public static ProjectUpdateResponse from(ProjectUpdate update) {
             return new ProjectUpdateResponse(
@@ -147,7 +159,8 @@ public final class ProjectDtos {
                     update.getImageUrl(),
                     update.getCompletionPercentage(),
                     UserDtos.UserSummary.from(update.getAuthor()),
-                    update.getCreatedAt());
+                    update.getCreatedAt(),
+                    update.getImages().stream().map(image -> image.getUrl()).toList());
         }
     }
 

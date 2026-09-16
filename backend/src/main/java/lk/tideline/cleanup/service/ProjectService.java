@@ -25,15 +25,21 @@ public class ProjectService {
     private final ProjectParticipantRepository participantRepository;
     private final AlertService alertService;
     private final TidelineProperties properties;
+    private final AuditService audit;
+    private final RegionService regions;
 
     public ProjectService(CleanupProjectRepository projectRepository,
                           ProjectParticipantRepository participantRepository,
                           AlertService alertService,
-                          TidelineProperties properties) {
+                          TidelineProperties properties,
+                          AuditService audit,
+                          RegionService regions) {
         this.projectRepository = projectRepository;
         this.participantRepository = participantRepository;
         this.alertService = alertService;
         this.properties = properties;
+        this.audit = audit;
+        this.regions = regions;
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +115,9 @@ public class ProjectService {
 
         project.setVolunteersNeeded(volunteers);
         project.setDiversNeeded(divers);
+        if (request.minimumParticipants() != null) {
+            project.setMinimumParticipants(request.minimumParticipants());
+        }
         project.getEquipment().clear();
         project.getEquipment().addAll(equipment);
 
@@ -118,6 +127,12 @@ public class ProjectService {
             project.setResourcesFinalizedBy(admin);
         }
         projectRepository.save(project);
+
+        if (request.publish()) {
+            audit.record(admin, AuditService.PROJECT_RESOURCES_FINALIZED, "CleanupProject", project.getId(),
+                    "Resources finalized for " + project.getReference() + ": "
+                            + describe(volunteers, divers, equipment.size()));
+        }
 
         if (firstFinalize) {
             alertService.send(project.getOwner(), AlertType.RESOURCES_ASSIGNED,
@@ -155,6 +170,7 @@ public class ProjectService {
         project.setOwner(report.getReporter());
         project.setLocationName(report.getLocationName());
         project.setProvince(report.getProvince());
+        regions.apply(project);
         project.setLatitude(report.getLatitude());
         project.setLongitude(report.getLongitude());
         project.setStatus(ProjectStatus.PLANNED);
@@ -180,6 +196,12 @@ public class ProjectService {
         if (Objects.equals(project.getOwner().getId(), user.getId())) {
             throw new IllegalStateException("You are this project's owner, so you are already part of it.");
         }
+        // NF-11 — no cleanup of a hazardous site until the authority has given safety guidance.
+        PollutionReport source = project.getReport();
+        if (source != null && source.isHazardous() && source.getSafetyNote() == null) {
+            throw new IllegalStateException(
+                    "This site is marked hazardous. Volunteers can join once the authority gives safety instructions.");
+        }
         participantRepository.findByProjectAndUser(project, user).ifPresent(existing -> {
             throw new IllegalStateException("You have already joined this cleanup.");
         });
@@ -199,6 +221,33 @@ public class ProjectService {
         }
 
         return toResponse(project, user);
+    }
+
+    /**
+     * REQ-41 — widen the alert radius when turnout is short. The project owner or an
+     * administrator asks for it; the service refuses once the target is met or the ladder ends.
+     */
+    @Transactional
+    public ProjectResponse escalateAlerts(Long projectId, User actor) {
+        CleanupProject project = get(projectId);
+        boolean allowed = Objects.equals(project.getOwner().getId(), actor.getId())
+                || actor.getRole() == Role.ADMIN;
+        if (!allowed) {
+            throw new AccessDeniedException("Only the project owner or an administrator can widen the alert area.");
+        }
+        if (project.getStatus() == ProjectStatus.COMPLETED) {
+            throw new IllegalStateException("This cleanup is already complete.");
+        }
+
+        long joined = participantRepository.findByProjectOrderByJoinedAtAsc(project).size();
+        int reached = alertService.escalate(project, joined, actor);
+        if (reached < 0) {
+            throw new IllegalStateException(
+                    "The alert area cannot be widened further, or the turnout this cleanup needs has been met.");
+        }
+        audit.record(actor, AuditService.ALERT_ESCALATED, "CleanupProject", project.getId(),
+                "Alert area widened for " + project.getReference() + ", reaching " + reached + " more people");
+        return toResponse(project, actor);
     }
 
     /** Module 8 — the project owner rates each participant (1-5) once the cleanup is complete. */
@@ -249,6 +298,16 @@ public class ProjectService {
         update.setNote(request.note());
         update.setImageUrl(request.imageUrl());
         update.setCompletionPercentage(request.completionPercentage());
+        if (request.imageUrls() != null) {
+            int position = 0;
+            for (String url : request.imageUrls()) {
+                ProjectUpdateImage image = new ProjectUpdateImage();
+                image.setUpdate(update);
+                image.setUrl(url);
+                image.setPosition(position++);
+                update.getImages().add(image);
+            }
+        }
         project.getUpdates().add(update);
 
         if (request.completionPercentage() != null) {
@@ -273,6 +332,11 @@ public class ProjectService {
         project.setStatus(ProjectStatus.COMPLETED);
         project.setCompletionPercentage(100);
         project.setCompletedAt(Instant.now());
+
+        audit.record(project.getOwner(), AuditService.PROJECT_COMPLETED, "CleanupProject", project.getId(),
+                project.getReference() + " completed"
+                        + (project.getDebrisRemovedKg() == null
+                                ? "" : " with " + project.getDebrisRemovedKg() + " kg of debris removed"));
 
         PollutionReport report = project.getReport();
         if (report != null) {

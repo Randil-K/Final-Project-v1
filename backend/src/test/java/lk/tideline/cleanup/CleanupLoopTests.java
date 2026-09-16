@@ -79,7 +79,7 @@ class CleanupLoopTests {
 
         projects.join(project.id(), volunteer, null);
         projects.addUpdate(project.id(),
-                new ProjectUpdateRequest(UpdateStage.AFTER, "All clear.", null, 100, 12.5), reporter);
+                new ProjectUpdateRequest(UpdateStage.AFTER, "All clear.", null, 100, 12.5, null), reporter);
 
         assertThat(reports.findById(project.reportId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
         assertThat(titlesFor(volunteer)).contains("Cleanup complete");
@@ -89,7 +89,7 @@ class CleanupLoopTests {
     void onlyTheProjectOwnerCanRecordProgress() {
         User reporter = user(Role.CITIZEN);
         ProjectResponse project = approve(reporter);
-        ProjectUpdateRequest update = new ProjectUpdateRequest(UpdateStage.DURING, "Half done.", null, 50, 3.0);
+        ProjectUpdateRequest update = new ProjectUpdateRequest(UpdateStage.DURING, "Half done.", null, 50, 3.0, null);
 
         for (Role official : List.of(Role.AUTHORITY, Role.ADMIN, Role.CITIZEN)) {
             assertThatThrownBy(() -> projects.addUpdate(project.id(), update, user(official)))
@@ -152,7 +152,7 @@ class CleanupLoopTests {
                 .hasMessageContaining("complete");
 
         projects.addUpdate(project.id(),
-                new ProjectUpdateRequest(UpdateStage.AFTER, "Done.", null, 100, null), owner);
+                new ProjectUpdateRequest(UpdateStage.AFTER, "Done.", null, 100, null, null), owner);
 
         assertThatThrownBy(() -> projects.mark(project.id(), participantId, 4, volunteer))
                 .isInstanceOf(IllegalStateException.class);

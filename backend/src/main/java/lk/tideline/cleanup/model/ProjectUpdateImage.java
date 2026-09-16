@@ -4,33 +4,33 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+/** REQ-45 — one of the before / during / after photos attached to a progress update. */
 @Entity
-@Table(name = "report_photos")
+@Table(name = "project_update_images")
 @Getter
 @Setter
-public class ReportPhoto {
+public class ProjectUpdateImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "report_id")
-    private PollutionReport report;
+    @JoinColumn(name = "update_id")
+    private ProjectUpdate update;
 
-    /** Where the photo or video is served from: /api/reports/evidence/{storedName} for uploads. */
     @Column(nullable = false, length = 1000)
     private String url;
 
-    /** Set for uploaded files; null for evidence referenced by an external URL. */
+    /** Set for uploaded files; null for an image referenced by an external URL. */
     @Column(unique = true, length = 80)
     private String storedName;
 
     @Column(length = 100)
     private String contentType;
 
-    /** NF-24 — recorded for uploaded evidence; null for an external URL. */
     private Long sizeBytes;
 
-    private String caption;
+    @Column(name = "position", nullable = false)
+    private int position;
 }
