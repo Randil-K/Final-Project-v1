@@ -104,10 +104,11 @@ class GovernanceTests {
         String officerEmail = UUID.randomUUID() + "@test.lk";
         String adminEmail = UUID.randomUUID() + "@test.lk";
 
+        // No documents: officials are vouched for by an existing administrator, not by an upload.
         AuthResponse officer = authService.register(
-                registration(officerEmail, Role.AUTHORITY, "Marine Environment Protection Authority", null), List.of(pdf("staff-id.pdf")));
+                registration(officerEmail, Role.AUTHORITY, "Marine Environment Protection Authority", null), List.of());
         AuthResponse newAdmin = authService.register(
-                registration(adminEmail, Role.ADMIN, "Tideline operations", null), List.of(pdf("appointment.pdf")));
+                registration(adminEmail, Role.ADMIN, "Tideline operations", null), List.of());
 
         assertThat(officer.token()).isNull();
         assertThat(newAdmin.token()).isNull();
@@ -124,15 +125,16 @@ class GovernanceTests {
     }
 
     @Test
-    void officialsMustGiveTheirDepartmentAndProofOfAppointment() {
+    void officialsMustGiveTheirDepartmentButAttachNothing() {
         assertThatThrownBy(() -> authService.register(
-                registration(UUID.randomUUID() + "@test.lk", Role.AUTHORITY, "MEPA", null), List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("proof of your appointment");
-        assertThatThrownBy(() -> authService.register(
-                registration(UUID.randomUUID() + "@test.lk", Role.ADMIN, null, null), List.of(pdf("id.pdf"))))
+                registration(UUID.randomUUID() + "@test.lk", Role.ADMIN, null, null), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("department");
+        // Documents are a volunteer diver thing now; an official sending one is a mistake, not a step.
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.AUTHORITY, "MEPA", null), List.of(pdf("id.pdf"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Only volunteer divers attach documents");
     }
 
     @Test

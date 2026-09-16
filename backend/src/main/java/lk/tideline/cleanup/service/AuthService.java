@@ -52,8 +52,8 @@ public class AuthService {
 
     /**
      * Community members can sign in straight away. Volunteer divers (with certificates), organisations
-     * (with a website), and administrators and government officers (with their department and proof of
-     * appointment) wait for an existing administrator to approve them, so they get no token.
+     * (with a website), and administrators and government officers (with their department) wait for an
+     * existing administrator to approve them, so they get no token.
      */
     @Transactional
     public AuthResponse register(RegisterRequest request, List<MultipartFile> certificates) {
@@ -68,11 +68,10 @@ public class AuthService {
         if (role == Role.DIVER && files.isEmpty()) {
             throw new IllegalArgumentException("Attach at least one diving certificate so an administrator can verify you.");
         }
-        if (official && files.isEmpty()) {
-            throw new IllegalArgumentException("Attach proof of your appointment, such as a staff ID or appointment letter.");
-        }
-        if (role != Role.DIVER && !official && !files.isEmpty()) {
-            throw new IllegalArgumentException("Only volunteer divers, administrators and government officers attach documents.");
+        // Officials no longer upload proof of appointment. They still cannot sign in until an
+        // existing administrator approves them, which is the check that actually matters.
+        if (role != Role.DIVER && !files.isEmpty()) {
+            throw new IllegalArgumentException("Only volunteer divers attach documents.");
         }
         if (official && (request.organizationName() == null || request.organizationName().isBlank())) {
             throw new IllegalArgumentException("Add the department or agency you work for.");
@@ -148,7 +147,6 @@ public class AuthService {
     }
 
     private void notifyAdministrators(User applicant, int documentCount) {
-        String documents = documentCount + (documentCount == 1 ? " document." : " documents.");
         String title;
         String body;
         switch (applicant.getRole()) {
@@ -159,11 +157,13 @@ public class AuthService {
             }
             case ADMIN -> {
                 title = "New administrator to verify";
-                body = applicant.getFullName() + " (" + applicant.getOrganizationName() + ") asked for administrator access with " + documents;
+                body = applicant.getFullName() + " (" + applicant.getOrganizationName()
+                        + ") asked for administrator access. Confirm their appointment before approving.";
             }
             case AUTHORITY -> {
                 title = "New government officer to verify";
-                body = applicant.getFullName() + " (" + applicant.getOrganizationName() + ") registered as a government officer with " + documents;
+                body = applicant.getFullName() + " (" + applicant.getOrganizationName()
+                        + ") registered as a government officer. Confirm their appointment before approving.";
             }
             default -> {
                 title = "New organisation to verify";

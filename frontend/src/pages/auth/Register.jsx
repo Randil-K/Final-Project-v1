@@ -17,7 +17,8 @@ const ROLES = [
 ];
 
 const OFFICIAL_ROLES = ['AUTHORITY', 'ADMIN'];
-const NEEDS_DOCUMENTS = ['DIVER', ...OFFICIAL_ROLES];
+/** Only volunteer divers attach anything; officials are vouched for by an administrator. */
+const NEEDS_DOCUMENTS = ['DIVER'];
 
 const ORGANIZATION_TYPES = [
   { value: 'NGO', label: 'NGO' },
@@ -113,10 +114,6 @@ export default function Register() {
     }
     if (OFFICIAL_ROLES.includes(role) && !form.organizationName.trim()) {
       setError('Add the department or agency you work for.');
-      return;
-    }
-    if (OFFICIAL_ROLES.includes(role) && !certificates.length) {
-      setError('Attach proof of your appointment, such as a staff ID or appointment letter.');
       return;
     }
     if (role === 'ORGANIZATION' && !form.websiteUrl.trim()) {
@@ -226,14 +223,6 @@ export default function Register() {
               placeholder={role === 'AUTHORITY' ? 'e.g. Marine Environment Protection Authority' : 'e.g. Tideline operations team'}
               value={form.organizationName}
               onChange={set('organizationName')}
-            />
-            <DocumentPicker
-              label="Proof of appointment"
-              actionLabel="Add proof of appointment"
-              required
-              hint="Staff ID card or appointment letter."
-              files={certificates}
-              onChange={setCertificates}
             />
           </>
         ) : null}

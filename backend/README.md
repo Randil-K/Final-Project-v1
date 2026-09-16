@@ -140,13 +140,14 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
   account. For a real account it stores a hash of a random one-time token (valid 30 minutes; only the
   newest works) and emails `FRONTEND_URL/reset-password?token=…`. With no `SPRING_MAIL_HOST` configured
   (local development) the link is written to the server log instead.
-- **Officials.** Government officers and administrators can register too, giving their department or agency and
-  proof of appointment (staff ID or appointment letter). They stay pending until an existing administrator approves them.
+- **Officials.** Government officers and administrators can register too, giving the department or
+  agency they work for. They attach no documents: an existing administrator vouches for them, so the
+  account stays pending until one approves it.
 - **Account verification.** Citizens can sign in straight away. Volunteer divers must attach at
   least one certificate (PDF, JPG or PNG, 5 MB each, up to 5 — checked by file content, not
-  extension) and organisations must give a website link. Both start as `PENDING_REVIEW`, get no
-  token at registration, and can't sign in until an administrator approves them; a rejection
-  needs a reason. Either decision is sent to the applicant's alerts; the frontend also pops it up
+  extension) and organisations must give a website link. Officers and administrators give only their
+  department. All four start as `PENDING_REVIEW`, get no token at registration, and can't sign in
+  until an administrator approves them; a rejection needs a reason. Either decision is sent to the applicant's alerts; the frontend also pops it up
   on their next sign-in (approved) or sign-in attempt (rejected, with the reason). Files are stored under
   `UPLOADS_DIR` (default `uploads/`) with random names and served only to administrators.
 - **Report review.** Each report carries an administrator decision and an authority decision:
