@@ -95,6 +95,35 @@
   overflow: hidden;
 }
 
+.tl-auth-photo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Taller than the panel and anchored to the bottom, so the visible window is the lower part
+     of the photograph — the horizon and the surf — rather than the empty sky above it. */
+  bottom: 0;
+  width: 100%;
+  height: 168%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.tl-auth-credit {
+  margin-top: var(--space-4);
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+}
+.tl-auth-credit a {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.tl-auth-credit a:hover {
+  color: var(--white);
+}
+
 .tl-auth-aside-body {
   position: relative;
   z-index: 1;
@@ -102,7 +131,7 @@
   min-width: 0;
   color: var(--white);
   /* Keeps the text legible over the lighter sand at the bottom of the scene. */
-  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.3) 24%, rgba(5, 23, 31, 0.82) 52%, rgba(5, 23, 31, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.45) 22%, rgba(5, 23, 31, 0.86) 48%, rgba(5, 23, 31, 0.96) 100%);
   width: 100%;
   padding-top: clamp(var(--space-8), 12vh, 120px);
 }
@@ -165,7 +194,8 @@
   }
   .tl-auth-aside-sticky {
     position: static;
-    height: 230px;
+    /* Tall enough that the photo credit is never clipped — the licence requires it to show. */
+    height: 285px;
     min-height: 0;
   }
   .tl-auth-points {
@@ -174,8 +204,12 @@
   .tl-auth-aside-body h2 {
     font-size: 20px;
   }
-  .tl-auth-aside-body p {
+  /* The description goes, but not the credit line. */
+  .tl-auth-aside-body > p:not(.tl-auth-credit) {
     display: none;
+  }
+  .tl-auth-credit {
+    margin-top: var(--space-3);
   }
 }
 
