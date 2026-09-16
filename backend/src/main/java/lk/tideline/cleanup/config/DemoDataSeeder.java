@@ -47,7 +47,7 @@ public class DemoDataSeeder {
             User officer = user(users, regions, encoder, "D. Bandara", "officer@mepa.gov.lk",
                     Role.AUTHORITY, "Western Province", "Colombo", 6.9271, 79.8612);
 
-            User sanduni = user(users, regions, encoder, "Sanduni Perera", "sanduni@example.lk",
+            User hiruna = user(users, regions, encoder, "Hiruna Perera", "hiruna@example.lk",
                     Role.DIVER, "Western Province", "Negombo", 7.2083, 79.8358);
             diverProfile(hiruna, CertificationLevel.ADVANCED_OPEN_WATER, 4, "Own BCD, regulator, wetsuit",
                     List.of("Western Province", "North Western Province"));
@@ -55,21 +55,21 @@ public class DemoDataSeeder {
             users.save(hiruna);
 
             // More verified volunteer divers for demos.
-            User kavindu = user(users, encoder, "Kavindu Fernando", "kavindu@example.lk",
+            User kavindu = user(users, regions, encoder, "Kavindu Fernando", "kavindu@example.lk",
                     Role.DIVER, "Southern Province", "Hikkaduwa", 6.1395, 80.1063);
             diverProfile(kavindu, CertificationLevel.RESCUE_DIVER, 7, "Full kit, dive computer, lift bags",
                     List.of("Southern Province"));
             attachCertificate(storage, kavindu, "PADI-Rescue-Diver.pdf", "PADI Rescue Diver - Kavindu Fernando");
             users.save(kavindu);
 
-            User tharushi = user(users, encoder, "Tharushi Silva", "tharushi@example.lk",
+            User tharushi = user(users, regions, encoder, "Tharushi Silva", "tharushi@example.lk",
                     Role.DIVER, "Eastern Province", "Trincomalee", 8.5711, 81.2335);
             diverProfile(tharushi, CertificationLevel.OPEN_WATER, 2, "Mask, fins, wetsuit",
                     List.of("Eastern Province", "Northern Province"));
             attachCertificate(storage, tharushi, "PADI-Open-Water.pdf", "PADI Open Water - Tharushi Silva");
             users.save(tharushi);
 
-            User dinuka = user(users, encoder, "Dinuka Rajapaksha", "dinuka@example.lk",
+            User dinuka = user(users, regions, encoder, "Dinuka Rajapaksha", "dinuka@example.lk",
                     Role.DIVER, "North Western Province", "Kalpitiya", 8.2300, 79.7600);
             diverProfile(dinuka, CertificationLevel.DIVEMASTER, 9, "Full kit, underwater cutting tools",
                     List.of("North Western Province", "Western Province"));

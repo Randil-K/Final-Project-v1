@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Icon, Avatar, Badge } from '../design-system';
+import { Icon, Avatar, Badge, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import { ROLE_LABEL } from '../lib/format.js';
@@ -73,6 +73,11 @@ export default function AuthorityShell() {
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {/* The console has its own sidebar, so without this an officer who comes in here can
+              only leave by signing out. Mirrors the "Console" button on the volunteer shell. */}
+          <Button variant="inverse" size="sm" iconLeft="chevron-left" fullWidth onClick={() => navigate('/app')}>
+            Back to app
+          </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 var(--space-2)' }}>
             <Avatar name={user?.fullName || ''} src={mediaUrl(user?.avatarUrl)} role="authority" size="sm" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -105,8 +110,17 @@ export default function AuthorityShell() {
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <span style={{ font: 'var(--text-h3)', color: 'var(--text-strong)' }}>Authority console</span>
-          <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>Marine Environment Protection Authority</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', minWidth: 0 }}>
+            <Button variant="secondary" size="sm" iconLeft="chevron-left" onClick={() => navigate('/app')}>
+              Back to app
+            </Button>
+            <span style={{ font: 'var(--text-h3)', color: 'var(--text-strong)' }}>
+              {user?.role === 'ADMIN' ? 'Administration console' : 'Authority console'}
+            </span>
+          </div>
+          <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>
+            {user?.organizationName || (user?.role === 'ADMIN' ? 'Tideline administration' : 'Marine Environment Protection Authority')}
+          </span>
         </header>
         <main style={{ flex: 1, padding: 'var(--space-6)', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
           <Outlet />
