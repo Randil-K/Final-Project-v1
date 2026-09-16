@@ -132,7 +132,7 @@ public class DemoDataSeeder {
                             + "along a 40m stretch of shoreline.",
                     Severity.CRITICAL, "Trincomalee", "Eastern Province", 8.5874, 81.2152, 5);
 
-            PollutionReport kalpitiya = report(reports, hiruna,
+            PollutionReport kalpitiya = report(reports, regions, hiruna,
                     "Discarded fishing nets tangled on the reef edge",
                     "Ghost nets caught on the reef edge, roughly 15m from the dive site mooring. "
                             + "Needs diver support to remove safely.",
