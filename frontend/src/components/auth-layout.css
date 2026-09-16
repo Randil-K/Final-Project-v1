@@ -8,8 +8,9 @@
   align-items: center;
   justify-content: center;
   background: var(--surface-page-warm);
-  /* The blank space around the panel — generous on a large screen, tight on a phone. */
-  padding: clamp(var(--space-5), 5vh, var(--space-10)) var(--space-5);
+  /* The blank space around the panel. The vertical value is fixed so the picture panel can be
+     sized to exactly the rest of the viewport — see .tl-auth-aside-sticky. */
+  padding: 40px var(--space-5);
 }
 
 .tl-auth-frame {
@@ -30,6 +31,12 @@
 /* Sign-in has far fewer fields, so its panel is narrower and the proportions stay comfortable. */
 .tl-auth-frame.is-narrow {
   max-width: 940px;
+}
+
+/* Sign-in never scrolls, so its picture is sized to the viewport minus the page padding and the
+   card sits exactly within the screen. */
+.tl-auth-frame.is-narrow .tl-auth-aside-sticky {
+  height: calc(100vh - 80px);
 }
 
 /* ---------------------------------------------------------------- form side */
@@ -88,7 +95,13 @@
 .tl-auth-aside-sticky {
   position: sticky;
   top: 0;
-  height: min(100vh, 780px);
+  /* As tall as the visible page, minus the space left around the card. A short form gets a panel
+     that fills its side; a long one scrolls past a panel that stays full height, so the column
+     never shows bare background below the photograph. */
+  /* Full viewport height: at rest the panel starts below the page padding and overflows the
+     bottom (harmless, it is clipped); once stuck at top: 0 it still reaches the bottom. Any
+     shorter and a strip of bare column shows under the photograph in one state or the other. */
+  height: 100vh;
   min-height: 520px;
   display: flex;
   align-items: flex-end;
@@ -107,28 +120,6 @@
   object-fit: cover;
   object-position: center;
   display: block;
-}
-
-/* The credit now sits directly on the photograph, so it carries its own shade. */
-.tl-auth-credit {
-  position: relative;
-  z-index: 1;
-  align-self: flex-end;
-  width: 100%;
-  margin: 0;
-  padding: 52px clamp(var(--space-5), 3vw, var(--space-6)) 12px;
-  font-size: 11px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.78);
-  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.5) 55%, rgba(5, 23, 31, 0.8) 100%);
-}
-.tl-auth-credit a {
-  color: rgba(255, 255, 255, 0.92);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.tl-auth-credit a:hover {
-  color: var(--white);
 }
 
 /* ---------------------------------------------------------------- responsive */

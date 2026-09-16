@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Input, Select, Field, Alert, Badge } from '../../design-system';
 import ChipButton from '../../components/ChipButton.jsx';
 import DocumentPicker from '../../components/DocumentPicker.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import AuthLayout from '../../components/AuthLayout.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { CERTIFICATION_OPTIONS, PROVINCES } from '../../lib/format.js';
@@ -255,9 +256,7 @@ export default function Register() {
           </>
         ) : null}
 
-        <Input
-          label="Password"
-          type="password"
+        <PasswordInput
           placeholder="At least 8 characters"
           required
           minLength={8}
