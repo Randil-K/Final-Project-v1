@@ -8,8 +8,7 @@ import lk.tideline.cleanup.dto.UserDtos.DocumentDownload;
 import lk.tideline.cleanup.dto.AuditDtos.AuditResponse;
 import lk.tideline.cleanup.dto.UserDtos.SanctionResponse;
 import lk.tideline.cleanup.dto.UserDtos.SuspensionRequest;
-import lk.tideline.cleanup.repository.AuditEntryRepository;
-import org.springframework.data.domain.PageRequest;
+import lk.tideline.cleanup.service.AuditService;
 import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.service.UserService;
 import org.springframework.http.ContentDisposition;
@@ -29,11 +28,11 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
-    private final AuditEntryRepository auditLog;
+    private final AuditService audit;
 
-    public AdminController(UserService userService, AuditEntryRepository auditLog) {
+    public AdminController(UserService userService, AuditService audit) {
         this.userService = userService;
-        this.auditLog = auditLog;
+        this.audit = audit;
     }
 
     @GetMapping("/users")
@@ -51,9 +50,7 @@ public class AdminController {
     @GetMapping("/audit")
     public List<AuditResponse> audit(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "50") int size) {
-        return auditLog.findAllByOrderByCreatedAtDesc(PageRequest.of(page, Math.min(size, 200)))
-                .map(AuditResponse::from)
-                .getContent();
+        return audit.recent(page, size);
     }
 
     @PostMapping("/users/{id}/suspension")

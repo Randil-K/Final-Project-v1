@@ -1,10 +1,14 @@
 package lk.tideline.cleanup.service;
 
+import lk.tideline.cleanup.dto.AuditDtos.AuditResponse;
 import lk.tideline.cleanup.model.AuditEntry;
 import lk.tideline.cleanup.model.User;
 import lk.tideline.cleanup.repository.AuditEntryRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * NF-25 — writes the audit trail. Every reviewable action funnels through here so the log has
@@ -28,6 +32,17 @@ public class AuditService {
 
     public AuditService(AuditEntryRepository entries) {
         this.entries = entries;
+    }
+
+    /**
+     * Newest first. Mapped to DTOs inside the transaction: open-in-view is off, so the lazy
+     * actor proxy cannot be read once the session has closed.
+     */
+    @Transactional(readOnly = true)
+    public List<AuditResponse> recent(int page, int size) {
+        return entries.findAllByOrderByCreatedAtDesc(PageRequest.of(page, Math.min(size, 200)))
+                .map(AuditResponse::from)
+                .getContent();
     }
 
     @Transactional

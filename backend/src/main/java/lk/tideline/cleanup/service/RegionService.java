@@ -1,5 +1,7 @@
 package lk.tideline.cleanup.service;
 
+import lk.tideline.cleanup.dto.RegionDtos.DistrictResponse;
+import lk.tideline.cleanup.dto.RegionDtos.ProvinceResponse;
 import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.District;
 import lk.tideline.cleanup.model.PollutionReport;
@@ -28,14 +30,18 @@ public class RegionService {
         this.districts = districts;
     }
 
+    /**
+     * Mapped to DTOs inside the transaction: open-in-view is off, so a district's lazy province
+     * proxy cannot be read once the session has closed.
+     */
     @Transactional(readOnly = true)
-    public List<Province> allProvinces() {
-        return provinces.findAllByOrderByNameAsc();
+    public List<ProvinceResponse> allProvinces() {
+        return provinces.findAllByOrderByNameAsc().stream().map(ProvinceResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<District> allDistricts() {
-        return districts.findAllByOrderByNameAsc();
+    public List<DistrictResponse> allDistricts() {
+        return districts.findAllByOrderByNameAsc().stream().map(DistrictResponse::from).toList();
     }
 
     public Province province(String name) {
