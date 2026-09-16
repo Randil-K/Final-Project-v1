@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Card, Button, Checkbox, Input, Alert } from '../../design-system';
 import Modal from '../../components/Modal.jsx';
 import AuthLayout from '../../components/AuthLayout.jsx';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
 export default function Login() {
@@ -55,9 +56,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            label="Password"
-            type="password"
+          <PasswordInput
             placeholder="••••••••"
             required
             value={password}

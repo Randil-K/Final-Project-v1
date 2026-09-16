@@ -15,12 +15,14 @@
 
 .tl-auth-frame {
   width: 100%;
-  max-width: 1060px;
+  max-width: 1140px;
   /* Flex and grid children default to min-width: auto, which stops them shrinking below their
      content. Clearing it keeps the panel inside the viewport on very narrow screens. */
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  /* The picture column is the wider of the two: a tall, narrow panel crops a photograph down to
+     a sliver, so giving it more width keeps more of the image in frame. */
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
   background: var(--surface-card);
   border: 1px solid var(--sand-200);
   border-radius: var(--radius-lg);
@@ -30,7 +32,7 @@
 
 /* Sign-in has far fewer fields, so its panel is narrower and the proportions stay comfortable. */
 .tl-auth-frame.is-narrow {
-  max-width: 940px;
+  max-width: 1000px;
 }
 
 /* Sign-in never scrolls, so its picture is sized to the viewport minus the page padding and the
@@ -86,7 +88,8 @@
 .tl-auth-aside {
   position: relative;
   min-width: 0;
-  background: var(--sea-900);
+  /* Deep water below the photograph, so its faded edge has something to melt into. */
+  background: linear-gradient(180deg, #071726 0%, #04101b 100%);
   border-left: 1px solid var(--sand-200);
 }
 
@@ -108,17 +111,20 @@
   overflow: hidden;
 }
 
+/* The photograph is landscape and the panel is portrait. Rather than crop it to a narrow sliver,
+   the image occupies the upper part of the panel at a gentler aspect and fades out at the bottom
+   into the panel's own dark water. The subject stays whole and the seam is invisible. */
 .tl-auth-photo {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
-  /* Taller than the panel and anchored to the bottom, so the visible window is the lower part
-     of the photograph — the horizon and the surf — rather than the empty sky above it. */
-  bottom: 0;
   width: 100%;
-  height: 168%;
+  height: 74%;
   object-fit: cover;
-  object-position: center;
+  object-position: center 42%;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
   display: block;
 }
 
@@ -135,7 +141,9 @@
     border-left: none;
     border-bottom: 1px solid var(--sand-200);
   }
-  .tl-auth-aside-sticky {
+  /* Both selectors, because the .is-narrow rule above is more specific than a bare class. */
+  .tl-auth-aside-sticky,
+  .tl-auth-frame.is-narrow .tl-auth-aside-sticky {
     position: static;
     height: 210px;
     min-height: 0;

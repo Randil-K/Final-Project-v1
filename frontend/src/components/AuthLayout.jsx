@@ -4,7 +4,7 @@ import './auth-layout.css';
 
 /**
  * Shared frame for the sign-in and registration pages: the form on one side, a photograph of the
- * coast on the other, the pair held inside one bordered panel that is centred with space left
+ * sea on the other, the pair held inside one bordered panel that is centred with space left
  * around it.
  *
  * The photograph is released under CC0, so it carries no credit line — see docs/CREDITS.md for
@@ -37,8 +37,8 @@ export default function AuthLayout({ title, subtitle, children, footer, width = 
           <div className="tl-auth-aside-sticky">
             <img
               className="tl-auth-photo"
-              src="/assets/sea-waves.jpg"
-              alt="Rippling sea water at dusk"
+              src="/assets/sea-jellyfish.jpg"
+              alt="Jellyfish drifting in dark water"
               loading="eager"
               decoding="async"
             />
