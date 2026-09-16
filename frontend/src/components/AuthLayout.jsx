@@ -31,7 +31,7 @@ export default function AuthLayout({ title, subtitle, children, footer, width = 
           {footer ? <div className="tl-auth-footer">{footer}</div> : null}
         </div>
 
-        {/* Picture side */}
+        {/* Picture side — the photograph carries this panel on its own. */}
         <aside className="tl-auth-aside">
           {/* Sticky, so a long form scrolls past a picture that keeps its proportions. */}
           <div className="tl-auth-aside-sticky">
@@ -43,48 +43,21 @@ export default function AuthLayout({ title, subtitle, children, footer, width = 
               decoding="async"
             />
 
-            <div className="tl-auth-aside-body">
-              <span className="tl-auth-pill">
-                <Icon name="waves-horizontal" size="xs" color="var(--tide-300)" />
-                Sri Lanka&rsquo;s coastline
-              </span>
-
-              <h2>Every cleanup starts with someone noticing.</h2>
-              <p>
-                Report a polluted stretch of coast, let the community confirm it, and watch it become a cleanup
-                the authorities have signed off on.
-              </p>
-              <ul className="tl-auth-points">
-                <li>
-                  <Icon name="badge-check" size="sm" color="var(--tide-300)" />
-                  Community-verified reports
-                </li>
-                <li>
-                  <Icon name="shield-check" size="sm" color="var(--tide-300)" />
-                  Reviewed by MEPA officers
-                </li>
-                <li>
-                  <Icon name="anchor" size="sm" color="var(--tide-300)" />
-                  Volunteers and divers alerted nearby
-                </li>
-              </ul>
-
-              {/* Required by the photograph's CC BY-SA 4.0 licence. */}
-              <p className="tl-auth-credit">
-                Unawatuna, Sri Lanka · Photo{' '}
-                <a
-                  href="https://commons.wikimedia.org/wiki/File:The_Turquoise_Beach_-_Unawatuna.jpg"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  Leesha.S
-                </a>{' '}
-                ·{' '}
-                <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer noopener">
-                  CC BY-SA 4.0
-                </a>
-              </p>
-            </div>
+            {/* Required by the photograph's CC BY-SA 4.0 licence — see docs/CREDITS.md. */}
+            <p className="tl-auth-credit">
+              Unawatuna, Sri Lanka · Photo{' '}
+              <a
+                href="https://commons.wikimedia.org/wiki/File:The_Turquoise_Beach_-_Unawatuna.jpg"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                Leesha.S
+              </a>{' '}
+              ·{' '}
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer noopener">
+                CC BY-SA 4.0
+              </a>
+            </p>
           </div>
         </aside>
       </div>

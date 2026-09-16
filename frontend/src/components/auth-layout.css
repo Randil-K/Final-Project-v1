@@ -109,74 +109,26 @@
   display: block;
 }
 
+/* The credit now sits directly on the photograph, so it carries its own shade. */
 .tl-auth-credit {
-  margin-top: var(--space-4);
+  position: relative;
+  z-index: 1;
+  align-self: flex-end;
+  width: 100%;
+  margin: 0;
+  padding: 52px clamp(var(--space-5), 3vw, var(--space-6)) 12px;
   font-size: 11px;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.5) 55%, rgba(5, 23, 31, 0.8) 100%);
 }
 .tl-auth-credit a {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.92);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 .tl-auth-credit a:hover {
   color: var(--white);
-}
-
-.tl-auth-aside-body {
-  position: relative;
-  z-index: 1;
-  padding: clamp(var(--space-5), 3vw, var(--space-7));
-  min-width: 0;
-  color: var(--white);
-  /* Keeps the text legible over the lighter sand at the bottom of the scene. */
-  background: linear-gradient(180deg, rgba(5, 23, 31, 0) 0%, rgba(5, 23, 31, 0.45) 22%, rgba(5, 23, 31, 0.86) 48%, rgba(5, 23, 31, 0.96) 100%);
-  width: 100%;
-  padding-top: clamp(var(--space-8), 12vh, 120px);
-}
-
-.tl-auth-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: var(--radius-pill, 999px);
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  font: var(--text-caption);
-  color: var(--white);
-}
-
-.tl-auth-aside-body h2 {
-  margin-top: var(--space-4);
-  overflow-wrap: break-word;
-  font: 700 clamp(22px, 2.2vw, 28px) / 1.15 var(--font-display);
-  letter-spacing: -0.03em;
-}
-
-.tl-auth-aside-body p {
-  margin-top: var(--space-3);
-  font: var(--text-body-sm);
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.tl-auth-points {
-  margin-top: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  list-style: none;
-  padding: 0;
-}
-.tl-auth-points li {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font: var(--text-body-sm);
-  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ---------------------------------------------------------------- responsive */
@@ -194,22 +146,8 @@
   }
   .tl-auth-aside-sticky {
     position: static;
-    /* Tall enough that the photo credit is never clipped — the licence requires it to show. */
-    height: 285px;
+    height: 210px;
     min-height: 0;
-  }
-  .tl-auth-points {
-    display: none;
-  }
-  .tl-auth-aside-body h2 {
-    font-size: 20px;
-  }
-  /* The description goes, but not the credit line. */
-  .tl-auth-aside-body > p:not(.tl-auth-credit) {
-    display: none;
-  }
-  .tl-auth-credit {
-    margin-top: var(--space-3);
   }
 }
 

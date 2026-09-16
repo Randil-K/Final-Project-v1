@@ -176,16 +176,6 @@ export default function Register() {
           </div>
         </Field>
 
-        {role !== 'CITIZEN' ? (
-          <Alert tone="info" title="Accounts are verified by an administrator">
-            {role === 'DIVER'
-              ? 'Attach your diving certificates. You can sign in once an administrator has checked them.'
-              : OFFICIAL_ROLES.includes(role)
-                ? 'Attach proof of your appointment. You can sign in once an existing administrator has approved you.'
-                : "Add your organisation's website. You can sign in once an administrator has checked it."}
-          </Alert>
-        ) : null}
-
         <div className="tl-auth-row">
           <Input label="First name" placeholder="e.g. Sanduni" required value={form.firstName} onChange={set('firstName')} />
           <Input label="Last name" placeholder="e.g. Perera" required value={form.lastName} onChange={set('lastName')} />
