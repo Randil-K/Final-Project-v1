@@ -58,4 +58,10 @@ public class ProjectController {
     public ProjectResponse addUpdate(@PathVariable Long id, @Valid @RequestBody ProjectUpdateRequest request) {
         return projectService.addUpdate(id, request, currentUser.require());
     }
+
+    /** REQ-41 - widen the alert radius when turnout is short. Owner or administrator. */
+    @PostMapping("/{id}/alerts/escalate")
+    public ProjectResponse escalateAlerts(@PathVariable Long id) {
+        return projectService.escalateAlerts(id, currentUser.require());
+    }
 }

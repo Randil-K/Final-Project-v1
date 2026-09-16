@@ -9,7 +9,9 @@ import lk.tideline.cleanup.model.InfoRequestStatus;
 import lk.tideline.cleanup.model.PollutionReport;
 import lk.tideline.cleanup.model.ReactionType;
 import lk.tideline.cleanup.model.ReportComment;
+import lk.tideline.cleanup.model.ReportReviewAction;
 import lk.tideline.cleanup.model.ReportStatus;
+import lk.tideline.cleanup.model.ReviewStage;
 import lk.tideline.cleanup.model.ReviewDecision;
 import lk.tideline.cleanup.model.Severity;
 import lk.tideline.cleanup.model.User;
@@ -30,7 +32,9 @@ public final class ReportDtos {
             String province,
             @NotNull Double latitude,
             @NotNull Double longitude,
-            List<String> photoUrls
+            List<String> photoUrls,
+            /** REQ-11 — when the pollution was seen. Optional; the submission time is recorded regardless. */
+            Instant incidentAt
     ) {
     }
 
@@ -71,7 +75,15 @@ public final class ReportDtos {
             Instant verifiedAt,
             Instant escalatedAt,
             /** The signed-in viewer's vote: true confirmed, false disputed, null none. */
-            Boolean myVote
+            Boolean myVote,
+            /** REQ-11 — when the pollution happened, if the reporter gave it. */
+            Instant incidentAt,
+            /** NF-9 — an administrator judged this site unsafe to clean without guidance. */
+            boolean hazardous,
+            /** NF-11, NF-14 — the safety guidance that unblocks a hazardous cleanup. */
+            String safetyNote,
+            /** REQ-58 — the seeded district this report rolls up to, if its location matched one. */
+            String district
     ) {
         public static ReportResponse from(PollutionReport report, int thresholdPercent, int minimumConfirmations,
                                           CleanupProject project, InfoRequestStatus infoRequestStatus, Boolean myVote,
@@ -110,7 +122,11 @@ public final class ReportDtos {
                     report.getCreatedAt(),
                     report.getVerifiedAt(),
                     report.getEscalatedAt(),
-                    myVote);
+                    myVote,
+                    report.getIncidentAt(),
+                    report.isHazardous(),
+                    report.getSafetyNote(),
+                    report.getDistrict() == null ? null : report.getDistrict().getName());
         }
     }
 
@@ -171,5 +187,32 @@ public final class ReportDtos {
             @NotNull ReviewDecision decision,
             @NotBlank @Size(max = 1000) String comment
     ) {
+    }
+
+    /** NF-9 — an administrator marks a site hazardous, with the safety note that lets work start. */
+    public record HazardRequest(
+            @NotNull Boolean hazardous,
+            @Size(max = 1000) String safetyNote
+    ) {
+    }
+
+    /** REQ-28, REQ-35 — one decision from the report's review history. */
+    public record ReviewActionResponse(
+            Long id,
+            ReviewStage stage,
+            ReviewDecision decision,
+            String comment,
+            UserDtos.UserSummary reviewer,
+            Instant createdAt
+    ) {
+        public static ReviewActionResponse from(ReportReviewAction action) {
+            return new ReviewActionResponse(
+                    action.getId(),
+                    action.getStage(),
+                    action.getDecision(),
+                    action.getComment(),
+                    UserDtos.UserSummary.from(action.getReviewer()),
+                    action.getCreatedAt());
+        }
     }
 }
