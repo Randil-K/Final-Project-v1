@@ -1,14 +1,19 @@
 import React from 'react';
 import { Icon, Input } from '../design-system';
 
-/** A password field with an eye button that shows or hides what was typed. */
-export default function PasswordInput(props) {
+/**
+ * A password field with a show/hide toggle, so someone can check what they have typed before
+ * committing to it. Starts hidden, and goes back to hidden on every fresh render of the page.
+ */
+export default function PasswordInput({ label = 'Password', ...rest }) {
   const [visible, setVisible] = React.useState(false);
+
   return (
     <Input
-      {...props}
+      {...rest}
+      label={label}
       type={visible ? 'text' : 'password'}
-      trailing={
+      suffix={
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
@@ -16,17 +21,16 @@ export default function PasswordInput(props) {
           aria-pressed={visible}
           title={visible ? 'Hide password' : 'Show password'}
           style={{
-            width: 32,
-            height: 32,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-muted)',
             cursor: 'pointer',
+            padding: 4,
+            margin: -4,
+            borderRadius: 'var(--radius-sm, 6px)',
           }}
         >
-          <Icon name={visible ? 'eye-off' : 'eye'} size="sm" />
+          <Icon name={visible ? 'eye-off' : 'eye'} size="sm" color="var(--text-muted)" />
         </button>
       }
     />

@@ -51,6 +51,11 @@ public class CleanupProject {
 
     private String province;
 
+    /** Region key resolved from the province text on save; null if it matches no lookup row. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "province_id")
+    private Province provinceRef;
+
     private Double latitude;
     private Double longitude;
 
@@ -67,6 +72,9 @@ public class CleanupProject {
     private Integer volunteersNeeded;
 
     private Integer diversNeeded;
+
+    /** REQ-41 — how many people this cleanup needs before the alert radius stops widening. */
+    private Integer minimumParticipants;
 
     @ElementCollection
     @CollectionTable(name = "project_equipment", joinColumns = @JoinColumn(name = "project_id"))

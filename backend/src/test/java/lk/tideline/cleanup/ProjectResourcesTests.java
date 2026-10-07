@@ -79,11 +79,11 @@ class ProjectResourcesTests {
         Long projectId = approve(owner).projectId();
         List<EquipmentLine> kit = List.of(new EquipmentLine("Gloves", 40), new EquipmentLine("Boat", 1));
 
-        ProjectResponse draft = projects.updateResources(projectId, new ResourcesRequest(20, 3, kit, false), admin);
+        ProjectResponse draft = projects.updateResources(projectId, new ResourcesRequest(20, 3, kit, false, null), admin);
         assertThat(draft.resources().finalized()).isFalse();
         assertThat(projects.view(projectId, owner).resources()).as("owners don't see drafts").isNull();
 
-        ProjectResponse published = projects.updateResources(projectId, new ResourcesRequest(20, 3, kit, true), admin);
+        ProjectResponse published = projects.updateResources(projectId, new ResourcesRequest(20, 3, kit, true, null), admin);
         assertThat(published.resources().finalized()).isTrue();
 
         ProjectResponse seenByOwner = projects.view(projectId, owner);
@@ -99,11 +99,11 @@ class ProjectResourcesTests {
     void onlyAdministratorsAssignResourcesAndAnEmptyPlanCannotBeFinalized() {
         User admin = user(Role.ADMIN);
         Long projectId = approve(user(Role.CITIZEN)).projectId();
-        ResourcesRequest plan = new ResourcesRequest(5, 0, List.of(), true);
+        ResourcesRequest plan = new ResourcesRequest(5, 0, List.of(), true, null);
 
         assertThatThrownBy(() -> projects.updateResources(projectId, plan, user(Role.AUTHORITY)))
                 .isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> projects.updateResources(projectId, new ResourcesRequest(0, 0, List.of(), true), admin))
+        assertThatThrownBy(() -> projects.updateResources(projectId, new ResourcesRequest(0, 0, List.of(), true, null), admin))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
