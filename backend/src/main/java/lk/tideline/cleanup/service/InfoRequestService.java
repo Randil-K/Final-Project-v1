@@ -53,7 +53,7 @@ public class InfoRequestService {
         request.setMessage(message);
         requests.save(request);
 
-        String who = reviewer.getRole() == Role.AUTHORITY ? "The government authority" : "An administrator";
+        String who = reviewer.getRole() == Role.AUTHORITY ? "The government officer" : "An administrator";
         alerts.sendCritical(report.getReporter(), AlertType.INFO_REQUESTED,
                 "Action needed: more information on " + report.getReference(),
                 who + " asked: " + message,

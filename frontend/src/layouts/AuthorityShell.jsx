@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Icon, Avatar, Badge } from '../design-system';
+import { Icon, Avatar, Badge, Button } from '../design-system';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { useUnreadAlerts } from '../hooks/useUnreadAlerts.js';
 import { ROLE_LABEL } from '../lib/format.js';
@@ -61,6 +61,7 @@ export default function AuthorityShell() {
                 background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
                 color: isActive ? 'var(--white)' : 'var(--text-inverse-muted)',
                 font: 'var(--text-label)',
+                textDecoration: 'none',
               })}
             >
               <Icon name={n.icon} size="sm" />
@@ -105,7 +106,14 @@ export default function AuthorityShell() {
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <span style={{ font: 'var(--text-h3)', color: 'var(--text-strong)' }}>Authority console</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', minWidth: 0 }}>
+            <Button variant="secondary" size="sm" iconLeft="chevron-left" onClick={() => navigate('/app')}>
+              Back to feed
+            </Button>
+            <span style={{ font: 'var(--text-h3)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.role === 'AUTHORITY' ? 'Government officer console' : 'Administrator console'}
+            </span>
+          </div>
           <span style={{ font: 'var(--text-caption)', color: 'var(--text-muted)' }}>Marine Environment Protection Authority</span>
         </header>
         <main style={{ flex: 1, padding: 'var(--space-6)', maxWidth: 1200, width: '100%', margin: '0 auto' }}>

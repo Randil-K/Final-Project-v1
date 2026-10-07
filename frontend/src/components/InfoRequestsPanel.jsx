@@ -9,7 +9,7 @@ const STATUS = {
   ANSWERED: { label: 'Answered', tone: 'success' },
 };
 
-const roleName = (user) => (user?.role === 'AUTHORITY' ? 'Government authority' : 'Administrator');
+const roleName = (user) => (user?.role === 'AUTHORITY' ? 'Government officer' : 'Administrator');
 
 /** Reviewers' requests for more information and the reporter's answers, newest first. */
 export default function InfoRequestsPanel({ requests, reporterName }) {

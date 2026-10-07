@@ -21,6 +21,12 @@ const FILTERS = [
   { value: 'APPROVED', label: 'Verified' },
 ];
 
+const DOCUMENT_GROUPS = [
+  ['CERTIFICATE', 'Certificates'],
+  ['LICENCE', 'Licences'],
+  ['APPOINTMENT', 'Proof of appointment'],
+];
+
 const EMPTY = {
   PENDING_REVIEW: 'No accounts are waiting for verification.',
   REJECTED: 'No applications have been turned down.',
@@ -163,24 +169,35 @@ export default function Verifications() {
                     </div>
 
                     {hasDocuments ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{isOfficial ? 'Proof of appointment' : 'Certificates and files'}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                         {account.documents?.length ? (
-                          account.documents.map((doc) => (
-                            <div
-                              key={doc.id}
-                              style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)' }}
-                            >
-                              <Icon name={doc.contentType === 'application/pdf' ? 'file-text' : 'image'} size="sm" color="var(--text-muted)" />
-                              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                                <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</span>
-                                <span style={{ font: 'var(--text-micro)', color: 'var(--text-muted)' }}>{formatBytes(doc.sizeBytes)}</span>
+                          DOCUMENT_GROUPS.map(([kind, title]) => {
+                            const group = account.documents.filter((doc) => (doc.kind || 'CERTIFICATE') === kind);
+                            if (!group.length) return null;
+                            return (
+                              <div key={kind} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                                <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{title}</span>
+                                {group.map((doc) => (
+                                  <div
+                                    key={doc.id}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)' }}
+                                  >
+                                    <Icon name={doc.contentType === 'application/pdf' ? 'file-text' : 'image'} size="sm" color="var(--text-muted)" />
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                                      <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</span>
+                                      <span style={{ font: 'var(--text-micro)', color: 'var(--text-muted)' }}>{formatBytes(doc.sizeBytes)}</span>
+                                    </div>
+                                    <Button size="sm" variant="secondary" iconLeft="eye" onClick={() => viewDocument(doc)}>View</Button>
+                                  </div>
+                                ))}
                               </div>
-                              <Button size="sm" variant="secondary" iconLeft="eye" onClick={() => viewDocument(doc)}>View</Button>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
-                          <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>No files were attached.</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                            <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>{isOfficial ? 'Proof of appointment' : 'Certificates and licences'}</span>
+                            <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>No files were attached.</span>
+                          </div>
                         )}
                       </div>
                     ) : null}

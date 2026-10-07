@@ -338,7 +338,7 @@ public class ReportService {
 
         switch (report.getStatus()) {
             case ESCALATED -> throw new IllegalStateException(
-                    "This report is with the government authority. Wait for their decision.");
+                    "This report is with the government officer. Wait for their decision.");
             case APPROVED, CLEANED -> throw new IllegalStateException("This report has already become a project.");
             case REJECTED -> throw new IllegalStateException("This report was rejected and is closed.");
             default -> {
@@ -363,7 +363,7 @@ public class ReportService {
                 report.setAuthorityDecision(ReviewDecision.PENDING);
                 alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
                         "An administrator approved your report",
-                        reference + " has been sent to the government authority for a decision.",
+                        reference + " has been sent to the government officer for a decision.",
                         report.getId(), null, null);
                 for (User officer : userRepository.findByRole(Role.AUTHORITY)) {
                     if (officer.isSuspended()) {
@@ -406,7 +406,7 @@ public class ReportService {
         PollutionReport report = get(reportId);
 
         if (report.getStatus() != ReportStatus.ESCALATED) {
-            throw new IllegalStateException("Only a report an administrator has sent to the authority can be decided.");
+            throw new IllegalStateException("Only a report an administrator has sent to the government officer can be decided.");
         }
         ReviewDecision decision = request.decision();
         if (decision == ReviewDecision.PENDING) {
@@ -431,7 +431,7 @@ public class ReportService {
                 // The officer's note is guidance for the administrators planning resources, not for the owner.
                 alertService.send(report.getReporter(), AlertType.PROJECT_PLANNED,
                         "Your report is now a project",
-                        "The government authority approved " + reference + ". It is now project "
+                        "The government officer approved " + reference + ". It is now project "
                                 + project.getReference() + " and you are its project owner.",
                         report.getId(), project.getId(), null);
                 for (User admin : userRepository.findByRole(Role.ADMIN)) {
@@ -445,13 +445,13 @@ public class ReportService {
             case REJECTED -> {
                 report.setStatus(ReportStatus.REJECTED);
                 alertService.send(report.getReporter(), AlertType.AUTHORITY_DECISION,
-                        "The authority rejected your report",
+                        "The government officer rejected your report",
                         reference + ": " + comment, report.getId(), null, null);
-                adminTitle = "Authority rejected " + reference;
+                adminTitle = "Government officer rejected " + reference;
             }
             default -> {
                 infoRequests.open(report, officer, comment);
-                adminTitle = "Authority requested more information on " + reference;
+                adminTitle = "Government officer requested more information on " + reference;
             }
         }
 

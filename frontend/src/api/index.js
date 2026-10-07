@@ -20,10 +20,11 @@ export const api = {
     resetPassword: (token, password) =>
       request('/api/auth/reset-password', { method: 'POST', body: { token, password }, auth: false }),
     /** Multipart: the account details as a JSON "data" part, plus any certificate files. */
-    register: (data, certificates = []) => {
+    register: (data, certificates = [], licences = []) => {
       const form = new FormData();
       form.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
       certificates.forEach((file) => form.append('certificates', file));
+      licences.forEach((file) => form.append('licences', file));
       return request('/api/auth/register', { method: 'POST', body: form, auth: false });
     },
   },
@@ -66,7 +67,7 @@ export const api = {
     },
     react: (id, commentId, type) =>
       request(`/api/reports/${id}/comments/${commentId}/reactions`, { method: 'POST', body: { type } }),
-    /** decision: APPROVED (sends it to the authority), REJECTED or MORE_INFO_REQUESTED. */
+    /** decision: APPROVED (sends it to the government officer), REJECTED or MORE_INFO_REQUESTED. */
     moderate: (id, decision, comment) =>
       request(`/api/reports/${id}/moderation`, { method: 'POST', body: { decision, comment } }),
     /** decision: APPROVED (creates the project), REJECTED or MORE_INFO_REQUESTED. */

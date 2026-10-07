@@ -142,7 +142,7 @@ export default function SubmitReport() {
 
       <Alert tone="info" title="What happens next">
         People nearby who have alerts turned on are asked to confirm what you saw. An administrator and then the
-        government authority review the report, and if it's approved it becomes a cleanup project that you own.
+        government officer review the report, and if it's approved it becomes a cleanup project that you own.
       </Alert>
 
       <Button type="submit" size="lg" fullWidth iconLeft="flag" loading={busy} disabled={busy}>

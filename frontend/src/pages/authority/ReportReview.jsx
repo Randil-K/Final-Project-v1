@@ -68,7 +68,7 @@ export default function ReportReview() {
     <Async state={state}>
       {(report) => {
         const canModerate = isAdmin && ['PENDING', 'VERIFYING', 'VERIFIED'].includes(report.status);
-        // Approval and questions wait for 8 community confirmations; rejection doesn't.
+        // Approval and questions wait for the community confirmations; rejection doesn't.
         const verified = report.status === 'VERIFIED';
         const waitingForReporter = report.infoRequestStatus === 'OPEN';
         const requests = infoState.data || [];
@@ -148,12 +148,12 @@ export default function ReportReview() {
             <ReviewStatusCard report={report} />
 
             {isAdmin && report.status === 'ESCALATED' ? (
-              <Alert tone="info" title="With the government authority">
-                Nothing more for you to do until an authority officer approves, rejects or asks for more detail.
+              <Alert tone="info" title="With the government officer">
+                Nothing more for you to do until a government officer approves, rejects or asks for more detail.
               </Alert>
             ) : null}
             {isAuthority && report.status !== 'ESCALATED' && !report.projectId && report.authorityDecision == null ? (
-              <Alert tone="info" title="Not sent to the authority yet">
+              <Alert tone="info" title="Not sent to the government officer yet">
                 An administrator has to approve this report before you can decide on it.
               </Alert>
             ) : null}
@@ -162,20 +162,29 @@ export default function ReportReview() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', padding: 'var(--space-5)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>
-                    {canDecide ? 'Your decision as the government authority' : 'Your review as administrator'}
+                    {canDecide ? 'Your decision as the government officer' : 'Your review as administrator'}
                   </span>
                   <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
                     {canDecide
                       ? `Approving creates the cleanup project, with ${report.reporter?.fullName} as project owner.`
-                      : 'Approving sends the report to the government authority for a decision.'}
+                      : 'Approving sends the report to the government officer for a decision.'}
                   </p>
                 </div>
+                {canDecide ? (
+                  <Alert tone="warning" title="List the resources this cleanup needs">
+                    Administrators assign volunteers, divers and equipment from this comment — it is all
+                    they have to work from. Say how many volunteers and divers the site needs, and what
+                    equipment, such as a boat, lift bags or cutting tools.
+                  </Alert>
+                ) : null}
                 <Textarea
                   label="Official comment"
                   hint={canDecide
                     ? 'Required for every decision — the reporter and administrators see it.'
                     : 'Required to request more information or reject — the reporter sees it.'}
-                  placeholder={canDecide ? 'Conditions, instructions or reasons for your decision.' : 'Notes for the authority, what information you need from the reporter, or why you are rejecting.'}
+                  placeholder={canDecide
+                    ? 'e.g. Approved. Needs 12 volunteers and 3 divers, with a boat and lift bags for the drums.'
+                    : 'Notes for the government officer, what information you need from the reporter, or why you are rejecting.'}
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -186,9 +195,9 @@ export default function ReportReview() {
                       <Button
                         iconLeft="flag"
                         disabled={busy || !verified}
-                        onClick={() => moderate('APPROVED', 'Approved. The report is with the government authority, and officers have been alerted.')}
+                        onClick={() => moderate('APPROVED', 'Approved. The report is with the government officer, who has been alerted.')}
                       >
-                        Approve and send to authority
+                        Approve and send to government officer
                       </Button>
                       <Button
                         variant="secondary"

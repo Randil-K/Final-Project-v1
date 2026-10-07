@@ -38,7 +38,7 @@ public class TidelineProperties {
     public static class Verification {
         private int thresholdPercent = 75;
         /** Confirmations needed before a report can pass, on top of the trust percentage. */
-        private int minimumConfirmations = 8;
+        private int minimumConfirmations = 5;
     }
 
     @Getter

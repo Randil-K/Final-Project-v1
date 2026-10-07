@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import lk.tideline.cleanup.model.AccountDocument;
 import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.CertificationLevel;
+import lk.tideline.cleanup.model.DocumentKind;
 import lk.tideline.cleanup.model.CleanupProject;
 import lk.tideline.cleanup.model.DiverProfile;
 import lk.tideline.cleanup.model.OrganizationType;
@@ -256,11 +257,12 @@ public final class UserDtos {
         }
     }
 
-    public record DocumentResponse(Long id, String name, String contentType, long sizeBytes, Instant uploadedAt) {
+    public record DocumentResponse(Long id, String name, DocumentKind kind, String contentType, long sizeBytes, Instant uploadedAt) {
         public static DocumentResponse from(AccountDocument document) {
             return new DocumentResponse(
                     document.getId(),
                     document.getOriginalName(),
+                    document.getKind() == null ? DocumentKind.CERTIFICATE : document.getKind(),
                     document.getContentType(),
                     document.getSizeBytes(),
                     document.getUploadedAt());

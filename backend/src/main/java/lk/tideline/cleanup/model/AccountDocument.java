@@ -3,10 +3,13 @@ package lk.tideline.cleanup.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
-/** A certificate a volunteer diver uploaded at registration. The file itself lives in the upload directory. */
+/** A file uploaded at registration — a diving certificate, a licence, or proof of appointment.
+ *  The file itself lives in the upload directory. */
 @Entity
 @Table(name = "account_documents")
 @Getter
@@ -20,6 +23,12 @@ public class AccountDocument {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
     private User user;
+
+    /** Documents saved before this was recorded are diving certificates. */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(length = 20)
+    private DocumentKind kind = DocumentKind.CERTIFICATE;
 
     /** The uploader's file name, for display only — never used to build a path. */
     @Column(nullable = false, length = 150)

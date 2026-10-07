@@ -9,7 +9,7 @@ import { useAuth } from '../../auth/AuthContext.jsx';
 import { ALERTS_CHANGED } from '../../hooks/useUnreadAlerts.js';
 import { formatDate } from '../../lib/format.js';
 
-const who = (user) => (user?.role === 'AUTHORITY' ? 'The government authority' : 'An administrator');
+const who = (user) => (user?.role === 'AUTHORITY' ? 'The government officer' : 'An administrator');
 
 /** Where the reporter answers a reviewer's request for more information. */
 export default function MoreInfo() {

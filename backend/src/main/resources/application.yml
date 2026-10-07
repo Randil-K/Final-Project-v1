@@ -49,10 +49,10 @@ management:
         enabled: true
 
 tideline:
-  # A report passes community verification with at least 8 confirmations and 75% trust.
+  # A report passes community verification with at least 5 confirmations and 75% trust.
   verification:
     threshold-percent: 75
-    minimum-confirmations: 8
+    minimum-confirmations: 5
   # New reports alert available users within this distance.
   alerts:
     initial-radius-km: 5

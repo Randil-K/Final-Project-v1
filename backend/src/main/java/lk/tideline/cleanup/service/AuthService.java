@@ -7,6 +7,7 @@ import lk.tideline.cleanup.dto.UserDtos.UserResponse;
 import lk.tideline.cleanup.model.AccountStatus;
 import lk.tideline.cleanup.model.AlertType;
 import lk.tideline.cleanup.model.DiverProfile;
+import lk.tideline.cleanup.model.DocumentKind;
 import lk.tideline.cleanup.model.Role;
 import lk.tideline.cleanup.model.User;
 import lk.tideline.cleanup.repository.UserRepository;
@@ -54,6 +55,10 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse register(RegisterRequest request, List<MultipartFile> certificates) {
+        return register(request, certificates, List.of());
+    }
+
+    public AuthResponse register(RegisterRequest request, List<MultipartFile> certificates, List<MultipartFile> licences) {
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
             throw new IllegalStateException("An account already uses that email address.");
         }
@@ -62,6 +67,7 @@ public class AuthService {
         boolean official = role == Role.ADMIN || role == Role.AUTHORITY;
 
         List<CheckedFile> files = storage.check(certificates);
+        List<CheckedFile> licenceFiles = storage.check(licences);
         if (role == Role.DIVER && files.isEmpty()) {
             throw new IllegalArgumentException("Attach at least one diving certificate so an administrator can verify you.");
         }
@@ -70,6 +76,9 @@ public class AuthService {
         }
         if (role != Role.DIVER && !official && !files.isEmpty()) {
             throw new IllegalArgumentException("Only volunteer divers, administrators and government officers attach documents.");
+        }
+        if (role != Role.DIVER && !licenceFiles.isEmpty()) {
+            throw new IllegalArgumentException("Only volunteer divers attach licences.");
         }
         if (official && (request.organizationName() == null || request.organizationName().isBlank())) {
             throw new IllegalArgumentException("Add the department or agency you work for.");
@@ -106,14 +115,18 @@ public class AuthService {
         }
 
         User saved = userRepository.save(user);
+        DocumentKind attached = official ? DocumentKind.APPOINTMENT : DocumentKind.CERTIFICATE;
         for (CheckedFile file : files) {
-            saved.getDocuments().add(storage.save(saved, file));
+            saved.getDocuments().add(storage.save(saved, file, attached));
+        }
+        for (CheckedFile file : licenceFiles) {
+            saved.getDocuments().add(storage.save(saved, file, DocumentKind.LICENCE));
         }
         userRepository.saveAndFlush(saved);
 
         UserResponse view = userService.view(saved.getId());
         if (saved.getAccountStatus() != AccountStatus.APPROVED) {
-            notifyAdministrators(saved, files.size());
+            notifyAdministrators(saved, files.size() + licenceFiles.size());
             return new AuthResponse(null, 0, view);
         }
         return new AuthResponse(jwtService.issueToken(saved), jwtService.expirySeconds(), view);
@@ -167,7 +180,7 @@ public class AuthService {
             }
         }
         for (User admin : userRepository.findByRole(Role.ADMIN)) {
-            alertService.send(admin, AlertType.ACCOUNT_REVIEW, title, body, null, null, null);
+            alertService.send(admin, AlertType.ACCOUNT_APPLICATION, title, body, null, null, null);
         }
     }
 

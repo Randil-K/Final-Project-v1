@@ -22,7 +22,7 @@ const SLIDES = [
   {
     eyebrow: 'Verify',
     title: 'The community checks every report before it moves on.',
-    body: 'Eight confirmations and 75% trust send a report to administrators, then to the government authority.',
+    body: 'Five confirmations and 75% trust send a report to administrators, then to the government officer.',
     cta: 'Browse reports',
     icon: 'badge-check',
     action: 'feed',
@@ -46,8 +46,8 @@ const TILES = [
 
 const STEPS = [
   { icon: 'camera', title: 'Someone reports it', body: 'A citizen or diver submits photos, severity and the exact location.' },
-  { icon: 'users', title: 'The community verifies', body: 'Neighbours confirm or dispute. Eight confirmations and 75% trust pass it on.' },
-  { icon: 'shield-check', title: 'Officials approve', body: 'An administrator reviews it, then the government authority approves it.' },
+  { icon: 'users', title: 'The community verifies', body: 'Neighbours confirm or dispute. Five confirmations and 75% trust pass it on.' },
+  { icon: 'shield-check', title: 'Officials approve', body: 'An administrator reviews it, then the government officer approves it.' },
   { icon: 'hand-heart', title: 'It becomes a project', body: 'Resources are assigned, volunteers join and progress is tracked to the end.' },
 ];
 
@@ -477,7 +477,7 @@ export default function Landing() {
                 <h2 style={{ font: '700 32px/1.12 var(--font-display)', letterSpacing: '-0.02em' }}>About Tideline</h2>
                 <p style={{ font: 'var(--text-body)', color: 'rgba(255, 255, 255, 0.72)' }}>
                   Tideline is a community-based ocean and coastal cleanup platform for Sri Lanka. Citizens and divers report
-                  pollution, the community verifies it, administrators and the government authority approve it, and it becomes
+                  pollution, the community verifies it, administrators and the government officer approve it, and it becomes
                   a cleanup project people can join.
                 </p>
                 <button type="button" className="tl-pill-btn" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>

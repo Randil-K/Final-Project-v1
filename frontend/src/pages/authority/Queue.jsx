@@ -13,7 +13,7 @@ import { mediaUrl } from '../../api/client.js';
 const FILTERS = [
   { value: 'all', label: 'All reports' },
   { value: 'VERIFIED', label: 'Verified' },
-  { value: 'ESCALATED', label: 'With authority' },
+  { value: 'ESCALATED', label: 'With government officer' },
   { value: 'REJECTED', label: 'Rejected' },
 ];
 

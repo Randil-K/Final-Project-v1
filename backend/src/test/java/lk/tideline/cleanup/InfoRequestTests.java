@@ -24,7 +24,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Modules 3 and 4 — the 8-confirmation rule, and reviewers asking the reporter for more information. */
+/** Modules 3 and 4 — the 5-confirmation rule, and reviewers asking the reporter for more information. */
 @SpringBootTest
 @TestPropertySource(properties = {"tideline.seed-demo-data=false", "tideline.uploads.directory=target/test-uploads"})
 class InfoRequestTests {
@@ -44,13 +44,13 @@ class InfoRequestTests {
     private AlertRepository alerts;
 
     @Test
-    void aReportNeedsEightConfirmationsBeforeItReachesTheAdministrator() {
+    void aReportNeedsFiveConfirmationsBeforeItReachesTheAdministrator() {
         User admin = user(Role.ADMIN);
         User reporter = user(Role.CITIZEN);
         Long id = report(reporter);
 
         ReportResponse response = null;
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 4; i++) {
             response = reportService.vote(id, user(Role.CITIZEN), true);
         }
         assertThat(response.trustPercentage()).isEqualTo(100);
@@ -79,16 +79,16 @@ class InfoRequestTests {
     }
 
     @Test
-    void eightConfirmationsStillNeedSeventyFivePercentTrust() {
+    void fiveConfirmationsStillNeedSeventyFivePercentTrust() {
         Long id = report(user(Role.CITIZEN));
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             reportService.vote(id, user(Role.CITIZEN), false);
         }
         ReportResponse response = null;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 5; i++) {
             response = reportService.vote(id, user(Role.CITIZEN), true);
         }
-        // 8 of 11 is 73%.
+        // 5 of 7 is 71%.
         assertThat(response.status()).isEqualTo(ReportStatus.VERIFYING);
     }
 
@@ -117,14 +117,14 @@ class InfoRequestTests {
     void withdrawingAConfirmationTakesAnUnreviewedReportBackBelowTheThreshold() {
         Long id = report(user(Role.CITIZEN));
         User last = null;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 5; i++) {
             last = user(Role.CITIZEN);
             reportService.vote(id, last, true);
         }
         assertThat(reportService.view(id).status()).isEqualTo(ReportStatus.VERIFIED);
 
         ReportResponse withdrawn = reportService.vote(id, last, true);
-        assertThat(withdrawn.confirmVotes()).isEqualTo(7);
+        assertThat(withdrawn.confirmVotes()).isEqualTo(4);
         assertThat(withdrawn.status()).isEqualTo(ReportStatus.VERIFYING);
     }
 
@@ -209,7 +209,7 @@ class InfoRequestTests {
 
     private Long verifiedReport(User reporter) {
         Long id = report(reporter);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 5; i++) {
             reportService.vote(id, user(Role.CITIZEN), true);
         }
         return id;

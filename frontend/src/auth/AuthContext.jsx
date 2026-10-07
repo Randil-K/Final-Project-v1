@@ -32,8 +32,8 @@ export function AuthProvider({ children }) {
         return result.user;
       },
       /** Divers and organisations get no token — they wait for an administrator to verify them. */
-      async register(data, certificates) {
-        const result = await api.auth.register(data, certificates);
+      async register(data, certificates, licences) {
+        const result = await api.auth.register(data, certificates, licences);
         if (result.token) {
           setToken(result.token);
           setUser(result.user);

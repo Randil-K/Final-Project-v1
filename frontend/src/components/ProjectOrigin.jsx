@@ -35,8 +35,8 @@ export default function ProjectOrigin({ project }) {
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>How this project started</span>
         <p style={{ font: 'var(--text-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
           {user?.id === origin.reporter?.id
-            ? 'You reported it, the community checked it, and the government authority approved it.'
-            : 'Spotted by a member of the community, checked by others, and approved by the government authority.'}
+            ? 'You reported it, the community checked it, and the government officer approved it.'
+            : 'Spotted by a member of the community, checked by others, and approved by the government officer.'}
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export default function ProjectOrigin({ project }) {
 
       <Row icon="shield-check">
         <span>
-          Approved by the government authority
+          Approved by the government officer
           {origin.authorityOfficer ? ` (${origin.authorityOfficer.fullName})` : ''}
           {origin.decidedAt ? ` on ${formatDate(origin.decidedAt)}` : ''}
         </span>

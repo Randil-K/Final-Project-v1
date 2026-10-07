@@ -7,6 +7,7 @@ import lk.tideline.cleanup.dto.ReportDtos.AuthorityDecisionRequest;
 import lk.tideline.cleanup.dto.ReportDtos.ModerationRequest;
 import lk.tideline.cleanup.dto.ReportDtos.ReportResponse;
 import lk.tideline.cleanup.dto.UserDtos.AccountReviewRequest;
+import lk.tideline.cleanup.dto.UserDtos.DocumentResponse;
 import lk.tideline.cleanup.dto.UserDtos.SuspensionRequest;
 import lk.tideline.cleanup.model.*;
 import lk.tideline.cleanup.repository.AlertRepository;
@@ -67,6 +68,11 @@ class GovernanceTests {
         assertThat(registered.token()).isNull();
         assertThat(registered.user().accountStatus()).isEqualTo(AccountStatus.PENDING_REVIEW);
         assertThat(titlesFor(admin)).contains("New volunteer diver to verify");
+        // A notice about someone else's registration, not a decision on the administrator's own account.
+        assertThat(alerts.findByRecipientOrderByCreatedAtDesc(admin))
+                .filteredOn(alert -> alert.getTitle().equals("New volunteer diver to verify"))
+                .extracting(Alert::getType)
+                .containsOnly(AlertType.ACCOUNT_APPLICATION);
         assertThat(userService.verifications(AccountStatus.PENDING_REVIEW))
                 .anySatisfy(account -> {
                     assertThat(account.email()).isEqualTo(email);
@@ -141,6 +147,29 @@ class GovernanceTests {
                 registration(UUID.randomUUID() + "@test.lk", Role.DIVER, null, null), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("certificate");
+    }
+
+    @Test
+    void aDiverCanAttachCertificatesAndLicencesSeparately() {
+        String email = UUID.randomUUID() + "@test.lk";
+
+        authService.register(registration(email, Role.DIVER, null, null),
+                List.of(pdf("padi.pdf")), List.of(pdf("boat-licence.pdf")));
+
+        assertThat(userService.verifications(AccountStatus.PENDING_REVIEW))
+                .filteredOn(account -> account.email().equals(email))
+                .singleElement()
+                .satisfies(account -> assertThat(account.documents())
+                        .extracting(DocumentResponse::kind)
+                        .containsExactlyInAnyOrder(DocumentKind.CERTIFICATE, DocumentKind.LICENCE));
+    }
+
+    @Test
+    void onlyDiversAttachLicences() {
+        assertThatThrownBy(() -> authService.register(
+                registration(UUID.randomUUID() + "@test.lk", Role.CITIZEN, null, null), List.of(), List.of(pdf("licence.pdf"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("licences");
     }
 
     @Test

@@ -62,6 +62,7 @@ All seeded accounts use the password `password123`.
 | `officer@mepa.gov.lk` | AUTHORITY |
 | `hiruna@example.lk` | DIVER (verified) |
 | `kavindu@example.lk` · `tharushi@example.lk` · `dinuka@example.lk` | DIVER (verified) |
+| `sanjeewa@example.lk` · `nethmi@example.lk` · `ruwan@example.lk` | DIVER (verified) |
 | `kasun@example.lk` | CITIZEN — owns project CP-118 |
 | `hello@blueresurgence.lk` | ORGANIZATION (verified) |
 | `tharindu@example.lk` | DIVER — pending verification, can't sign in yet |
@@ -111,7 +112,7 @@ Authenticate with `POST /api/auth/login`, then send `Authorization: Bearer <toke
 
 - **Trust threshold.** Every vote recalculates `trustPercentage = confirm / total`. A report
   moves `PENDING → VERIFYING` on its first vote, and `VERIFYING → VERIFIED` once it has at least
-  8 confirmations and 75% trust (`tideline.verification.minimum-confirmations` and
+  5 confirmations and 75% trust (`tideline.verification.minimum-confirmations` and
   `threshold-percent`). Reporters can't vote on their own report. Verification alerts the
   administrators, who can then approve or ask for more information; they can reject at any time.
 - **Nearby alerts.** A new report alerts available users within 5 km (Haversine distance).

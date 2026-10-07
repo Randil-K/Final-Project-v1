@@ -8,7 +8,10 @@ public enum AlertType {
     PROJECT_UPDATE,
     AUTHORITY_DECISION,
     OPPORTUNITY,
+    /** The decision on the recipient's own registration. */
     ACCOUNT_REVIEW,
+    /** Someone else's registration waiting for an administrator to approve it. */
+    ACCOUNT_APPLICATION,
     COMMENT_REPLY,
     INFO_REQUESTED,
     INFO_RESPONSE,

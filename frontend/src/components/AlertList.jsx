@@ -16,6 +16,7 @@ const KIND = {
   AUTHORITY_DECISION: { icon: 'shield-check', color: 'var(--sea-600)' },
   OPPORTUNITY: { icon: 'anchor', color: 'var(--buoy-600)' },
   ACCOUNT_REVIEW: { icon: 'user', color: 'var(--buoy-600)' },
+  ACCOUNT_APPLICATION: { icon: 'badge-check', color: 'var(--buoy-600)' },
   COMMENT_REPLY: { icon: 'message-square', color: 'var(--tide-600)' },
   INFO_REQUESTED: { icon: 'triangle-alert', color: 'var(--danger)' },
   INFO_RESPONSE: { icon: 'message-square', color: 'var(--sea-600)' },

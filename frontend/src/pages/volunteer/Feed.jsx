@@ -13,7 +13,7 @@ const STATUS_FILTERS = [
   { value: 'PENDING', label: 'Pending' },
   { value: 'VERIFYING', label: 'Verifying' },
   { value: 'VERIFIED', label: 'Verified' },
-  { value: 'ESCALATED', label: 'With authority' },
+  { value: 'ESCALATED', label: 'With government officer' },
 ];
 
 export default function Feed() {

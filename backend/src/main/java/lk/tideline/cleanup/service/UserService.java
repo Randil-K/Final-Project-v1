@@ -248,7 +248,7 @@ public class UserService {
                     switch (user.getRole()) {
                         case DIVER -> "An administrator checked your certificates. You can now join cleanups and apply for diving work.";
                         case ADMIN -> "An administrator confirmed your appointment. You now have access to the administration console.";
-                        case AUTHORITY -> "An administrator confirmed your appointment. You can now review reports in the authority console.";
+                        case AUTHORITY -> "An administrator confirmed your appointment. You can now review reports in the government officer console.";
                         default -> "An administrator checked your organisation. You can now post opportunities for divers.";
                     },
                     null, null, null);

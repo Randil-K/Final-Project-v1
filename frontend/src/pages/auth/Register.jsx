@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Input, Select, Field, Alert, Badge } from '../../design-system';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import ChipButton from '../../components/ChipButton.jsx';
 import DocumentPicker from '../../components/DocumentPicker.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -89,6 +90,7 @@ export default function Register() {
     websiteUrl: '',
   });
   const [certificates, setCertificates] = React.useState([]);
+  const [licences, setLicences] = React.useState([]);
   const [error, setError] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
   const [pending, setPending] = React.useState(null);
@@ -132,6 +134,7 @@ export default function Register() {
           websiteUrl: role === 'ORGANIZATION' ? withScheme(form.websiteUrl.trim()) : null,
         },
         NEEDS_DOCUMENTS.includes(role) ? certificates : [],
+        role === 'DIVER' ? licences : [],
       );
       if (result.token) {
         navigate('/app', { replace: true });
@@ -194,10 +197,18 @@ export default function Register() {
               />
               <DocumentPicker
                 label="Certificates"
+                actionLabel="Add certificate files"
                 required
                 hint="Your diving certification card or logbook page."
                 files={certificates}
                 onChange={setCertificates}
+              />
+              <DocumentPicker
+                label="Licences"
+                actionLabel="Add licence files"
+                hint="Any diving, boat or safety licence you hold."
+                files={licences}
+                onChange={setLicences}
               />
             </>
           ) : null}
@@ -240,9 +251,8 @@ export default function Register() {
             </>
           ) : null}
 
-          <Input
+          <PasswordInput
             label="Password"
-            type="password"
             placeholder="At least 8 characters"
             required
             minLength={8}

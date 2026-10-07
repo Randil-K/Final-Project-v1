@@ -83,6 +83,9 @@ class CleanupLoopTests {
 
         assertThat(reports.findById(project.reportId()).orElseThrow().getStatus()).isEqualTo(ReportStatus.CLEANED);
         assertThat(titlesFor(volunteer)).contains("Cleanup complete");
+        // The owner hears about their own project finishing, in their own words.
+        assertThat(titlesFor(reporter)).containsOnlyOnce("Your cleanup is complete");
+        assertThat(titlesFor(reporter)).doesNotContain("Cleanup complete");
     }
 
     @Test

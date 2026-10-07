@@ -74,6 +74,27 @@ public class DemoDataSeeder {
             attachCertificate(storage, dinuka, "PADI-Divemaster.pdf", "PADI Divemaster - Dinuka Rajapaksha");
             users.save(dinuka);
 
+            User sanjeewa = user(users, encoder, "Sanjeewa Alwis", "sanjeewa@example.lk",
+                    Role.DIVER, "Northern Province", "Jaffna", 9.6615, 80.0255);
+            diverProfile(sanjeewa, CertificationLevel.INSTRUCTOR, 12, "Full kit, twin tanks, surface marker buoys",
+                    List.of("Northern Province", "Eastern Province"));
+            attachCertificate(storage, sanjeewa, "PADI-Open-Water-Instructor.pdf", "PADI Open Water Scuba Instructor - Sanjeewa Alwis");
+            users.save(sanjeewa);
+
+            User nethmi = user(users, encoder, "Nethmi Bandara", "nethmi@example.lk",
+                    Role.DIVER, "Southern Province", "Tangalle", 6.0240, 80.7940);
+            diverProfile(nethmi, CertificationLevel.ADVANCED_OPEN_WATER, 3, "Own mask, fins, wetsuit, dive light",
+                    List.of("Southern Province", "Uva Province"));
+            attachCertificate(storage, nethmi, "PADI-Advanced-Open-Water.pdf", "PADI Advanced Open Water - Nethmi Bandara");
+            users.save(nethmi);
+
+            User ruwan = user(users, encoder, "Ruwan Dissanayake", "ruwan@example.lk",
+                    Role.DIVER, "Western Province", "Wadduwa", 6.6600, 79.9300);
+            diverProfile(ruwan, CertificationLevel.RESCUE_DIVER, 5, "Full kit, lift bags, hand tools",
+                    List.of("Western Province", "Southern Province"));
+            attachCertificate(storage, ruwan, "PADI-Rescue-Diver.pdf", "PADI Rescue Diver - Ruwan Dissanayake");
+            users.save(ruwan);
+
             User kasun = user(users, encoder, "Kasun Silva", "kasun@example.lk",
                     Role.CITIZEN, "Western Province", "Negombo", 7.2100, 79.8400);
             User achini = user(users, encoder, "Achini Fernando", "achini@example.lk",
@@ -81,7 +102,7 @@ public class DemoDataSeeder {
             User ishara = user(users, encoder, "Ishara Gunawardena", "ishara@example.lk",
                     Role.CITIZEN, "Western Province", "Mount Lavinia", 6.8389, 79.8653);
 
-            // Community members whose votes carry the demo reports past 8 confirmations.
+            // Community members whose votes carry the demo reports past 5 confirmations.
             List<User> community = List.of(
                     user(users, encoder, "Nuwan Jayasuriya", "nuwan@example.lk", Role.CITIZEN, "Western Province", "Negombo", 7.2150, 79.8420),
                     user(users, encoder, "Dilini Rathnayake", "dilini@example.lk", Role.CITIZEN, "North Western Province", "Kalpitiya", 8.2300, 79.7700),
@@ -113,9 +134,9 @@ public class DemoDataSeeder {
             coralGuard.setWebsiteUrl("https://coralguard.example.org");
             users.save(coralGuard);
 
-            alerts.send(admin, AlertType.ACCOUNT_REVIEW, "New volunteer diver to verify",
+            alerts.send(admin, AlertType.ACCOUNT_APPLICATION, "New volunteer diver to verify",
                     "Tharindu Wickrama registered with 2 certificates.", null, null, null);
-            alerts.send(admin, AlertType.ACCOUNT_REVIEW, "New organisation to verify",
+            alerts.send(admin, AlertType.ACCOUNT_APPLICATION, "New organisation to verify",
                     "Coral Guard Lanka registered. Check https://coralguard.example.org before approving.", null, null, null);
 
             PollutionReport negombo = report(reports, kasun,
@@ -270,6 +291,7 @@ public class DemoDataSeeder {
 
         AccountDocument document = new AccountDocument();
         document.setUser(user);
+        document.setKind(DocumentKind.CERTIFICATE);
         document.setOriginalName(fileName);
         document.setStoredName(storedName);
         document.setContentType("application/pdf");

@@ -164,7 +164,7 @@ public class ProjectService {
 
         alertService.notifyProjectNearby(saved, properties.getAlerts().getInitialRadiusKm(),
                 "New cleanup project near " + saved.getLocationName(),
-                saved.getTitle() + " — approved by the government authority. Join if you can help.",
+                saved.getTitle() + " — approved by the government officer. Join if you can help.",
                 Set.of(report.getReporter().getId()));
 
         return saved;
@@ -279,6 +279,14 @@ public class ProjectService {
             report.setStatus(ReportStatus.CLEANED);
             report.setUpdatedAt(Instant.now());
         }
+
+        alertService.send(project.getOwner(), AlertType.PROJECT_UPDATE,
+                "Your cleanup is complete",
+                project.getReference() + " — " + project.getTitle() + " is marked complete"
+                        + (project.getDebrisRemovedKg() != null
+                                ? ", with " + project.getDebrisRemovedKg() + " kg of debris recorded." : ".")
+                        + " The site you reported is now marked cleaned.",
+                null, project.getId(), null);
 
         for (ProjectParticipant participant : project.getParticipants()) {
             DiverProfile profile = participant.getUser().getDiverProfile();

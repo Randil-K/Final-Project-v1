@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Alert, Button, Card, Icon, Input } from '../../design-system';
+import { Alert, Button, Card, Icon } from '../../design-system';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import { api } from '../../api/index.js';
 
 export default function ResetPassword() {
@@ -61,18 +62,16 @@ export default function ResetPassword() {
                   {error} <Link to="/forgot-password">Get a new link</Link>
                 </Alert>
               ) : null}
-              <Input
+              <PasswordInput
                 label="New password"
-                type="password"
                 required
                 autoComplete="new-password"
                 error={tooShort ? 'Use at least 8 characters.' : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <Input
+              <PasswordInput
                 label="Confirm new password"
-                type="password"
                 required
                 autoComplete="new-password"
                 error={mismatch ? "The passwords don't match." : undefined}

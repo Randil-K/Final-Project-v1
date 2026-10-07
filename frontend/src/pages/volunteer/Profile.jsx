@@ -15,6 +15,8 @@ function formFrom(user) {
     phone: user?.phone || '',
     province: user?.province || '',
     city: user?.city || '',
+    latitude: user?.latitude ?? '',
+    longitude: user?.longitude ?? '',
   };
 }
 
@@ -66,10 +68,12 @@ export default function Profile() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          setUser(await api.users.updateProfile({
+          const updated = await api.users.updateProfile({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-          }));
+          });
+          setUser(updated);
+          setForm((f) => ({ ...f, latitude: updated.latitude, longitude: updated.longitude }));
           setStatus({ tone: 'success', title: 'Location saved', message: "You'll get alerts for reports and cleanups within 5 km." });
         } catch (error) {
           setStatus({ tone: 'danger', title: 'Location not saved', message: error.message });
@@ -89,7 +93,12 @@ export default function Profile() {
     setBusy(true);
     setStatus(null);
     try {
-      let updated = await api.users.updateProfile({ ...form, availableForAlerts: available });
+      let updated = await api.users.updateProfile({
+        ...form,
+        latitude: form.latitude === '' ? null : Number(form.latitude),
+        longitude: form.longitude === '' ? null : Number(form.longitude),
+        availableForAlerts: available,
+      });
       if (isDiver) {
         updated = await api.users.updateDiverProfile({
           certificationLevel: diver.certificationLevel || null,
@@ -177,20 +186,41 @@ export default function Profile() {
         <Input label="Full name" value={form.fullName} onChange={set('fullName')} />
         <Input label="Email" type="email" value={user.email} disabled />
         <Input label="Phone" type="tel" value={form.phone} onChange={set('phone')} />
-        <Input label="City or town" iconLeft="map-pin" value={form.city} onChange={set('city')} />
+      </section>
+
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Location</span>
+        <Input label="City or town" iconLeft="map-pin" placeholder="e.g. Negombo" value={form.city} onChange={set('city')} />
         <Select label="Province" placeholder="Select your province" options={PROVINCES} value={form.province} onChange={set('province')} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+          <Button variant="secondary" size="sm" iconLeft="map-pin" onClick={captureLocation} disabled={locating} style={{ alignSelf: 'flex-start' }}>
+            {locating ? 'Locating…' : hasLocation ? 'Update to my current location' : 'Use my current location'}
+          </Button>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+            <Input
+              label="Latitude"
+              type="number"
+              step="0.0001"
+              placeholder="6.9271"
+              value={form.latitude}
+              onChange={set('latitude')}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+            <Input
+              label="Longitude"
+              type="number"
+              step="0.0001"
+              placeholder="79.8612"
+              value={form.longitude}
+              onChange={set('longitude')}
+              style={{ flex: 1, minWidth: 140 }}
+            />
+          </div>
+        </div>
       </section>
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <span style={{ font: 'var(--text-label)', color: 'var(--text-heading)' }}>Alerts</span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-          <span style={{ font: 'var(--text-body-sm)', color: 'var(--text-body-color)' }}>
-            {hasLocation ? `${user.latitude.toFixed(4)}° N, ${user.longitude.toFixed(4)}° E` : 'No location saved'}
-          </span>
-          <Button variant="secondary" size="sm" iconLeft="map-pin" onClick={captureLocation} disabled={locating} style={{ alignSelf: 'flex-start' }}>
-            {locating ? 'Locating…' : hasLocation ? 'Update to my current location' : 'Use my current location'}
-          </Button>
-        </div>
         <div style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
           <Switch label="Available for cleanup alerts" checked={available} onChange={(e) => setAvailable(e.target.checked)} />
         </div>

@@ -18,7 +18,7 @@ export default function RequireAuth({ roles, children }) {
   if (roles && !roles.includes(user.role)) {
     return (
       <div style={{ padding: 'var(--space-8)' }}>
-        <Alert tone="warning" title="This console is for authority officers and administrators">
+        <Alert tone="warning" title="This console is for government officers and administrators">
           You are signed in as {user.fullName}. Ask an administrator if you need access.
         </Alert>
       </div>

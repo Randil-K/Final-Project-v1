@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon, Card, Button, Checkbox, Input, Alert } from '../../design-system';
+import PasswordInput from '../../components/PasswordInput.jsx';
 import Modal from '../../components/Modal.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
@@ -62,9 +63,8 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <Input
+            <PasswordInput
               label="Password"
-              type="password"
               placeholder="••••••••"
               required
               value={password}
@@ -97,8 +97,11 @@ export default function Login() {
               ['kavindu@example.lk', 'volunteer diver'],
               ['tharushi@example.lk', 'volunteer diver'],
               ['dinuka@example.lk', 'volunteer diver'],
+              ['sanjeewa@example.lk', 'volunteer diver'],
+              ['nethmi@example.lk', 'volunteer diver'],
+              ['ruwan@example.lk', 'volunteer diver'],
               ['admin@tideline.lk', 'administrator'],
-              ['officer@mepa.gov.lk', 'authority officer'],
+              ['officer@mepa.gov.lk', 'government officer'],
             ].map(([demoEmail, role]) => (
               <button
                 key={demoEmail}

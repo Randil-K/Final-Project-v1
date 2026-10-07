@@ -56,7 +56,7 @@ export default function CleanupDetail() {
     if (isOwner) {
       return (
         <Alert tone="info" title="You're the project owner">
-          You reported this site and the government authority approved it. Post progress below as the cleanup goes.
+          You reported this site and the government officer approved it. Post progress below as the cleanup goes.
         </Alert>
       );
     }

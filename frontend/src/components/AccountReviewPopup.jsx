@@ -7,8 +7,9 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { ALERTS_CHANGED } from '../hooks/useUnreadAlerts.js';
 
 /**
- * Pops up the administrator's decision on a diver's or organisation's registration the first time
- * they sign in after it. The same message stays in their alerts; closing the pop-up marks it read.
+ * Pops up the administrator's decision on the signed-in person's own registration the first time
+ * they sign in after it, and, for administrators, a registration waiting for their approval.
+ * The same message stays in their alerts; closing the pop-up marks it read.
  */
 export default function AccountReviewPopup() {
   const navigate = useNavigate();
@@ -23,8 +24,10 @@ export default function AccountReviewPopup() {
     api.alerts
       .list()
       .then((alerts) => {
-        const decision = alerts.find((a) => a.type === 'ACCOUNT_REVIEW' && !a.read);
-        if (!cancelled && decision) setAlert(decision);
+        const unread = alerts.filter((a) => !a.read);
+        const next = unread.find((a) => a.type === 'ACCOUNT_REVIEW')
+          || (user?.role === 'ADMIN' ? unread.find((a) => a.type === 'ACCOUNT_APPLICATION') : null);
+        if (!cancelled && next) setAlert(next);
       })
       .catch(() => {
         /* the pop-up is a courtesy; the alert is still in the alert box */
@@ -32,7 +35,7 @@ export default function AccountReviewPopup() {
     return () => {
       cancelled = true;
     };
-  }, [userId, needsReview]);
+  }, [userId, needsReview, user?.role]);
 
   async function close(target) {
     const current = alert;
@@ -47,6 +50,26 @@ export default function AccountReviewPopup() {
   }
 
   const verified = user?.accountStatus === 'APPROVED';
+
+  if (alert?.type === 'ACCOUNT_APPLICATION') {
+    return (
+      <Modal
+        open
+        title={alert.title}
+        onClose={() => close()}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => close()}>Later</Button>
+            <Button iconLeft="badge-check" onClick={() => close('/console/verifications')}>Review application</Button>
+          </>
+        }
+      >
+        <Alert tone="warning" title="Approve registration">
+          {alert.body}
+        </Alert>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

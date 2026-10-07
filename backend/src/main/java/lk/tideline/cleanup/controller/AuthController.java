@@ -51,11 +51,12 @@ public class AuthController {
         return Map.of("message", "Your password has been changed. Sign in with the new password.");
     }
 
-    /** Multipart so divers can attach certificates: a JSON "data" part plus optional "certificates" files. */
+    /** Multipart so applicants can attach files: a JSON "data" part plus "certificates" and "licences" files. */
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AuthResponse> register(@Valid @RequestPart("data") RegisterRequest request,
-                                                 @RequestPart(value = "certificates", required = false) List<MultipartFile> certificates) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request, certificates));
+                                                 @RequestPart(value = "certificates", required = false) List<MultipartFile> certificates,
+                                                 @RequestPart(value = "licences", required = false) List<MultipartFile> licences) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request, certificates, licences));
     }
 
     @PostMapping("/login")

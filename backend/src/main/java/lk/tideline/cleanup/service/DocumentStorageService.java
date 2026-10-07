@@ -2,6 +2,7 @@ package lk.tideline.cleanup.service;
 
 import lk.tideline.cleanup.config.TidelineProperties;
 import lk.tideline.cleanup.model.AccountDocument;
+import lk.tideline.cleanup.model.DocumentKind;
 import lk.tideline.cleanup.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -203,12 +204,13 @@ public class DocumentStorageService {
         }
     }
 
-    public AccountDocument save(User owner, CheckedFile file) {
+    public AccountDocument save(User owner, CheckedFile file, DocumentKind kind) {
         String storedName = UUID.randomUUID() + file.extension();
         write(storedName, file.bytes());
 
         AccountDocument document = new AccountDocument();
         document.setUser(owner);
+        document.setKind(kind);
         document.setOriginalName(file.originalName());
         document.setStoredName(storedName);
         document.setContentType(file.contentType());

@@ -27,7 +27,7 @@ function Step({ title, badge, note, meta, children }) {
 }
 
 /**
- * The review path after community verification: administrator, then government authority. Approved
+ * The review path after community verification: administrator, then government officer. Approved
  * reports redirect to their project, so this card only ever shows reports still under review.
  */
 export default function ReviewStatusCard({ report }) {
@@ -35,7 +35,7 @@ export default function ReviewStatusCard({ report }) {
   const authorityMeta = report.decidedAt
     ? `Updated ${formatDate(report.decidedAt)}${report.authorityOfficer ? ` by ${report.authorityOfficer.fullName}` : ''}`
     : report.escalatedAt
-      ? `Sent to the authority ${formatDate(report.escalatedAt)}`
+      ? `Sent to the government officer ${formatDate(report.escalatedAt)}`
       : null;
 
   return (
@@ -52,7 +52,7 @@ export default function ReviewStatusCard({ report }) {
       />
 
       <Step
-        title="Government authority"
+        title="Government officer"
         badge={<DecisionBadge decision={report.authorityDecision} fallback={authorityFallback} />}
         note={report.authorityComment}
         meta={authorityMeta}

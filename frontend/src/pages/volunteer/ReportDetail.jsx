@@ -43,7 +43,7 @@ export default function ReportDetail() {
       {(report) => {
         const votingClosed = CLOSED_REPORT_STATUSES.includes(report.status);
         const isReporter = user?.id === report.reporter?.id;
-        // Once the authority approves, the report lives on only as its project.
+        // Once the government officer approves, the report lives on only as its project.
         if (report.projectId) return <Navigate to={projectHref(report.projectId)} replace />;
 
         return (

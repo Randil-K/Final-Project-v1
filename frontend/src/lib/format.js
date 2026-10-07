@@ -33,7 +33,7 @@ export const ROLE_LABEL = {
   CITIZEN: 'Community member',
   DIVER: 'Volunteer diver',
   ORGANIZATION: 'Organisation',
-  AUTHORITY: 'Authority officer',
+  AUTHORITY: 'Government officer',
   ADMIN: 'Administrator',
 };
 
@@ -106,7 +106,7 @@ export function reviewStage(report) {
     if (report.infoRequestStatus === 'ANSWERED' && report.authorityDecision === 'MORE_INFO_REQUESTED') {
       return { label: 'Reporter sent info', tone: 'accent' };
     }
-    return { label: 'Waiting for authority', tone: 'warning' };
+    return { label: 'Waiting for government officer', tone: 'warning' };
   }
   if (report.infoRequestStatus === 'OPEN') return { label: 'Waiting for reporter', tone: 'info' };
   if (report.infoRequestStatus === 'ANSWERED' && report.adminDecision === 'MORE_INFO_REQUESTED') {
